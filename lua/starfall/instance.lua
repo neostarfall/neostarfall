@@ -8,6 +8,8 @@ local dsethook, dgethook = debug.sethook, debug.gethook
 local dgetmeta = debug.getmetatable
 local SysTime = SysTime
 
+SF.ExtraSecurity = CreateConVar("sf_extra_secure", 0, FCVAR_ARCHIVE, "Enable extra security checks for starfall scripts. This will make your scripts run slower, but in return will make exploits significantly harder to come by.")
+
 if SERVER then
 	SF.cpuQuota = CreateConVar("sf_timebuffer", 0.005, FCVAR_ARCHIVE, "The max average the CPU time can reach.")
 	SF.cpuBufferN = CreateConVar("sf_timebuffersize", 100, FCVAR_ARCHIVE, "The window width of the CPU time quota moving average.")
@@ -393,6 +395,59 @@ function SF.Instance:BuildEnvironment()
 			end
 		end
 	end
+
+	-- TODO: Make this faster by using documentation of function parameters.
+	if SF.ExtraSecurity:GetBool() then
+		local function IsWrappedObject(object)
+			local metatable = dgetmeta(object)
+			return metatable and object_unwrappers[metatable] ~= nil
+		end
+
+		local function RecurseMakeWrappedImmutable(object)
+			if IsWrappedObject(object) then
+				return setmetatable({}, {__metatable = object.__metatable, __index = object})
+			elseif istable(object) then
+				local newTable = {}
+				for key, value in pairs(object) do
+					if IsWrappedObject(value) then
+						newTable[key] = setmetatable({}, {__metatable = value.__metatable, __index = value})
+					elseif istable(value) then
+						newTable[key] = RecurseMakeWrappedImmutable(value)
+					else
+						newTable[key] = value
+					end
+				end
+				return newTable
+			else
+				return object
+			end
+		end
+
+		local function SecureTable(t)
+			for k, v in pairs(t) do
+				if type(v) == "function" then
+					t[k] = function(...)
+						local immutableArgs = RecurseMakeWrappedImmutable({...})
+						local outputs = self.Sanitize({ v(unpack(immutableArgs)) })
+						return unpack(outputs)
+					end
+				end
+			end
+		end
+
+		for _, meta in pairs(self.Types) do
+			if meta.Methods then
+				SecureTable(meta.Methods)
+			end
+		end
+
+		for _, fns in pairs(self.Libraries) do
+			SecureTable(fns)
+		end
+
+		SecureTable(self.env)
+	end
+
 	table.Inherit( self.env, self.Libraries ) 
 	self.env._G = self.env
 	self:DoAliases()
