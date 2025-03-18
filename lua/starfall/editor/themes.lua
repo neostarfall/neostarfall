@@ -8,7 +8,10 @@ include("xml.lua")
 
 SF.Editor.Themes.Themes = { }
 SF.Editor.Themes.CurrentTheme = nil -- Theme table
-SF.Editor.Themes.ThemeConVar = CreateClientConVar("sf_editor_theme", "default", true, false)
+
+local DEFAULT_THEME = "vsdark"
+SF.Editor.Themes.ThemeConVar = CreateClientConVar("sf_editor_theme", DEFAULT_THEME, true, false)
+
 SF.Editor.Themes.DebugOutput = false
 
 local themeformat_version = 1 --Change that if previous themes arent compatibile anymore
@@ -23,7 +26,7 @@ end
 
 function SF.Editor.Themes.Load()
 	if not file.Exists("sf_themes.txt", "DATA") then
-		SF.Editor.Themes.SwitchTheme("default")
+		SF.Editor.Themes.SwitchTheme(DEFAULT_THEME)
 		return
 	end
 
@@ -37,12 +40,11 @@ function SF.Editor.Themes.Load()
 		file.Write("sf_themes_old.txt", contents)
 		file.Delete("sf_themes.txt")
 
-		SF.Editor.Themes.SwitchTheme("default")
+		SF.Editor.Themes.SwitchTheme(DEFAULT_THEME)
 
 		return
 	end
 
-	result.default = SF.Editor.Themes.Themes.default -- Default theme wont be loaded
 	SF.Editor.Themes.Themes = result
 
 	-- Switch the theme, if invalid - switch to default
@@ -51,7 +53,7 @@ function SF.Editor.Themes.Load()
 	if SF.Editor.Themes.Themes[conVarTheme] then
 		SF.Editor.Themes.SwitchTheme(conVarTheme)
 	else
-		SF.Editor.Themes.SwitchTheme("default")
+		SF.Editor.Themes.SwitchTheme(DEFAULT_THEME)
 	end
 end
 
@@ -62,23 +64,20 @@ end
 function SF.Editor.Themes.AddTheme(name, tbl)
 	tbl.Version = themeformat_version
 	SF.Editor.Themes.Themes[name] = tbl
-
-	if name ~= "default" then
-		SF.Editor.Themes.Save()
-	end
+	SF.Editor.Themes.Save()
 end
 
 function SF.Editor.Themes.RemoveTheme(name)
-	if name == "default" then
-		print("Can't remove the default theme")
+	if table.Count(SF.Editor.Themes.Themes) == 1 then
+		print("Can't remove the last theme")
 		return
 	end
 
-	if SF.Editor.Themes.ThemeConVar:GetString() == name then
-		SF.Editor.Themes.SwitchTheme("default")
-	end
-
 	SF.Editor.Themes.Themes[name] = nil
+
+	if SF.Editor.Themes.ThemeConVar:GetString() == name then
+		SF.Editor.Themes.SwitchTheme(next(SF.Editor.Themes.Themes))
+	end
 
 	SF.Editor.Themes.Save()
 end
@@ -92,14 +91,9 @@ function SF.Editor.Themes.SwitchTheme(name)
 	   return
 	end
 	if theme.Version ~= themeformat_version then
-		SF.Editor.Themes.SwitchTheme("default")
+		SF.Editor.Themes.SwitchTheme(DEFAULT_THEME)
 		print("Theme "..name.." isnt compatibile with this Neostarfall version, you have to reimport it!")
 		return
-	end
-	for k, v in pairs(SF.Editor.Themes.Themes.default) do
-		if not theme[k] then
-			theme[k] = v
-		end
 	end
 
 	SF.Editor.Themes.CurrentTheme = theme
@@ -249,10 +243,49 @@ function SF.Editor.Themes.ParseTextMate(text)
 	return themeTable, strId
 end
 
-SF.Editor.Themes.AddTheme("default", {
-	Name = "Default Theme",
+local VS_Control_Light = Color(156, 220, 254)
+local VS_Control = Color(86, 156, 214)
 
-	["background"] = Color(18, 12, 0),
+local VS_FunctionName = Color(220, 220, 170)
+local VS_Keyword = Color(197, 134, 192)
+
+SF.Editor.Themes.AddTheme("vsdark", {
+	Name = "VS Dark Modern",
+
+	["background"] = Color(30, 30, 30),
+	["line_highlight"] = Color(0, 0, 0, 0),
+
+	["gutter_foreground"] = Color(146, 144, 140),
+	["gutter_background"] = Color(36, 36, 31),
+	["gutter_divider"] = Color(47,49,41),
+
+	["caret"] = Color(248, 248, 242),
+	["selection"] = Color(129, 164, 219, 20),
+
+	["word_highlight"] = Color(30, 150, 30),
+
+	--{foreground color, background color, fontStyle}
+	["keyword"] = { VS_Keyword, nil, 0 },
+	["storageType"] = { VS_Keyword, nil, 0 },
+	["directive"] =	{ VS_Control, nil, 0 },
+	["comment"] = { Color(106, 153, 85), nil, 1 },
+	["string"] = { Color(206, 145, 120), nil, 0 },
+	["number"] = { Color(181, 206, 168), nil, 0 },
+	["function"] = { VS_FunctionName, nil, 0 },
+	["method"] = { VS_FunctionName, nil, 0 },
+	["library"] = { VS_FunctionName, nil, 0 },
+	["operator"] = { Color(212, 212, 212), nil, 0 },
+	["notfound"] = { Color(248, 248, 242), nil, 0 },
+	["bracket"] = { Color(212, 212, 212), nil, 0 },
+	["userfunction"] = { VS_FunctionName, nil, 0 },
+	["constant"] = { VS_Control, nil, 0 },
+	["identifier"] = { VS_Control_Light, nil, 0 }
+})
+
+SF.Editor.Themes.AddTheme("monokai", {
+	Name = "Monokai Theme",
+
+	["background"] = Color(30, 30, 30),
 	["line_highlight"] = Color(39, 40, 34),
 
 	["gutter_foreground"] = Color(143,144,138),
