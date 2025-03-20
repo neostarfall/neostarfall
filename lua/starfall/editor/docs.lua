@@ -1,3 +1,15 @@
+---@alias DocEntry { type: string }
+
+---@alias DocMethod { description: string, params: DocEntry[], returns: DocEntry[] }
+---@alias DocMethods table<string, { description: string, params: DocEntry[], returns: DocEntry[] }>
+
+---@alias DocType { methods: DocMethods }
+---@alias DocTypes table<string, DocType>
+
+---@alias DocLibrary { methods: DocMethods }
+---@alias DocLibraries table<string, DocLibrary>
+
+---@type { Version: string, Types: DocTypes, Libraries: DocLibraries, Hooks: {}, Directives: {} }
 local Docs = {}
 SF.Docs = Docs
 
