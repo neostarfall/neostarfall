@@ -19,6 +19,34 @@ local function Ent_IsWeapon(ent) return dgetmeta(ent)==WEP_META end
 function Ent_SetParent(x,y) Ent_SetParent=ENT_META.SetParent return Ent_SetParent(x,y) end
 
 local Ply_IsSuperAdmin,Ply_Nick,Ply_PrintMessage,Ply_SteamID = PLY_META.IsSuperAdmin,PLY_META.Nick,PLY_META.PrintMessage,PLY_META.SteamID
+local prometheus = include("starfall/thirdparty/prometheus/wrapper.lua")
+prometheus.Logger.LogLevel = prometheus.Logger.LogLevel.Error
+
+local function getDirectives(code)
+    local lines = code:Split("\n")
+    local directives = {}
+
+    for _, line in ipairs(lines) do
+        line = line:Trim()
+        if line:StartsWith("--@") then
+            directives[#directives+1] = line
+        end
+    end
+
+    return directives
+end
+
+function SF.ObfuscateCode(code)
+    local directives = getDirectives(code)
+    local pipeline = prometheus.Pipeline:fromConfig(prometheus.Presets.Medium)
+    return table.concat(directives, "\n") .. "\n" .. pipeline:apply(code)
+end
+
+function SF.MinifyCode(code)
+    local directives = getDirectives(code)
+    local pipeline = prometheus.Pipeline:fromConfig(prometheus.Presets.Minify)
+    return table.concat(directives, "\n") .. "\n" .. pipeline:apply(code)
+end
 
 -- Make sure this is done after metatables have been set
 hook.Add("InitPostEntity","SF_SanitizeTypeMetatables",function()
@@ -242,6 +270,33 @@ SF.BurstObject = {
 	end
 }
 setmetatable(SF.BurstObject, SF.BurstObject)
+
+SF.PlayerCompileBurst = SF.BurstObject("compile", "compile", 3, 1, "The rate at which the burst regenerates per second.", "The number of processors allowed to be compiled in a short interval of time via the toolgun and upload pushes ( burst )")
+SF.MaxCompileLength = CreateConVar("sf_max_compile_length", "32768", FCVAR_ARCHIVE, "The maximum length of an unobfuscated Neostarfall file.")
+SF.MaxObfuscatedCompileLength = CreateConVar("sf_max_obfuscated_compile_length", "16384", FCVAR_ARCHIVE, "The maximum length of an obfuscated Neostarfall file.")
+
+function SF.TryCompile(player, sf, sfdata)
+    if SF.PlayerCompileBurst:check(player) >= 1 then
+        if sfdata.files then
+            for path, code in pairs(sfdata.files) do
+                local isObfuscated = code:find("-@obfuscate")
+                local maxLength = isObfuscated and SF.MaxObfuscatedCompileLength:GetInt() or SF.MaxCompileLength:GetInt()
+
+                if #code > maxLength then
+                    SF.AddNotify(player, ("File %s is too long! (%d chars, %d maximum)"):format(path, #code, maxLength), "ERROR", 7, "ERROR1")
+                    return false
+                end
+            end
+        end
+
+        SF.PlayerCompileBurst:use(player, 1)
+        sf:Compile(sfdata)
+        return true
+    end
+
+    SF.AddNotify(player, "You are compiling scripts too quickly, please wait a moment.", "ERROR", 7, "ERROR1")
+    return false
+end
 
 --- Returns a class that limits the number of something per player
 SF.LimitObject = {
