@@ -14,14 +14,24 @@ export default function Contributors() {
 				</button>
 			</div>
 
-			<ol className="overflow-y-scroll text-xs lg:text-base flex flex-col gap-1">
+			<p>
+				This is everybody who has contributed to the Starfall project, through
+				GmodStarfall, INP Starfall, StarfallEx and finally to Neostarfall.
+			</p>
+
+			<ol className="overflow-y-scroll text-xs lg:text-base flex flex-col gap-1 p-2">
 				{contributors.map((c) => (
-					<div key={c.name} className="flex flex-row items-center">
+					<div
+						key={c.name}
+						className={`flex flex-row items-center ${c.hidden ? "blur-xs hover:blur-none transition duration-200" : ""}`}
+					>
 						<a href={c.link} className="mr-2">
 							<img src={c.avatar} className="rounded-lg w-8 h-8" alt={c.name} />
 						</a>
 
-						<span className="font-bold mr-1">{c.name}</span>
+						<span className="font-bold mr-1">
+							{c.name.length > 20 ? `${c.name.slice(0, 15)}...` : c.name}
+						</span>
 
 						<span className="inline md:hidden">{c.contributions}</span>
 						<span className="hidden md:inline">

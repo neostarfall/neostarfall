@@ -1,10 +1,16 @@
 import { useEffect, useState } from "react";
 
+const HiddenList: Record<string, true> = {
+	"web-flow": true,
+	"\x74\x68\x65\x67\x72\x62\x39\x33": true,
+};
+
 type Contributor = {
 	name: string;
 	link: string;
 	avatar: string;
 	contributions: number;
+	hidden: boolean;
 };
 
 type RawResponse = {
@@ -33,6 +39,7 @@ export async function getContributors(): Promise<Contributor[]> {
 		link: c.html_url,
 		avatar: c.avatar_url,
 		contributions: c.contributions,
+		hidden: HiddenList[c.login],
 	}));
 
 	return CachedContributors;
