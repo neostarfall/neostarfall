@@ -94,32 +94,32 @@ export function InlineMethod(props: {
 									</div>
 								))}
 							</div>
+						</div>
+					);
+				}
+			})()}
 
-							{(() => {
-								if (method.returns) {
-									return (
-										<>
-											<span className="text-lg font-bold">Returns</span>
+			{(() => {
+				if (method.returns) {
+					return (
+						<div className="flex flex-col gap-4 px-2">
+							<span className="text-lg font-bold">Returns</span>
 
-											<div className="flex flex-col gap-6">
-												{method.returns.map((ret, i) => (
-													<div
-														key={`${ret.name}-${ret.type}`}
-														className="flex flex-col gap-1"
-													>
-														<div className="flex flex-row gap-1">
-															<TypeView name={ret.type} />
-															{ret.name}
-														</div>
+							<div className="flex flex-col gap-6">
+								{method.returns.map((ret, i) => (
+									<div
+										key={`${ret.name}-${ret.type}`}
+										className="flex flex-col gap-1"
+									>
+										<div className="flex flex-row gap-1">
+											<TypeView name={ret.type} />
+											{ret.name}
+										</div>
 
-														<div className="rounded-md">{ret.description}</div>
-													</div>
-												))}
-											</div>
-										</>
-									);
-								}
-							})()}
+										<div className="rounded-md">{ret.description}</div>
+									</div>
+								))}
+							</div>
 						</div>
 					);
 				}
