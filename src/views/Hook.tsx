@@ -7,28 +7,32 @@ export default function Hook(props: { name: string }) {
 	const docs = useDocs();
 
 	if (!docs?.Hooks[props.name]) {
-		return "Hook not found";
+		return <div className="bg-zinc-800 w-full h-full">Loading...</div>;
 	}
 
 	const hook = docs.Hooks[props.name];
 
 	return (
-		<div className="bg-zinc-800 w-full h-full text-white p-8 flex flex-col gap-2">
+		<div className="bg-zinc-800 w-full h-full text-white p-2 md:p-8 flex flex-col gap-2">
 			<div className="flex flex-row items-center justify-between px-2 py-2">
-				<button className="text-2xl font-bold px-2 py-1 rounded-md outline-none bg-zinc-900 w-fit flex flex-row justify-start font-mono">
+				<button
+					type="button"
+					className="text-2xl font-bold px-2 py-1 rounded-md outline-none bg-zinc-900 w-fit flex flex-row justify-start font-mono"
+				>
 					{hook.name}
 
-					<ParamsView params={ hook.params } />
+					<ParamsView params={hook.params} className="hidden md:flex" />
 				</button>
 
-				<a className="text-2xl font-bold" href={getGithubLinkFromPath(hook.path)}>
+				<a
+					className="text-2xl font-bold"
+					href={getGithubLinkFromPath(hook.path)}
+				>
 					[src]
 				</a>
 			</div>
 
-			<pre className="text-wrap px-2">
-				{hook.description}
-			</pre>
+			<pre className="text-wrap px-2">{hook.description}</pre>
 
 			{(() => {
 				if (hook.params) {
@@ -38,15 +42,16 @@ export default function Hook(props: { name: string }) {
 
 							<div className="flex flex-col gap-6">
 								{hook.params.map((param, i) => (
-									<div className="flex flex-col gap-1">
+									<div
+										key={`${param.name}-${param.type}`}
+										className="flex flex-col gap-1"
+									>
 										<div className="flex flex-row gap-1">
-											<TypeView name={param.type}/>
+											<TypeView name={param.type} />
 											{param.name}
 										</div>
 
-										<div className="rounded-md">
-											{param.description}
-										</div>
+										<div className="rounded-md">{param.description}</div>
 									</div>
 								))}
 							</div>
@@ -55,5 +60,5 @@ export default function Hook(props: { name: string }) {
 				}
 			})()}
 		</div>
-	)
+	);
 }

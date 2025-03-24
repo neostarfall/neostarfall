@@ -5,7 +5,7 @@ interface SFDocEntry {
 	description: string;
 	name: string;
 	path: string;
-	realm: string;
+	realm: "client" | "server" | "shared";
 }
 
 interface SFDocParam {
@@ -17,6 +17,7 @@ interface SFDocParam {
 
 export interface SFDocMethodEntry extends SFDocEntry {
 	params: SFDocParam[];
+	returns: SFDocParam[];
 }
 
 export interface SFDocLibraryEntry extends SFDocEntry {
@@ -33,29 +34,35 @@ interface SFDocHookEntry extends SFDocEntry {
 	params: SFDocParam[];
 }
 
-interface SFDocDirectiveEntry extends SFDocEntry {
-}
+interface SFDocDirectiveEntry extends SFDocEntry {}
 
 export type SFDocs = {
-	Libraries: Record<string, SFDocLibraryEntry>,
-	Hooks: Record<string, SFDocHookEntry>,
-	Directives: Record<string, SFDocDirectiveEntry>,
-	Types: Record<string, SFDocTypeEntry>,
+	Libraries: Record<string, SFDocLibraryEntry>;
+	Hooks: Record<string, SFDocHookEntry>;
+	Directives: Record<string, SFDocDirectiveEntry>;
+	Types: Record<string, SFDocTypeEntry>;
 
-	Version: string
+	Version: string;
+};
+
+// This is stored on the window so DHTML can inject the local json through here.
+declare namespace window {
+	let CachedDocs: SFDocs | null;
 }
 
-let CachedDocs: SFDocs | null = null;
-
 export async function getSFDocs(): Promise<SFDocs> {
-	if (CachedDocs) {
-		return CachedDocs;
+	if (window.CachedDocs) {
+		return window.CachedDocs;
 	}
 
-	const docs = await fetch("/sf_doc.json");
+	const docs = await fetch(
+		"https://raw.githubusercontent.com/neostarfall/neostarfall/refs/heads/gh-pages/sf_doc.json",
+	);
 	const docsJson = await docs.json();
 
-	return CachedDocs = docsJson as SFDocs;
+	window.CachedDocs = docsJson as SFDocs;
+
+	return window.CachedDocs;
 }
 
 export function useDocs() {

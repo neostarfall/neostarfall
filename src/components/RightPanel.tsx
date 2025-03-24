@@ -1,8 +1,11 @@
 import Method from "../views/Method";
-import { useHash } from "../lib/hash"
+import { useHash } from "../lib/hash";
 import { useEffect, useState } from "react";
-import Hook from "@/views/Hook";
+import Hook from "../views/Hook";
 import Directive from "@/views/Directive";
+import Type from "../views/Type";
+import Contributors from "./Contributors";
+import Library from "../views/Library";
 
 export default function RightPanel(props: { className?: string }) {
 	const hash = useHash();
@@ -15,18 +18,18 @@ export default function RightPanel(props: { className?: string }) {
 		setParts(parts);
 	}, [hash]);
 
-	console.log(parts);
+	console.log("hash", hash, "parts", parts);
 
 	if (parts[0] === "types") {
 		const typeName = parts[1];
 		const methodName = parts[2];
 
 		if (typeName && methodName) {
-			return <Method type={typeName} name={methodName} />
+			return <Method type={typeName} name={methodName} />;
 		}
 
 		if (typeName) {
-			return "Type here";
+			return <Type name={typeName} />;
 		}
 	}
 
@@ -35,11 +38,11 @@ export default function RightPanel(props: { className?: string }) {
 		const methodName = parts[2];
 
 		if (libName && methodName) {
-			return <Method lib={libName} name={methodName} />
+			return <Method lib={libName} name={methodName} />;
 		}
 
 		if (libName) {
-			return "Library here";
+			return <Library name={libName} />;
 		}
 	}
 
@@ -47,7 +50,7 @@ export default function RightPanel(props: { className?: string }) {
 		const hookName = parts[1];
 
 		if (hookName) {
-			return <Hook name={hookName} />
+			return <Hook name={hookName} />;
 		}
 	}
 
@@ -55,13 +58,13 @@ export default function RightPanel(props: { className?: string }) {
 		const directiveName = parts[1];
 
 		if (directiveName) {
-			return <Directive name={directiveName} />
+			return <Directive name={directiveName} />;
 		}
 	}
 
-	return (
-		<div className="w-full h-full p-2 bg-zinc-800">
-			Right panel h!ere
-		</div>
-	)
+	if (parts[0] === "contributors") {
+		return <Contributors />;
+	}
+
+	return <Contributors />;
 }
