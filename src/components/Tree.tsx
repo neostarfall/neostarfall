@@ -61,7 +61,7 @@ function Item(props: { item: Item; expand?: boolean }) {
 
 export default function Tree(props: { items: Item[]; expandAll?: boolean }) {
 	return (
-		<ol className="font-mono text-sm lg:text-base w-full max-h-56 md:max-h-[600px] overflow-y-auto overflow-x-clip">
+		<ol className="font-mono text-sm lg:text-base w-full max-h-[400px] md:max-h-[600px] overflow-y-auto overflow-x-clip">
 			{props.items.map((item) => (
 				<Item item={item} key={item.key} expand={props.expandAll} />
 			))}

@@ -13,6 +13,17 @@ export default function LeftPanel(props: { className?: string }) {
 	const docs = useDocs();
 
 	useEffect(() => {
+		const callback = () => {
+			searchInputRef.current?.focus();
+		};
+
+		window.addEventListener("keydown", callback);
+		return () => {
+			window.removeEventListener("keydown", callback);
+		};
+	});
+
+	useEffect(() => {
 		if (!docs) {
 			setItems([]);
 			return;

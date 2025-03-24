@@ -6,9 +6,9 @@ import RightPanel from "./components/RightPanel";
 
 function App() {
 	return (
-		<div className="flex flex-row h-svh w-svw">
-			<LeftPanel className="w-40 lg:w-96 border-r border-white" />
-			<RightPanel />
+		<div className="flex flex-row w-dvw h-dvh">
+			<LeftPanel className="w-40 lg:w-96 h-full border-r border-white" />
+			<RightPanel className="h-full" />
 		</div>
 	);
 }
