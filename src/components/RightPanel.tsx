@@ -18,8 +18,6 @@ export default function RightPanel(props: { className?: string }) {
 		setParts(parts);
 	}, [hash]);
 
-	console.log("hash", hash, "parts", parts);
-
 	if (parts[0] === "types") {
 		const typeName = parts[1];
 		const methodName = parts[2];
