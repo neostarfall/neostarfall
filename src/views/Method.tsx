@@ -28,7 +28,7 @@ export function InlineMethod(props: {
 	}
 
 	return (
-		<div>
+		<div className="flex flex-col gap-4">
 			<div className="flex flex-row items-center justify-between px-2 py-2">
 				<button
 					type="button"
@@ -69,7 +69,7 @@ export function InlineMethod(props: {
 				</a>
 			</div>
 
-			<pre className="text-wrap lg:px-2 py-2">
+			<pre className="text-wrap lg:px-2">
 				{method.description.trim().replaceAll("\n ", "\n")}
 			</pre>
 
