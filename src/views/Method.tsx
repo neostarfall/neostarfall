@@ -134,7 +134,7 @@ export default function Method(props: {
 	name: string;
 }) {
 	return (
-		<div className="bg-zinc-800 w-full h-full text-white p-1 lg:p-8 flex flex-col gap-2">
+		<div className="bg-zinc-800 w-full h-full text-white p-2 md:p-4 lg:p-8 flex flex-col gap-2">
 			<InlineMethod lib={props.lib} type={props.type} name={props.name} />
 		</div>
 	);

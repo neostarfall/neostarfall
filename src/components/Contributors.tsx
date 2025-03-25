@@ -4,7 +4,7 @@ export default function Contributors() {
 	const contributors = useContributors();
 
 	return (
-		<div className="bg-zinc-800 w-full h-full text-white p-2 lg:p-8 flex flex-col gap-2">
+		<div className="bg-zinc-800 w-full h-full text-white p-2 md:p-4 lg:p-8 flex flex-col gap-2">
 			<div className="flex flex-row items-center justify-between px-2 py-2">
 				<button
 					type="button"
