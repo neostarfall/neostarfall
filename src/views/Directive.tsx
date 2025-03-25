@@ -11,7 +11,7 @@ export default function Directive(props: { name: string }) {
 	const directive = docs.Directives[props.name];
 
 	return (
-		<div className="bg-zinc-800 w-full h-full text-white p-2 md:p-8 flex flex-col gap-2">
+		<div className="bg-zinc-800 w-full h-full text-white p-2 md:p-8 flex flex-col gap-2 overflow-y-auto">
 			<div className="flex flex-row items-center justify-between px-2 py-2">
 				<button
 					type="button"
