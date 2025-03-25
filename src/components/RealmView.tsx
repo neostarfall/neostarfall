@@ -1,9 +1,12 @@
-type Realm = "client" | "server" | "shared";
+export type Realm = "client" | "server" | "shared";
 
 const ServerColor = "#4287f5";
 const ClientColor = "#e68e29";
 
-export default function RealmView(props: { realm: Realm; className?: string }) {
+export default function RealmView(props: {
+	realm?: Realm;
+	className?: string;
+}) {
 	const styling = `size-4 rounded-sm inline-block ${props.className ?? ""}`;
 
 	if (props.realm === "client") {

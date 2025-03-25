@@ -2,6 +2,7 @@ import { getGithubLinkFromPath } from "../lib/src";
 import { useDocs } from "../lib/docs";
 import RealmView from "../components/RealmView";
 import { InlineMethod } from "./Method";
+import { formatDescription } from "../lib/format";
 
 export default function Type(props: { name: string }) {
 	const docs = useDocs();
@@ -31,7 +32,7 @@ export default function Type(props: { name: string }) {
 				</a>
 			</div>
 
-			<pre className="text-wrap">{type.description}</pre>
+			<pre className="text-wrap">{formatDescription(type.description)}</pre>
 
 			<ol className="flex flex-col gap-8 overflow-y-auto">
 				{Object.entries(type.methods).map(([_, method], i) => (

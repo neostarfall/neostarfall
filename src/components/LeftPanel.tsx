@@ -219,11 +219,7 @@ export default function LeftPanel(props: { className?: string }) {
 						/>
 					</div>
 
-					<Tree
-						items={items}
-						expandAll={search !== ""}
-						expandOnHover={search === ""}
-					/>
+					<Tree items={items} expandAll={search !== ""} />
 				</div>
 			</div>
 

@@ -1,3 +1,4 @@
+import { useHash } from "../lib/hash";
 import { type JSX, useState } from "react";
 
 export type Item = ({ children: Item[] } | { callback: () => void }) & {
@@ -6,6 +7,7 @@ export type Item = ({ children: Item[] } | { callback: () => void }) & {
 };
 
 function Item(props: { item: Item; expand?: boolean }) {
+	const hash = useHash();
 	const [hidden, setHidden] = useState(!props.expand);
 
 	const isHidden = props.expand ? false : hidden;
@@ -40,12 +42,16 @@ function Item(props: { item: Item; expand?: boolean }) {
 	}
 
 	const prevSymbol = " ";
+	let activeStyle = "";
+	if (hash.slice(1) === props.item.key) {
+		activeStyle = "bg-blue-500/50";
+	}
 
 	return (
 		<li className="outline-none select-none">
 			<button
 				type="button"
-				className="flex py-2 lg:py-0 flex-row gap-1 hover:cursor-pointer outline-none"
+				className={`flex py-2 lg:py-0 flex-row gap-1 hover:cursor-pointer outline-none ${activeStyle}`}
 				onClick={() => {
 					if ("callback" in props.item) {
 						props.item.callback();
@@ -62,7 +68,6 @@ function Item(props: { item: Item; expand?: boolean }) {
 export default function Tree(props: {
 	items: Item[];
 	expandAll?: boolean;
-	expandOnHover?: boolean;
 }) {
 	return (
 		<ol className="font-mono text-sm lg:text-base w-full max-h-[400px] md:max-h-[600px] overflow-y-auto overflow-x-clip">

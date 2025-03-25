@@ -1,7 +1,9 @@
+import RealmView, { type Realm } from "../components/RealmView";
 import ParamsView from "../components/ParamsView";
 import TypeView from "../components/TypeView";
 import { type SFDocMethodEntry, useDocs } from "../lib/docs";
 import { getGithubLinkFromPath } from "../lib/src";
+import { formatDescription } from "../lib/format";
 
 export function InlineMethod(props: {
 	lib?: string;
@@ -16,10 +18,13 @@ export function InlineMethod(props: {
 
 	let method: SFDocMethodEntry | undefined;
 	let separator = ".";
+	let realm: Realm | undefined;
 	if (props.lib) {
 		method = docs?.Libraries[props.lib].methods[props.name];
+		realm = docs?.Libraries[props.lib].realm;
 	} else if (props.type) {
 		method = docs?.Types[props.type].methods[props.name];
+		realm = docs?.Types[props.type].realm;
 		separator = ":";
 	}
 
@@ -32,8 +37,10 @@ export function InlineMethod(props: {
 			<div className="flex flex-row items-center justify-between px-2 py-2">
 				<button
 					type="button"
-					className="text-lg lg:text-2xl font-bold px-2 py-1 rounded-md outline-none bg-zinc-900 w-fit flex flex-row justify-start font-mono"
+					className="text-lg lg:text-2xl font-bold px-2 py-1 rounded-md outline-none bg-zinc-900 w-fit flex flex-row justify-start items-center font-mono"
 				>
+					<RealmView realm={realm} className="mr-2 size-6 hidden md:inline" />
+
 					{(() => {
 						if (props.lib !== "builtins") {
 							return (
@@ -70,7 +77,7 @@ export function InlineMethod(props: {
 			</div>
 
 			<pre className="text-wrap lg:px-2">
-				{method.description.trim().replaceAll("\n ", "\n")}
+				{formatDescription(method.description)}
 			</pre>
 
 			{(() => {
