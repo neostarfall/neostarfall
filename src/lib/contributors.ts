@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 
-const HiddenList: Record<string, true> = {
-	"web-flow": true,
-	"\x74\x68\x65\x67\x72\x62\x39\x33": true,
-};
+const HiddenList = new Set(["web-flow", "\x74\x68\x65\x67\x72\x62\x39\x33"]);
 
 type Contributor = {
 	name: string;
@@ -39,7 +36,7 @@ export async function getContributors(): Promise<Contributor[]> {
 		link: c.html_url,
 		avatar: c.avatar_url,
 		contributions: c.contributions,
-		hidden: HiddenList[c.login],
+		hidden: HiddenList.has(c.login),
 	}));
 
 	return CachedContributors;

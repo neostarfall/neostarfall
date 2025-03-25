@@ -3,3 +3,8 @@
 @theme {
     --color-primary: #4a90e2;
 }
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(91, 91, 91) transparent;
+}

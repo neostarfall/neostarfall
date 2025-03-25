@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import Logo from "../../assets/logo-round.svg";
-import { IoSearch, IoStar } from "react-icons/io5";
+import { IoLogoGithub, IoSearch, IoStar } from "react-icons/io5";
 import Tree, { type Item } from "./Tree";
 
-import { getSFDocs, useDocs, type SFDocs } from "../lib/docs";
+import { useDocs } from "../lib/docs";
 import RealmView from "./RealmView";
+import { FaDiscord } from "react-icons/fa";
 
 export default function LeftPanel(props: { className?: string }) {
 	const searchInputRef = useRef<HTMLInputElement>(null);
@@ -181,40 +181,68 @@ export default function LeftPanel(props: { className?: string }) {
 
 	return (
 		<div
-			className={`bg-zinc-800 text-white flex flex-col gap-2 p-1 lg:px-4 lg:py-2 h-full ${props.className ?? ""}`}
+			className={`bg-zinc-800 text-white flex flex-col h-full ${props.className ?? ""}`}
 		>
-			<a
-				className="flex flex-row items-center gap-2 hover:cursor-pointer"
-				href="."
-			>
-				<img alt="Neostarfall Logo" src={Logo} className="size-8 lg:size-16" />
-
-				<span className="text-xl md:text-2xl lg:text-4xl overflow-hidden">
-					Neostarfall
-				</span>
-			</a>
-
-			<div className="flex flex-col gap-2">
-				<div
-					className="flex flex-row gap-2 py-2 lg:py-1 text-sm lg:text-base items-center border-b border-white"
-					onClick={() => searchInputRef.current?.focus()}
-					onKeyDown={(e) => {
-						if (e.key === "Enter" || e.key === " ") {
-							e.preventDefault();
-							searchInputRef.current?.focus();
-						}
-					}}
+			<div className="h-11/12 p-1 lg:px-4 lg:py-2 flex flex-col gap-2 overflow-clip">
+				<a
+					className="flex flex-row items-center gap-2 hover:cursor-pointer"
+					href="."
 				>
-					<IoSearch className="hidden lg:block" />
-					<input
-						className="outline-none"
-						placeholder="Search"
-						ref={searchInputRef}
-						onChange={(e) => setSearch(e.currentTarget.value)}
+					<img
+						alt="Neostarfall Logo"
+						src="https://raw.githubusercontent.com/neostarfall/neostarfall/refs/heads/master/branding/neostarfall-round.svg"
+						className="size-8 lg:size-16"
+					/>
+
+					<span className="text-xl md:text-2xl lg:text-4xl overflow-hidden">
+						Neostarfall
+					</span>
+				</a>
+
+				<div className="flex flex-col gap-2 h-full">
+					<div
+						className="flex flex-row gap-2 py-2 lg:py-1 text-sm lg:text-base items-center border-b border-white"
+						onClick={() => searchInputRef.current?.focus()}
+						onKeyDown={(e) => {
+							if (e.key === "Enter" || e.key === " ") {
+								e.preventDefault();
+								searchInputRef.current?.focus();
+							}
+						}}
+					>
+						<IoSearch className="hidden lg:block" />
+						<input
+							className="outline-none"
+							placeholder="Search"
+							ref={searchInputRef}
+							onChange={(e) => setSearch(e.currentTarget.value)}
+						/>
+					</div>
+
+					<Tree
+						items={items}
+						expandAll={search !== ""}
+						expandOnHover={search === ""}
 					/>
 				</div>
+			</div>
 
-				<Tree items={items} expandAll={search !== ""} />
+			<div className="border-t border-white flex flex-row text-2xl md:text-3xl justify-center h-12">
+				<div className="w-1/2 flex flex-row gap-2 justify-evenly items-center">
+					<a
+						href="https://github.com/neostarfall/neostarfall"
+						className="hover:text-white/70 transition duration-100"
+					>
+						<IoLogoGithub />
+					</a>
+
+					<a
+						href="https://discord.gg/aSXXa4urpm"
+						className="hover:text-white/70 transition duration-100"
+					>
+						<FaDiscord />
+					</a>
+				</div>
 			</div>
 		</div>
 	);
