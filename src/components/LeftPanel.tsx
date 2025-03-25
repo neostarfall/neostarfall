@@ -194,7 +194,7 @@ export default function LeftPanel(props: { className?: string }) {
 						className="size-8 lg:size-16"
 					/>
 
-					<span className="text-xl md:text-2xl lg:text-4xl overflow-hidden">
+					<span className="text-lg md:text-xl lg:text-4xl overflow-hidden">
 						Neostarfall
 					</span>
 				</a>
