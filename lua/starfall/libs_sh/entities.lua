@@ -1007,7 +1007,7 @@ function ents_methods:getChipName()
 	if GetGateName then
 		return tostring(GetGateName(ent))
 	else
-		SF.Throw("The entity is not a starfall or expression2!", 2)
+		SF.Throw("The entity is not a neostarfall or expression2!", 2)
 	end
 end
 
@@ -1016,7 +1016,7 @@ end
 -- @return string The author of the starfall chip.
 function ents_methods:getChipAuthor()
 	local ent_tbl = Ent_GetTable(getent(self))
-	if not ent_tbl.Starfall then SF.Throw("The entity isn't a starfall chip", 2) end
+	if not ent_tbl.Starfall then SF.Throw("The entity isn't a neostarfall chip", 2) end
 
 	return tostring(ent_tbl.author)
 end
@@ -1028,7 +1028,7 @@ end
 -- @return number Current quota used this Think
 function ents_methods:getQuotaUsed()
 	local ent_tbl = Ent_GetTable(getent(self))
-	if not ent_tbl.Starfall then SF.Throw("The entity isn't a starfall chip", 2) end
+	if not ent_tbl.Starfall then SF.Throw("The entity isn't a neostarfall chip", 2) end
 
 	return ent_tbl.instance and ent_tbl.instance.cpu_total or 0
 end
@@ -1044,7 +1044,7 @@ function ents_methods:getQuotaAverage()
 	elseif Ent_GetClass(ent)=="gmod_wire_expression2" then
 		return SERVER and ent_tbl.context.timebench or ent_tbl.GetOverlayData(ent).timebench
 	else
-		SF.Throw("The entity isn't a starfall or expression2 chip", 2)
+		SF.Throw("The entity isn't a neostarfall or expression2 chip", 2)
 	end
 end
 
@@ -1061,7 +1061,7 @@ function ents_methods:getQuotaMax()
 	elseif Ent_GetClass(ent)=="gmod_wire_expression2" then
 		return GetConVarNumber("wire_expression2_quotatime")
 	else
-		SF.Throw("The entity isn't a starfall or expression2 chip", 2)
+		SF.Throw("The entity isn't a neostarfall or expression2 chip", 2)
 	end
 end
 
@@ -1089,7 +1089,7 @@ if SERVER then
 	function ents_methods:getErroredPlayers()
 		local ent = getent(self)
 		local ent_tbl = Ent_GetTable(ent)
-		if not ent_tbl.Starfall then SF.Throw("The entity isn't a starfall chip", 2) end
+		if not ent_tbl.Starfall then SF.Throw("The entity isn't a neostarfall chip", 2) end
 
 		local plys = {}
 		for ply, _ in pairs(ent_tbl.ErroredPlayers) do
