@@ -9,7 +9,7 @@ SF.PreprocessData = {
 		include = function(self, args)
 			if #args == 0 then return "Empty include directive" end
 
-			if table.HasValue(self.includes, args) then
+			if self.includes[args] then
 				return "Duplicate include directive: " .. args
 			end
 
@@ -17,32 +17,32 @@ SF.PreprocessData = {
 				-- HTTP approach
 				local httpUrl, httpName = string.match(args, "^(.+)%s+as%s+(.+)$")
 				if not httpUrl then return "Bad include format - Expected '--@include http://url as filename'" end
-				self.httpincludes[#self.httpincludes + 1] = { httpUrl, httpName }
+				self.httpincludes[httpName] = httpUrl
 			else
 				-- Standard/Filesystem approach
-				self.includes[#self.includes + 1] = args
+				self.includes[args] = true
 			end
 		end,
 
 		includedata = function(self, args)
 			if #args == 0 then return "Empty includedata directive" end
 
-			if table.HasValue(self.includesdata, args) then
+			if self.includesdata[args] then
 				return "Duplicate includesdata directive: " .. args
 			end
 
-			self.includesdata[#self.includesdata + 1] = args
+			self.includesdata[args] = true
 			SF.PreprocessData.directives.include(self, args)
 		end,
 
 		includedir = function(self, args)
 			if #args == 0 then return "Empty includedir directive" end
 
-			if table.HasValue(self.includesdata, args) then
+			if self.includesdata[args] then
 				return "Duplicate includedir directive: " .. args
 			end
 
-			self.includedirs[#self.includedirs + 1] = args
+			self.includedirs[args] = true
 		end,
 
 		model = function(self, args)
@@ -88,8 +88,8 @@ SF.PreprocessData = {
 					goto skip
 				end
 
-				for _, v in ipairs { self.includes, self.includedirs, self.includesdata, self.httpincludes } do
-					if table.HasValue(v, arg) then
+				for _, v in ipairs({ self.includes, self.includedirs, self.includesdata, self.httpincludes }) do
+					if v[arg] then
 						goto skip
 					end
 				end
@@ -99,18 +99,18 @@ SF.PreprocessData = {
 					goto skip
 				end
 
-				self.includes[#self.includes+1] = arg
+				self.includes[arg] = true
 
 				::skip::
 			end
 		end,
 		Postprocess = function(self, processor)
 			if self.clientmain then
-				self.clientmain = processor:ResolvePath(self.clientmain, self.path) or error("Bad --@clientmain "..self.clientmain.." in file "..self.path)
+				self.clientmain = processor:ResolvePath(self.clientmain, self.path) or error("Bad --@clientmain " .. self.clientmain .. " in file " .. self.path)
 			end
 
-			for _, incdata in ipairs(self.includesdata) do
-				incdata = processor:ResolvePath(incdata, self.path) or error("Bad --@includedata "..incdata.." in file "..self.path)
+			for incdata in pairs(self.includesdata) do
+				incdata = processor:ResolvePath(incdata, self.path) or error("Bad --@includedata " .. incdata .. " in file " .. self.path)
 				local fdata = processor.files[incdata]
 				fdata.datafile = true
 				fdata.serverorclient = self.serverorclient
@@ -149,7 +149,7 @@ SF.Preprocessor = {
 
 			local files = {} for k, v in pairs(sfdata.files) do files[k] = v end
 
-            local isMainFileObfuscated = sfdata.mainfile and self.files[sfdata.mainfile].obfuscate
+			local isMainFileObfuscated = sfdata.mainfile and self.files[sfdata.mainfile].obfuscate
 
 			for path, fdata in pairs(self.files) do
 				if fdata.owneronly then ownersenddata = true end
@@ -162,16 +162,16 @@ SF.Preprocessor = {
 					}, "\n")
 				end
 
-                local originalCode = files[path]
+				local originalCode = files[path]
 				if fdata.obfuscate or isMainFileObfuscated then
-				    files[path] = SF.ObfuscateCode(files[path])
+					files[path] = SF.ObfuscateCode(files[path])
 				elseif minifyAllScripts:GetBool() then
-                    files[path] = SF.MinifyCode(files[path])
-                    if #originalCode - #files[path] < 0 then
-                        -- revert to original code if minification is larger, which can happen in certain cases
-                        files[path] = originalCode
-                    end
-                end
+					files[path] = SF.MinifyCode(files[path])
+					if #originalCode - #files[path] < 0 then
+						-- revert to original code if minification is larger, which can happen in certain cases
+						files[path] = originalCode
+					end
+				end
 			end
 
 			if ownersenddata then
@@ -206,7 +206,7 @@ SF.Preprocessor = {
 
 	__call = function(t, files)
 		local self = setmetatable({
-			files = setmetatable({}, {__index = function(t,k) error("Invalid file: "..k) end}),
+			files = setmetatable({}, {__index = function(_, k) error("Invalid file: " .. k) end}),
 			mainfile = ""
 		}, t)
 
@@ -216,7 +216,7 @@ SF.Preprocessor = {
 				fdata:Preprocess()
 				self.files[path] = fdata
 			end
-			for path, fdata in pairs(self.files) do
+			for _, fdata in pairs(self.files) do
 				fdata:Postprocess(self)
 			end
 		end
@@ -235,7 +235,7 @@ SF.FileLoader = {
 		GetIncludePath = function(self, path, curfile)
 			return SF.ChoosePath(path, string.GetPathFromFilename(curfile), function(testpath)
 				return self.openfiles[testpath] or file.Exists("starfall/" .. testpath, "DATA")
-			end) or error("Bad include in "..curfile..": " .. path)
+			end) or error("Bad include in " .. curfile .. ": " .. path)
 		end,
 
 		AddFileToLoad = function(self, path)
@@ -245,7 +245,7 @@ SF.FileLoader = {
 			self.files[path] = fdata
 		end,
 
-		LoadUrl = function(self, url, name)
+		LoadUrl = function(self, name, url)
 			if self.files[name] then return end
 
 			local cache = self.httpCache[url]
@@ -253,7 +253,7 @@ SF.FileLoader = {
 				self.files[name] = cache
 				return
 			end
-			
+
 			local fdata = SF.PreprocessData(name)
 			self.files[name] = fdata
 			self.httpCache[url] = fdata
@@ -270,7 +270,7 @@ SF.FileLoader = {
 				end,
 				failed = function(reason)
 					if self.errored then return end
-					self.errored=true
+					self.errored = true
 					self.onfail(string.format("Could not fetch --@include link (%s): %s", url, reason))
 				end,
 			}
@@ -281,21 +281,21 @@ SF.FileLoader = {
 
 			fdata:Preprocess()
 
-			for _, v in ipairs(fdata.includesdata) do
+			for v in pairs(fdata.includesdata) do
 				self.dontParseTbl[self:GetIncludePath(v, fdata.path)] = true
 			end
-			for _, v in ipairs(fdata.includes) do
+			for v in pairs(fdata.includes) do
 				self:AddFileToLoad(self:GetIncludePath(v, fdata.path))
 			end
-			for _, v in ipairs(fdata.includedirs) do
+			for v in pairs(fdata.includedirs) do
 				local dir = self:GetIncludePath(v, fdata.path)
 				local files = file.Find("starfall/" .. dir .. "/*", "DATA")
-				for k, v in ipairs(files) do
-					self:AddFileToLoad(dir.."/"..v)
+				for _, f in ipairs(files) do
+					self:AddFileToLoad(dir .. "/" .. f)
 				end
 			end
-			for _, v in ipairs(fdata.httpincludes) do
-				self:LoadUrl(unpack(v))
+			for name, url in pairs(fdata.httpincludes) do
+				self:LoadUrl(name, url)
 			end
 		end,
 
@@ -313,14 +313,14 @@ SF.FileLoader = {
 			if ok then
 				self:Finish()
 			else
-				self.errored=true
+				self.errored = true
 				self.onfail(err)
 			end
 		end,
 
 		Finish = function(self)
 			if self.httpRequests > 0 then return end
-			self.errored=true
+			self.errored = true
 
 			local ok, err = pcall(function()
 				local files = {}
