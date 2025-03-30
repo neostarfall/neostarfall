@@ -56,6 +56,7 @@ end
 
 function net.WriteStarfall(sfdata, callback)
 	if #sfdata.mainfile > 255 then error("Main file name too large: " .. #sfdata.mainfile .. " (max is 255)") end
+
 	if SERVER then
 		if IsValid(sfdata.proc) then
 			net.WriteBool(true)
@@ -70,6 +71,7 @@ function net.WriteStarfall(sfdata, callback)
 			net.WriteBool(false)
 		end
 	end
+
 	net.WriteString(sfdata.mainfile)
 
 	if sfdata.compressed then
@@ -224,11 +226,11 @@ if SERVER then
 
 			if not (IsValid(sf) and sf:GetClass() == "starfall_processor" and sf.sfdata) then return end
 			if sf.sfdata.mainfile ~= sfdata.mainfile or sf.sfdata.owner ~= ply then return end
+
 			sfdata.owner = ply
-			sf:Compile(sfdata)
+			SF.TryCompile(ply, sf, sfdata)
 		end)
 	end)
-
 else
 
 	-- Sends starfall files to server
@@ -248,7 +250,6 @@ else
 		net.SendToServer()
 	end
 
-	
 	function SF.SendError(chip, message, traceback)
 		local owner, is_blocked = chip.owner, false
 		if IsValid(owner) then

@@ -1,7 +1,19 @@
 --@name Include
---@author INP
---@include https://raw.githubusercontent.com/neostarfall/neostarfall/master/lua/starfall/examples/included.lua as included.txt
+--@author Vurv
 
-local value = require("included.txt") -- Note the include above
-printHelloWorld() -- Call global function from included file
-print(value) -- Print returned value
+-- This part is only necessary because we pass a variable instead.
+--@include included.txt
+
+local filesWantToInclude = { "included.txt" }
+
+for _, file in ipairs(filesWantToInclude) do
+    local ret = require(file)
+    print(ret)
+end
+
+-- You can also do this via requiredir and includedir instead.
+
+-- You can also import specific files over http, giving them a name to pass to require..
+--@include https://raw.githubusercontent.com/neostarfall/neostarfall/master/lua/starfall/examples/included.lua as anotherinclude.txt
+
+local ret = require("anotherinclude.txt")

@@ -19,6 +19,34 @@ local function Ent_IsWeapon(ent) return dgetmeta(ent)==WEP_META end
 function Ent_SetParent(x,y) Ent_SetParent=ENT_META.SetParent return Ent_SetParent(x,y) end
 
 local Ply_IsSuperAdmin,Ply_Nick,Ply_PrintMessage,Ply_SteamID = PLY_META.IsSuperAdmin,PLY_META.Nick,PLY_META.PrintMessage,PLY_META.SteamID
+local prometheus = include("starfall/thirdparty/prometheus/wrapper.lua")
+prometheus.Logger.LogLevel = prometheus.Logger.LogLevel.Error
+
+local function getDirectives(code)
+	local lines = code:Split("\n")
+	local directives = {}
+
+	for _, line in ipairs(lines) do
+		line = line:Trim()
+		if line:StartsWith("--@") then
+			directives[#directives+1] = line
+		end
+	end
+
+	return directives
+end
+
+function SF.ObfuscateCode(code)
+	local directives = getDirectives(code)
+	local pipeline = prometheus.Pipeline:fromConfig(prometheus.Presets.Medium)
+	return table.concat(directives, "\n") .. "\n" .. pipeline:apply(code)
+end
+
+function SF.MinifyCode(code)
+	local directives = getDirectives(code)
+	local pipeline = prometheus.Pipeline:fromConfig(prometheus.Presets.Minify)
+	return table.concat(directives, "\n") .. "\n" .. pipeline:apply(code)
+end
 
 -- Make sure this is done after metatables have been set
 hook.Add("InitPostEntity","SF_SanitizeTypeMetatables",function()
@@ -124,8 +152,10 @@ function SF.CallOnRemove(ent, key, func, deferedfunc)
 	removedHooks[ent][key] = {func, deferedfunc}
 end
 function SF.RemoveCallOnRemove(ent, key)
+	local ret = removedHooks[ent][key]
 	removedHooks[ent][key] = nil
 	if next(removedHooks[ent])==nil then removedHooks[ent] = nil end
+	return ret
 end
 
 -------------------------------------------------------------------------------
@@ -243,6 +273,33 @@ SF.BurstObject = {
 }
 setmetatable(SF.BurstObject, SF.BurstObject)
 
+SF.PlayerCompileBurst = SF.BurstObject("compile", "compile", 3, 1, "The rate at which the burst regenerates per second.", "The number of processors allowed to be compiled in a short interval of time via the toolgun and upload pushes ( burst )")
+SF.MaxCompileLength = CreateConVar("sf_max_compile_length", "65536", FCVAR_ARCHIVE, "The maximum length of an unobfuscated Neostarfall file.")
+SF.MaxObfuscatedCompileLength = CreateConVar("sf_max_obfuscated_compile_length", "16384", FCVAR_ARCHIVE, "The maximum length of an obfuscated Neostarfall file.")
+
+function SF.TryCompile(player, sf, sfdata)
+	if SF.PlayerCompileBurst:check(player) >= 1 then
+		if sfdata.files then
+			for path, code in pairs(sfdata.files) do
+				local isObfuscated = code:find("-@obfuscate")
+				local maxLength = isObfuscated and SF.MaxObfuscatedCompileLength:GetInt() or SF.MaxCompileLength:GetInt()
+
+				if #code > maxLength then
+					SF.AddNotify(player, ("File %s is too long! (%d chars, %d maximum)"):format(path, #code, maxLength), "ERROR", 7, "ERROR1")
+					return false
+				end
+			end
+		end
+
+		SF.PlayerCompileBurst:use(player, 1)
+		sf:Compile(sfdata)
+		return true
+	end
+
+	SF.AddNotify(player, "You are compiling scripts too quickly, please wait a moment.", "ERROR", 7, "ERROR1")
+	return false
+end
+
 --- Returns a class that limits the number of something per player
 SF.LimitObject = {
 	__index = {
@@ -317,50 +374,57 @@ setmetatable(SF.LimitObject, SF.LimitObject)
 SF.EntManager = {
 	__index = {
 		register = function(self, instance, ent, onremove)
-			if not self.nocallonremove then
-				local function sf_on_remove()
-					self:onremove(instance, ent)
-					if onremove then onremove() end
-				end
-				ent.sf_on_remove = sf_on_remove
-				SF.CallOnRemove(ent, "entmanager", sf_on_remove)
-			end
-
+			if self.registryByEnt[ent] then return end
+			if self.removeCb then SF.CallOnRemove(ent, self.removeCbName, self.removeCb) end
 			self.entsByInstance[instance][ent] = true
+			self.registryByEnt[ent] = {player = instance.player, instance = instance, onremove = onremove}
 			self:free(instance.player, -1)
 		end,
-		remove = function(self, instance, ent)
-			-- ent:IsValid() used since not all types this class supports are entity
-			if not (ent and ent:IsValid()) then return end
-			if self.nocallonremove then
-				self:onremove(instance, ent)
-			else
-				-- The die function is called the next frame after 'Remove' which is too slow so call it ourself
-				SF.RemoveCallOnRemove(ent, "entmanager")
-				ent.sf_on_remove()
+		unregister = function(self, ent)
+			local register = self.registryByEnt[ent]
+			if not register then return end
+			self.registryByEnt[ent] = nil
+			if self.removeCb then SF.RemoveCallOnRemove(ent, self.removeCbName) end
+			self:free(register.player, 1)
+
+			if register.instance then
+				self.entsByInstance[register.instance][ent] = nil
 			end
-			ent:Remove()
+			if register.onremove then
+				register.onremove(ent)
+			end
 		end,
-		onremove = function(self, instance, ent)
-			self.entsByInstance[instance][ent] = nil
-			self:free(instance.player, 1)
+		remove = function(self, ent)
+			self:unregister(ent)
+			if ent:IsValid() then ent:Remove() end
 		end,
 		clear = function(self, instance)
 			for ent in pairs(self.entsByInstance[instance]) do
-				self:remove(instance, ent)
+				self:remove(ent)
 			end
 		end,
 		deinitialize = function(self, instance, shouldclear)
+			if not rawget(self.entsByInstance, instance) then return end
 			if shouldclear then
 				self:clear(instance)
+			else
+				for ent in pairs(self.entsByInstance[instance]) do
+					self.registryByEnt[ent].instance = nil
+				end
 			end
 			self.entsByInstance[instance] = nil
 		end
 	},
 	__call = function(p, cvarname, limitname, max, maxhelp, scale, nocallonremove)
 		local t = SF.LimitObject(cvarname, limitname, max, maxhelp, scale)
-		t.nocallonremove = nocallonremove or false
 		t.entsByInstance = setmetatable({},{__index = function(t,k) local r = {} t[k]=r return r end})
+		t.registryByEnt = {}
+		if nocallonremove then
+			t.removeCb = false
+		else
+			t.removeCb = function(ent) t:unregister(ent) end
+			t.removeCbName = "entmanager"..cvarname
+		end
 		return setmetatable(t, p)
 	end
 }

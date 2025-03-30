@@ -1,0 +1,3 @@
+[submodule "lua/starfall/thirdparty/prometheus"]
+	path = lua/starfall/thirdparty/prometheus
+	url = https://github.com/neostarfall/prometheus.git

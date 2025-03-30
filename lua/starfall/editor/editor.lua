@@ -625,7 +625,7 @@ if CLIENT then
 			local BonePos, BoneAng = ply:GetBonePosition(BoneIndx)
 			local particle = emitter:Add("radon/starfall2", BonePos + Vector(math.random(-10, 10), math.random(-10, 10), 60 + math.random(0, 10)))
 			if particle then
-				particle:SetColor(math.random(30, 50), math.random(40, 150), math.random(180, 220))
+				particle:SetColor(math.random(235, 255), math.random(190, 195), math.random(0, 20))
 				particle:SetVelocity(Vector(0, 0, -40))
 
 				particle:SetDieTime(1.5)

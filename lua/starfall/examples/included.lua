@@ -1,7 +1,8 @@
 -- This file gets included in the include example
+local MyLibrary = {}
 
-function printHelloWorld() -- Define a global function
-	print("Hello World!")
+function MyLibrary.add(a, b)
+    return a + b
 end
 
-return 5 -- Return a value
+return MyLibrary
