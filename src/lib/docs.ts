@@ -58,16 +58,12 @@ export async function fetchSFDocs(): Promise<SFDocs> {
 	return await docs.json();
 }
 
-class GlobalDocManager {
+class GlobalDocManager extends EventTarget {
 	private docs: SFDocs | null = null;
-	private listeners: Array<(docs: SFDocs) => void> = [];
 
 	setDocs(docs: SFDocs) {
 		this.docs = docs;
-
-		for (const listener of this.listeners) {
-			listener(docs);
-		}
+		this.dispatchEvent(new CustomEvent("docsLoaded", { detail: docs }));
 	}
 
 	hasDocs(): boolean {
@@ -77,40 +73,28 @@ class GlobalDocManager {
 	getDocs(): SFDocs | null {
 		return this.docs;
 	}
-
-	addListener(listener: (docs: SFDocs) => void) {
-		if (this.docs) {
-			listener(this.docs);
-		} else {
-			this.listeners.push(listener);
-		}
-	}
-
-	removeListener(listener: (docs: SFDocs) => void) {
-		const index = this.listeners.indexOf(listener);
-		if (index !== -1) {
-			this.listeners.splice(index, 1);
-		}
-	}
 }
 
-window.globalDocManager = new GlobalDocManager();
+export const globalDocManager = new GlobalDocManager();
+window.globalDocManager = globalDocManager;
 
 export function useDocs() {
 	const [docs, setDocs] = useState<SFDocs | null>(null);
 
 	useEffect(() => {
-		const onUpdate = (docs: SFDocs) => setDocs(docs);
-		window.globalDocManager.addListener(onUpdate);
+		const onUpdate = (e: Event) => {
+			const customEvent = e as CustomEvent<SFDocs>;
+			setDocs(customEvent.detail);
+		};
 
-		if (!window.globalDocManager.hasDocs()) {
-			fetchSFDocs().then((fetchedDocs) => {
-				window.globalDocManager.setDocs(fetchedDocs);
-			});
+		if (window.globalDocManager.hasDocs()) {
+			setDocs(window.globalDocManager.getDocs());
 		}
 
+		window.globalDocManager.addEventListener("docsLoaded", onUpdate);
+
 		return () => {
-			window.globalDocManager.removeListener(onUpdate);
+			window.globalDocManager.removeEventListener("docsLoaded", onUpdate);
 		};
 	}, []);
 

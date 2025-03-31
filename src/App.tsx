@@ -3,6 +3,7 @@ import "./index.css";
 
 import LeftPanel from "./components/LeftPanel";
 import RightPanel from "./components/RightPanel";
+import { fetchSFDocs, globalDocManager } from "./lib/docs";
 
 function App() {
 	return (
@@ -16,3 +17,10 @@ function App() {
 // biome-ignore lint/style/noNonNullAssertion: <explanation>
 const root = createRoot(document.getElementById("root")!);
 root.render(<App />);
+
+const searchParams = new URLSearchParams(window.location.search);
+
+if (!searchParams.get("nofetch")) {
+	const docs = await fetchSFDocs();
+	globalDocManager.setDocs(docs);
+}
