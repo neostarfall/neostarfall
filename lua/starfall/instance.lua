@@ -8,6 +8,8 @@ local dsethook, dgethook = debug.sethook, debug.gethook
 local dgetmeta = debug.getmetatable
 local SysTime = SysTime
 
+SF.ExtraSecurity = CreateConVar("sf_extra_secure", 0, FCVAR_ARCHIVE, "Enable extra security checks for starfall scripts. This will make your scripts run slower, but in return will make exploits significantly harder to come by.")
+
 if SERVER then
 	SF.cpuQuota = CreateConVar("sf_timebuffer", 0.005, FCVAR_ARCHIVE, "The max average the CPU time can reach.")
 	SF.cpuBufferN = CreateConVar("sf_timebuffersize", 100, FCVAR_ARCHIVE, "The window width of the CPU time quota moving average.")
@@ -269,8 +271,15 @@ function SF.Instance:BuildEnvironment()
 		[TYPE_NIL] = true,
 	}
 
-	local function WrapObject(object)
+	local function WrapObject(object, ty)
+		ty = ty or TypeID(object)
+
+		if safe_types[ty] then
+			return object
+		end
+
 		local metatable = dgetmeta(object)
+
 		if metatable then
 			local wrap = object_wrappers[metatable]
 			if wrap then
@@ -282,10 +291,7 @@ function SF.Instance:BuildEnvironment()
 				end
 			end
 		end
-		-- Do not elseif here because strings do have a metatable.
-		if safe_types[TypeID(object)] then
-			return object
-		end
+
 		-- Clientside holograms don't have a gmod metatype so check manually
 		if isentity(object) and object.IsSFHologram then
 			return self.Types.Hologram.Wrap(object)
@@ -307,28 +313,32 @@ function SF.Instance:BuildEnvironment()
 	end
 	self.UnwrapObject = UnwrapObject
 
-	function self.Sanitize(original)
-		local completed_tables = {}
+	local Sanitize
+	function Sanitize(tbl, completed_tables)
+		completed_tables = completed_tables or {}
 
-		local function RecursiveSanitize(tbl)
-			local return_list = {}
-			completed_tables[tbl] = return_list
-			for key, value in pairs(tbl) do
-				local keyt = TypeID(key)
-				local valuet = TypeID(value)
-				if not safe_types[keyt] then
-					key = WrapObject(key) or (keyt == TYPE_TABLE and (completed_tables[key] or RecursiveSanitize(key)) or nil)
-				end
-				if not safe_types[valuet] then
-					value = WrapObject(value) or (valuet == TYPE_TABLE and (completed_tables[value] or RecursiveSanitize(value)) or nil)
-				end
-				return_list[key] = value
+		local return_list = {}
+		completed_tables[tbl] = return_list
+
+		for key, value in pairs(tbl) do
+			local keyt = TypeID(key)
+			local valuet = TypeID(value)
+
+			if not safe_types[keyt] then
+				key = WrapObject(key) or (keyt == TYPE_TABLE and (completed_tables[key] or Sanitize(key, completed_tables)) or nil)
 			end
-			return return_list
+
+			if not safe_types[valuet] then
+				value = WrapObject(value) or (valuet == TYPE_TABLE and (completed_tables[value] or Sanitize(value, completed_tables)) or nil)
+			end
+
+			return_list[key] = value
 		end
 
-		return RecursiveSanitize(original)
+		return return_list
 	end
+
+	self.Sanitize = Sanitize
 
 	function self.Unsanitize(original)
 		local completed_tables = {}
@@ -393,7 +403,203 @@ function SF.Instance:BuildEnvironment()
 			end
 		end
 	end
-	table.Inherit( self.env, self.Libraries ) 
+
+	-- TODO: Make this faster by using documentation of function parameters.
+	if SF.ExtraSecurity:GetBool() then
+		local COUNT_VARARG = 10
+
+		local cases = 0
+		local varargCases = 0
+
+		local function getFrozen(t)
+			return t
+		end
+
+		---@param docInfo { returnCount?: number, paramCount?: number, name?: string }
+		---@param fn function
+		---@return function
+		local function GetSecured(docInfo, fn)
+			local debugInfo = debug.getinfo(fn, "uS")
+
+			docInfo.returnCount = docInfo.returnCount or COUNT_VARARG
+			docInfo.paramCount = docInfo.paramCount or (debugInfo.isvararg and COUNT_VARARG or debugInfo.nparams)
+
+			cases = cases + 1
+
+			if docInfo.returnCount == 0 and docInfo.paramCount == 0 then
+				-- This still wraps so no return is accidentally given.
+				return function()
+					fn()
+				end
+			elseif docInfo.returnCount == 0 and docInfo.paramCount == 1 then
+				return function(arg1)
+					fn(getFrozen(arg1))
+				end
+			elseif docInfo.returnCount == 0 and docInfo.paramCount == 2 then
+				return function(arg1, arg2)
+					fn(getFrozen(arg1), getFrozen(arg2))
+				end
+			elseif docInfo.returnCount == 0 and docInfo.paramCount == 3 then
+				return function(arg1, arg2, arg3)
+					fn(getFrozen(arg1), getFrozen(arg2), getFrozen(arg3))
+				end
+			elseif docInfo.returnCount == 0 and docInfo.paramCount == 4 then
+				return function(arg1, arg2, arg3, arg4)
+					fn(getFrozen(arg1), getFrozen(arg2), getFrozen(arg3), getFrozen(arg4))
+				end
+			elseif docInfo.returnCount == 1 and docInfo.paramCount == 0 then
+				return function()
+					return WrapObject(fn())
+				end
+			elseif docInfo.returnCount == 2 and docInfo.paramCount == 0 then
+				return function()
+					local ret1, ret2 = fn()
+					return WrapObject(ret1), WrapObject(ret2)
+				end
+			elseif docInfo.returnCount == 0 and docInfo.paramCount == 1 then
+				return function(arg1)
+					fn(getFrozen(arg1))
+				end
+			elseif docInfo.returnCount == 1 and docInfo.paramCount == 1 then
+				return function(arg1)
+					return WrapObject(fn(getFrozen(arg1)))
+				end
+			elseif docInfo.returnCount == 1 and docInfo.paramCount == 2 then
+				return function(arg1, arg2)
+					return WrapObject(fn(getFrozen(arg1), getFrozen(arg2)))
+				end
+			elseif docInfo.returnCount == 1 and docInfo.paramCount == 3 then
+				return function(arg1, arg2, arg3)
+					return WrapObject(fn(getFrozen(arg1), getFrozen(arg2), getFrozen(arg3)))
+				end
+			elseif docInfo.returnCount == 1 and docInfo.paramCount == 4 then
+				return function(arg1, arg2, arg3, arg4)
+					return WrapObject(fn(getFrozen(arg1), getFrozen(arg2), getFrozen(arg3), getFrozen(arg4)))
+				end
+			else
+				varargCases = varargCases + 1
+				print("vararg case", docInfo.returnCount, docInfo.paramCount, docInfo.name)
+				return function(...)
+					return unpack( Sanitize({fn( unpack(getFrozen({...})) )}) )
+				end
+			end
+		end
+
+		---@param methodData DocMethod
+		local function getReturnCountFromDoc(methodData)
+			if methodData.returns then
+				local retCount = 0
+
+				for _, returnInfo in ipairs(methodData.returns) do
+					local ty = returnInfo.type or "any"
+
+					if string.find(ty, "%.%.%.") then
+						return 10
+					end
+
+					retCount = retCount + 1
+				end
+
+				return retCount
+			end
+
+			return 0
+		end
+
+		---@param methodData DocMethod
+		local function getParamCountFromDoc(methodData)
+			if methodData.params then
+				local paramCount = 0
+
+				for _, paramInfo in ipairs(methodData.params) do
+					local ty = paramInfo.type or "any"
+
+					if string.find(ty, "%.%.%.") then
+						return 10
+					end
+
+					paramCount = paramCount + 1
+				end
+
+				return paramCount
+			end
+
+			return 0
+		end
+
+		for typeName, meta in pairs(self.Types) do
+			local typeData = SF.Docs.Types[typeName]
+
+			if not typeData then
+				goto cont
+			end
+
+			if meta.Methods then
+				for methodName, fn in pairs(meta.Methods) do
+					local methodData = typeData.methods[methodName]
+
+					if methodData then
+						local returnCount = getReturnCountFromDoc(methodData)
+						local paramCount = getParamCountFromDoc(methodData)
+
+						meta.Methods[methodName] = GetSecured({ name = methodName, returnCount = returnCount, paramCount = paramCount }, fn)
+					else
+						meta.Methods[methodName] = GetSecured({ name = methodName }, fn)
+					end
+				end
+			end
+
+			::cont::
+		end
+
+		for libraryName, meta in pairs(self.Libraries) do
+			local libraryData = SF.Docs.Libraries[libraryName]
+
+			if not libraryData then
+				goto cont
+			end
+
+			if meta.Methods then
+				for methodName, fn in pairs(meta.Methods) do
+					local methodData = libraryData.methods[methodName]
+
+					if methodData then
+						local returnCount = getReturnCountFromDoc(methodData)
+						local paramCount = getParamCountFromDoc(methodData)
+
+						meta.Methods[methodName] = GetSecured({ name = methodName, returnCount = returnCount, paramCount = paramCount }, fn)
+					else
+						meta.Methods[methodName] = GetSecured({ name = methodName }, fn)
+					end
+				end
+			end
+
+			::cont::
+		end
+
+		local builtinMeta = SF.Docs.Libraries.builtins
+		for methodName, fn in pairs(self.env) do
+			if type(fn) ~= "function" then
+				goto cont
+			end
+
+			local methodData = builtinMeta.methods[methodName]
+			if methodData then
+				local returnCount = getReturnCountFromDoc(methodData)
+				local paramCount = getParamCountFromDoc(methodData)
+
+				self.env[methodName] = GetSecured({ name = methodName, returnCount = returnCount, paramCount = paramCount }, fn)
+			else
+				self.env[methodName] = GetSecured({ name = methodName }, fn)
+			end
+
+			::cont::
+		end
+
+		print("???", cases, varargCases)
+	end
+
+	table.Inherit( self.env, self.Libraries )
 	self.env._G = self.env
 	self:DoAliases()
 end
