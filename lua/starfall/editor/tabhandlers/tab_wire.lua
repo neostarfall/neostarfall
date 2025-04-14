@@ -29,6 +29,7 @@ local table_insert = table.insert
 local table_sort = table.sort
 local surface_SetDrawColor = surface.SetDrawColor
 local surface_DrawRect = surface.DrawRect
+local surface_DrawOutlinedRect = surface.DrawOutlinedRect
 local surface_SetFont = surface.SetFont
 local surface_GetTextSize = surface.GetTextSize
 local surface_PlaySound = surface.PlaySound
@@ -321,6 +322,14 @@ function PANEL:OnValidate(s, r, m, go_to)
 	self:SetCaret({ r, 0 })
 end
 
+local nsf_autocomplete_controlstyle = CreateClientConVar( "nsf_autocomplete_controlstyle", "0", true, false )
+
+local AC_STYLE_DEFAULT = 0 -- Default style - Tab/CTRL+Tab to choose item;\nEnter/Space to use;\nArrow keys to abort.
+local AC_STYLE_VISUALCSHARP = 1 -- Visual C# Style - Ctrl+Space to use the top match;\nArrow keys to choose item;\nTab/Enter/Space to use;\nCode validation hotkey (ctrl+space) moved to ctrl+b.
+local AC_STYLE_SCROLLER = 2 -- Scroller style - Mouse scroller to choose item;\nMiddle mouse to use.
+local AC_STYLE_SCROLLER_ENTER = 3 -- Scroller Style w/ Enter - Mouse scroller to choose item;\nEnter to use.
+local AC_STYLE_ECLIPSE = 4 -- Eclipse Style - Enter to use top match;\nTab to enter auto completion menu;\nArrow keys to choose item;\nEnter to use;\nSpace to abort.
+local AC_STYLE_ATOM = 5 -- Atom style - Tab/Enter to use, arrow keys to choose
 
 function PANEL:Init()
 	self:SetCursor("beam")
@@ -1533,6 +1542,7 @@ function PANEL:_OnTextChanged()
 	end
 
 	self:SetSelection(text)
+	self:AC_showAutocomplete()
 	if self.OnTextChanged then self:OnTextChanged() end
 end
 
@@ -2673,6 +2683,8 @@ function PANEL:_OnKeyCodeTyped(code)
 		handled = self:OnShortcut(code, shift)
 	end
 
+	self:AC_showAutocomplete()
+
 	return handled
 end
 
@@ -2778,7 +2790,7 @@ function PANEL:SkipPattern(pattern)
 end
 
 function PANEL:IsDirectiveLine()
-	local line = self:GetRowText(caret[1])
+	local line = self:GetRowText(self.Caret[1])
 	return line:match("^@") ~= nil
 end
 
@@ -2790,6 +2802,19 @@ function PANEL:getWordStart(caret, getword)
 			return { caret[1], startpos }, getword and line:sub(startpos, endpos-1) or nil
 		end
 	end
+
+	return { caret[1], 1 }
+end
+
+function PANEL:getWordlikeStart(caret, getword)
+	local line = self:GetRowText(caret[1])
+
+	for startpos, endpos in line:gmatch("()[%w%._]+()") do
+		if startpos <= caret[2] and endpos >= caret[2] then
+			return { caret[1], startpos }, getword and line:sub(startpos, endpos-1) or nil
+		end
+	end
+
 	return { caret[1], 1 }
 end
 
@@ -2803,6 +2828,493 @@ function PANEL:getWordEnd(caret, getword)
 	end
 	return { caret[1], #line + 1 }
 end
+
+-- Autocomplete by Vurv
+
+local nsf_autocomplete_maxresults = CreateClientConVar( "nsf_autocomplete_maxresults", 10, true, false )
+
+function PANEL:AC_getPreviousWord()
+	local ln, col = self.Caret[1], self.Caret[2]
+	local row = self:GetRowText(ln)
+	local startpos, _, word = row:sub(1, col - 1):find("(%w+)[^%w]+(%w*)$", 1)
+	if not startpos then startpos, word = 1, "" end
+
+	return word, self:GetArea({ { ln, startpos - 1 }, { ln, startpos } })
+end
+
+function PANEL:AC_saveVariables()
+
+end
+
+function PANEL:AC_setVisible( bool )
+	if self.AC_panelVisible == bool or not self.AC_panel then return end
+
+	self.AC_panelVisible = bool
+	self.AC_panel:SetVisible( bool )
+	self.AC_panel.infolist:SetPos( 1000, 1000 )
+end
+
+---@alias SuggestionType "library" | "value"
+---@alias Suggestion { name: string, desc: string, type: SuggestionType, color: Color }
+
+---@type Suggestion[]
+PANEL.AC_suggestionsList = {}
+
+function PANEL:AC_populateDirectiveResults()
+	return false
+end
+
+local AC_COLOR_CONSTANT = Color(86, 156, 214)
+local AC_COLOR_FUNCTION = Color(220, 220, 170)
+local AC_COLOR_VARIABLE = Color(156, 220, 254)
+local AC_COLOR_KEYWORD = Color(197, 134, 192)
+
+function PANEL:AC_populateVariableResults(typing --[[@param typing string?]])
+	if not typing then
+		return false
+	end
+
+	---@type Suggestion[]
+	local suggestions = {}
+
+	for kw in pairs(self.CurrentMode.Keywords) do
+		---@cast kw string
+
+		if kw:StartsWith(typing) and kw ~= typing then
+			suggestions[#suggestions + 1] = {
+				name = kw,
+				description = "The keyword " .. kw,
+				type = "value",
+
+				replacement = function(self, editor)
+					return kw, #kw
+				end,
+
+				color = AC_COLOR_KEYWORD,
+			}
+		end
+	end
+
+	for kw in pairs(self.CurrentMode.KeywordsConst) do
+		---@cast kw string
+
+		if kw:StartsWith(typing) and kw ~= typing then
+			suggestions[#suggestions + 1] = {
+				name = kw,
+				description = "The keyword " .. kw,
+				type = "value",
+
+				replacement = function(self, editor)
+					return kw, #kw
+				end,
+
+				color = AC_COLOR_CONSTANT,
+			}
+		end
+	end
+
+	for libName, libData in pairs(SF.Docs.Libraries) do
+		---@cast libName string
+
+		local foundMethod = false
+
+		if not libData.methods then
+			goto cont
+		end
+
+		if typing:find(".", 1, true) then
+			for funcName in pairs(libData.methods) do
+				---@cast funcName string
+				local fullName = libName .. "." .. funcName
+	
+				if fullName:StartsWith(typing) and fullName ~= typing then
+					suggestions[#suggestions + 1] = {
+						name = funcName,
+						description = "The function " .. fullName,
+						type = "value",
+
+						replacement = function(self, editor)
+							return fullName, #fullName
+						end,
+
+						color = AC_COLOR_FUNCTION,
+					}
+
+					foundMethod = true
+				end
+			end
+		end
+
+		::cont::
+
+		if not foundMethod then
+			if libName:StartsWith(typing) and libName ~= typing then
+				suggestions[#suggestions + 1] = {
+					name = libName,
+					description = "The library " .. libName,
+					type = "library",
+
+					replacement = function(self, editor)
+						return libName, #libName
+					end,
+
+					color = AC_COLOR_FUNCTION,
+				}
+			end
+		end
+	end
+
+	self.AC_suggestionsList = suggestions--{ { name = "math", desc = "math lib", type = "library", color = Color(255, 0, 0) } }
+	return true
+end
+
+--- Runs before populating results.
+--- This provides context for the autocompletion, and can return false to abort the operation.
+function PANEL:AC_populateResults()
+	local caret = self:CopyPosition(self.Caret)
+	local tokenname = self:GetTokenAtPosition(caret)
+
+	-- If inside string or comment, don't autocomplete
+	if tokenname and (tokenname == "string" or tokenname == "comment") then
+		caret[2] = caret[2] - 1
+		tokenname = self:GetTokenAtPosition(caret)
+
+		if tokenname and (tokenname == "string" or tokenname == "comment") then
+			self:AC_setVisible(false)
+			return false
+		end
+	end
+
+	local start, typing = self:getWordlikeStart(self.Caret, true)
+	if typing then
+		-- Writing a variable. Wait for user to stop writing to avoid running a ton of times.
+		timer.Create("SF_AC_saveVariable", 0.6, 1, function()
+			if self and self.AC_saveVariables then
+				self:AC_saveVariables()
+			end
+		end)
+	end
+
+	self.AC_suggestionsList = {}
+
+	local ret = true
+
+	if self:IsDirectiveLine() then
+		ret = self:AC_populateDirectiveResults()
+	else
+		local prevWord = self:AC_getPreviousWord()
+
+		if prevWord ~= "function" and prevWord ~= "local" then -- don't autocomplete while writing a function
+			ret = self:AC_populateVariableResults(typing)
+		end
+	end
+
+	if ret == true then
+		-- Sort suggestions, clamp to max
+		table.sort(self.AC_suggestionsList, function(a, b)
+			return a.name < b.name
+		end)
+
+		local suggestions = {}
+		for i = 1, math.min(nsf_autocomplete_maxresults:GetInt(), #self.AC_suggestionsList) do
+			if not self.AC_suggestionsList[i] then break end
+			suggestions[i] = self.AC_suggestionsList[i]
+		end
+		self.AC_suggestionsList = suggestions
+
+		return true
+	end
+
+	return false
+end
+
+function PANEL:AC_applySuggestion(suggestion --[[ @param suggestion Suggestion ]])
+
+end
+
+local function SimpleWrap( txt, width )
+	local ret = ""
+
+	local prev_end, prev_newline = 0, 0
+	for cur_end in txt:gmatch( "[^ \n]+()" ) do
+		local w, _ = surface_GetTextSize( txt:sub( prev_newline, cur_end ) )
+		if w > width then
+			ret = ret .. txt:sub( prev_newline, prev_end ) .. "\n"
+			prev_newline = prev_end + 1
+		end
+		prev_end = cur_end
+	end
+	ret = ret .. txt:sub( prev_newline )
+
+	return ret
+end
+
+function PANEL:AC_fillInfoList(suggestion --[[@param suggestion Suggestion]])
+	local panel = self.AC_panel
+
+	if not suggestion or not suggestion.description then
+		panel:SetSize( panel.curw, panel.curh )
+		panel.infolist:SetPos( 1000, 1000 )
+		return
+	end
+
+	local infolist = panel.infolist
+	infolist:Clear()
+
+	local desc_label = vgui.Create("DLabel")
+	infolist:AddItem( desc_label )
+
+	local desc = "description here..."
+
+	local maxw = 164
+	local maxh = 0
+
+	if desc and desc ~= "" then
+		desc = "Description:\n" .. desc
+	end
+
+	if not desc or desc == "" then
+		panel:SetSize( panel.curw, panel.curh )
+		infolist:SetPos( 1000, 1000 )
+		return
+	end
+
+	-- Wrap the text, set it, and calculate size
+	desc = SimpleWrap( desc, maxw )
+	desc_label:SetText( desc )
+	desc_label:SizeToContents()
+	local _, texth = surface_GetTextSize( desc )
+
+	-- If it's bigger than the size of the panel, change it
+	if panel.curh < texth + 4 then panel:SetTall( texth + 6 ) else panel:SetTall( panel.curh ) end
+	if maxh + texth > panel:GetTall() then maxw = maxw + 25 end
+
+	-- Set other positions/sizes/etc
+	panel:SetWide( panel.curw + maxw )
+	infolist:SetPos( panel.curw, 1 )
+	infolist:SetSize( maxw - 1, panel:GetTall() - 2 )
+end
+
+function PANEL:AC_createPanel()
+	-- Create the panel
+	local panel = vgui.Create( "DPanel",self )
+	panel:SetSize( 100, 202 )
+	panel.selected = {}
+	panel.Paint = function( pnl, w, h )
+		surface_SetDrawColor(20, 20, 20, 220)
+		surface_DrawRect(0, 0, w, h)
+
+		surface_SetDrawColor(70, 70, 70, 255)
+		surface_DrawOutlinedRect(0, 0, w, h)
+	end
+
+	-- Override think, to make it listen for key presses
+	panel.Think = function( pnl, code )
+		if table.IsEmpty(self.AC_suggestionsList) or not self.AC_panelVisible then return end
+
+		local mode = nsf_autocomplete_controlstyle:GetInt()
+		if mode == AC_STYLE_DEFAULT then
+
+			if input.IsKeyDown( KEY_ENTER ) or input.IsKeyDown( KEY_SPACE ) then -- Use
+				self:AC_setVisible( false )
+				self:AC_applySuggestion( self.AC_suggestionsList[pnl.selected] )
+			elseif input.IsKeyDown( KEY_TAB ) and not pnl.AlreadySelected then -- Select
+				if input.IsKeyDown( KEY_LCONTROL ) then -- If control is held down
+					pnl.selected = pnl.selected - 1 -- Scroll up
+					if pnl.selected < 1 then pnl.selected = #self.AC_suggestionsList end
+				else -- If control isn't held down
+					pnl.selected = pnl.selected + 1 -- Scroll down
+					if pnl.selected > #self.AC_suggestionsList then pnl.selected = 1 end
+				end
+				self:AC_fillInfoList( self.AC_suggestionsList[pnl.selected] ) -- Fill the info list
+				pnl:RequestFocus()
+				pnl.AlreadySelected = true -- To keep it from scrolling a thousand times a second
+			elseif pnl.AlreadySelected and not input.IsKeyDown( KEY_TAB ) then
+				pnl.AlreadySelected = nil
+			elseif input.IsKeyDown( KEY_UP ) or input.IsKeyDown( KEY_DOWN ) or input.IsKeyDown( KEY_LEFT ) or input.IsKeyDown( KEY_RIGHT ) then
+				self:AC_setVisible( false )
+			end
+		elseif mode == AC_STYLE_VISUALCSHARP or mode == AC_STYLE_ATOM then
+
+			if input.IsKeyDown( KEY_TAB ) or input.IsKeyDown( KEY_ENTER ) or input.IsKeyDown( KEY_SPACE ) then -- Use
+				self:AC_setVisible( false )
+				self:AC_applySuggestion( self.AC_suggestionsList[pnl.selected] )
+			elseif input.IsKeyDown( KEY_DOWN ) and not pnl.AlreadySelected then -- Select
+				pnl.selected = pnl.selected + 1 -- Scroll down
+				if pnl.selected > #self.AC_suggestionsList then pnl.selected = 1 end
+				self:AC_fillInfoList( self.AC_suggestionsList[pnl.selected] ) -- Fill the info list
+				pnl.AlreadySelected = true -- To keep it from scrolling a thousand times a second
+			elseif input.IsKeyDown( KEY_UP ) and not pnl.AlreadySelected then -- Select
+				pnl.selected = pnl.selected - 1 -- Scroll up
+				if pnl.selected < 1 then pnl.selected = #self.AC_suggestionsList end
+				self:AC_fillInfoList( self.AC_suggestionsList[pnl.selected] ) -- Fill the info list
+				pnl.AlreadySelected = true -- To keep it from scrolling a thousand times a second
+			elseif pnl.AlreadySelected and not input.IsKeyDown( KEY_UP ) and not input.IsKeyDown( KEY_DOWN ) then
+				pnl.AlreadySelected = nil
+			end
+
+		elseif mode == AC_STYLE_SCROLLER then
+
+			if input.IsMouseDown( MOUSE_MIDDLE ) then
+				self:AC_setVisible( false )
+				self:AC_applySuggestion( self.AC_suggestionsList[pnl.selected] )
+			end
+
+		elseif mode == AC_STYLE_SCROLLER_ENTER then
+
+			if input.IsKeyDown( KEY_ENTER ) then
+				self:AC_setVisible( false )
+				self:AC_applySuggestion( self.AC_suggestionsList[pnl.selected] )
+			end
+
+		elseif mode == AC_STYLE_ECLIPSE then
+
+			if input.IsKeyDown( KEY_ENTER ) then -- Use
+				self:AC_setVisible( false )
+				self:AC_applySuggestion( self.AC_suggestionsList[pnl.selected] )
+			elseif input.IsKeyDown( KEY_SPACE ) then
+				self:AC_setVisible( false )
+			elseif input.IsKeyDown( KEY_DOWN ) and not pnl.AlreadySelected then -- Select
+				pnl.selected = pnl.selected + 1 -- Scroll down
+				if pnl.selected > #self.AC_suggestionsList then pnl.selected = 1 end
+				self:AC_fillInfoList( self.AC_suggestionsList[pnl.selected] ) -- Fill the info list
+				pnl.AlreadySelected = true -- To keep it from scrolling a thousand times a second
+			elseif input.IsKeyDown( KEY_UP ) and not pnl.AlreadySelected then -- Select
+				pnl.selected = pnl.selected - 1 -- Scroll up
+				if pnl.selected < 1 then pnl.selected = #self.AC_suggestionsList end
+				self:AC_fillInfoList( self.AC_suggestionsList[pnl.selected] ) -- Fill the info list
+				pnl.AlreadySelected = true -- To keep it from scrolling a thousand times a second
+			elseif pnl.AlreadySelected and not input.IsKeyDown( KEY_UP ) and not input.IsKeyDown( KEY_DOWN ) then
+				pnl.AlreadySelected = nil
+			end
+
+		end
+	end
+
+	-- Create list
+	local list = vgui.Create( "DPanelList", panel )
+	list:StretchToParent( 1,1,1,1 )
+	list.Paint = function() end
+
+	-- Create info list
+	local infolist = vgui.Create( "DPanelList", panel )
+	infolist:SetPos( 1000, 1000 )
+	infolist:SetSize( 100, 200 )
+	infolist:EnableVerticalScrollbar( true )
+	infolist.Paint = function() end
+
+	self.AC_panel = panel
+	panel.list = list
+	panel.infolist = infolist
+	self:AC_setVisible( false )
+end
+
+function PANEL:AC_fillList()
+	local panel = self.AC_panel
+	panel.list:Clear()
+	panel.selected = 0
+	local maxw = 15
+
+	surface.SetFont(self.CurrentFont)
+
+	local suggestionsList = self.AC_suggestionsList
+
+	-- Add all suggestions to the list
+	for i, suggestion in ipairs(suggestionsList) do
+		local niceName = suggestion.name
+
+		local txt = vgui.Create("DLabel")
+		txt:SetText( "" )
+		txt:SetCursor("hand")
+
+		txt.Paint = function( pnl, w, h )
+			local backgroundColor
+			if panel.selected == i then
+				surface_SetDrawColor(50, 50, 50, 150)
+				-- todo: make the color brighter
+				backgroundColor = suggestion.color:AddBrightness(1.0)
+			else
+				surface_SetDrawColor(30, 30, 30, 150)
+				backgroundColor = suggestion.color
+			end
+
+			surface_DrawRect(0, 0, w, h)
+			surface_SetDrawColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a)
+			surface_DrawRect(0, 0, 4, h)
+
+			surface.SetFont(self.CurrentFont)
+			local _, h2 = surface.GetTextSize(niceName)
+
+			surface.SetTextPos( 6, (h / 2) - (h2 / 2) )
+			surface.SetTextColor( 255, 255, 255, 255 )
+			surface.DrawText(niceName)
+		end
+
+		-- Enable mouse presses
+		txt.OnMousePressed = function( pnl, code )
+			if code == MOUSE_LEFT then
+				self:AC_setVisible( false )
+				self:AC_applySuggestion( pnl.suggestion )
+			end
+		end
+
+		-- Enable mouse hovering
+		txt.OnCursorEntered = function( pnl )
+			panel.selected = pnl.count
+			self:AC_fillInfoList( pnl.suggestion )
+		end
+
+		panel.list:AddItem( txt )
+
+		-- get the width of the widest suggestion
+		local w,_ = surface_GetTextSize( niceName )
+		w = w + 15
+		if w > maxw then maxw = w end
+	end
+
+	-- Size and positions etc
+	panel:SetSize( maxw, #suggestionsList * 20 + 2 )
+	panel.curw = maxw
+	panel.curh = #suggestionsList * 20 + 2
+	panel.list:StretchToParent( 1,1,1,1 )
+	panel.infolist:SetPos( 1000, 1000 )
+end
+
+function PANEL:AC_showAutocomplete()
+	if not self.AC_panel then
+		self:AC_createPanel()
+	end
+
+	self.AC_suggestionsList = {}
+
+	if not self:AC_populateResults() then
+		self:AC_setVisible(false)
+		return
+	end
+
+	local suggestionsList = self.AC_suggestionsList
+	if #suggestionsList == 0 then
+		self:AC_setVisible(false)
+		return
+	end
+
+	-- Show the panel
+	local panel = self.AC_panel
+	self:AC_setVisible( true )
+
+	-- Calculate its position
+	local caret = self:CopyPosition( self.Caret )
+	local wordStart = self:getWordStart({ caret[1], caret[2] - 1 })
+
+	local x = self.FontWidth * (wordStart[2] - self.Scroll[2] + 1) + 48
+	local y = self.FontHeight * (wordStart[1] - self.Scroll[1] + 1) + 2
+
+	panel:SetPos(x, y)
+
+	self:AC_fillList()
+end
+
+-- Autocomplete
 
 function PANEL:NextPattern(pattern)
 	if not self.character then return false end

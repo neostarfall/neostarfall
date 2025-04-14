@@ -57,6 +57,16 @@ local keyword_const = {
 	["..."] = kwNoParenthesis
 }
 
+EDITOR.KeywordsConst = keyword_const
+EDITOR.Keywords = {}
+
+for k, v in pairs(keywords) do
+	EDITOR.Keywords[k] = v
+end
+for k, v in pairs(storageTypes) do
+	EDITOR.Keywords[k] = v
+end
+
 -- fallback for nonexistant entries:
 local fallback_meta = { __index = function(tbl, index) return {} end }
 setmetatable(keywords, fallback_meta)
