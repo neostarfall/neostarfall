@@ -323,6 +323,7 @@ function PANEL:OnValidate(s, r, m, go_to)
 end
 
 local nsf_autocomplete_controlstyle = CreateClientConVar( "nsf_autocomplete_controlstyle", "0", true, false )
+local nsf_autocomplete_list_max_width = CreateClientConVar( "nsf_autocomplete_list_max_width", "600", true, false )
 
 local AC_STYLE_DEFAULT = 0 -- Default style - Tab/CTRL+Tab to choose item;\nEnter/Space to use;\nArrow keys to abort.
 local AC_STYLE_VISUALCSHARP = 1 -- Visual C# Style - Ctrl+Space to use the top match;\nArrow keys to choose item;\nTab/Enter/Space to use;\nCode validation hotkey (ctrl+space) moved to ctrl+b.
@@ -2789,9 +2790,9 @@ function PANEL:SkipPattern(pattern)
 	return text
 end
 
-function PANEL:IsDirectiveLine()
+function PANEL:AC_isDirectiveLine()
 	local line = self:GetRowText(self.Caret[1])
-	return line:match("^@") ~= nil
+	return line:match("^%s*%-%-@") ~= nil
 end
 
 function PANEL:getWordStart(caret, getword)
@@ -2855,19 +2856,57 @@ function PANEL:AC_setVisible( bool )
 end
 
 ---@alias SuggestionType "library" | "value"
----@alias Suggestion { name: string, desc: string, type: SuggestionType, color: Color }
+---@alias Suggestion { name: string, desc: string, type: SuggestionType, color: Color, replacement: fun(s: Suggestion, f: PANEL): string, number }
 
 ---@type Suggestion[]
 PANEL.AC_suggestionsList = {}
-
-function PANEL:AC_populateDirectiveResults()
-	return false
-end
 
 local AC_COLOR_CONSTANT = Color(86, 156, 214)
 local AC_COLOR_FUNCTION = Color(220, 220, 170)
 local AC_COLOR_VARIABLE = Color(156, 220, 254)
 local AC_COLOR_KEYWORD = Color(197, 134, 192)
+local AC_COLOR_DIRECTIVE = AC_COLOR_CONSTANT
+
+---@param method { params?: { name: string, type: string }[], returns: { name?: string, type: string }[] }
+local function getMethodParamsStr(method)
+	local params = {}
+
+	if not method.params then
+		return "()"
+	end
+
+	for _, param in ipairs(method.params) do
+		params[#params + 1] = param.name
+	end
+
+	return "(" .. table.concat(params, ", ") .. ")"
+end
+
+function PANEL:AC_populateDirectiveResults(typing --[[@param typing string?]])
+	if not typing then
+		return false
+	end
+
+	for dirName, dirData in pairs(SF.Docs.Directives) do
+		---@cast dirName string
+
+		if dirName:StartsWith(typing) then
+			self.AC_suggestionsList[#self.AC_suggestionsList + 1] = {
+				name = dirName,
+				desc = "The directive " .. dirName,
+				type = "value",
+
+				replacement = function(self, editor)
+					return dirName, #dirName
+				end,
+
+				color = AC_COLOR_DIRECTIVE,
+			}
+		end
+	end
+
+	return true
+end
 
 function PANEL:AC_populateVariableResults(typing --[[@param typing string?]])
 	if not typing then
@@ -2880,10 +2919,10 @@ function PANEL:AC_populateVariableResults(typing --[[@param typing string?]])
 	for kw in pairs(self.CurrentMode.Keywords) do
 		---@cast kw string
 
-		if kw:StartsWith(typing) and kw ~= typing then
+		if kw:StartsWith(typing) then
 			suggestions[#suggestions + 1] = {
 				name = kw,
-				description = "The keyword " .. kw,
+				desc = "The keyword " .. kw,
 				type = "value",
 
 				replacement = function(self, editor)
@@ -2898,10 +2937,10 @@ function PANEL:AC_populateVariableResults(typing --[[@param typing string?]])
 	for kw in pairs(self.CurrentMode.KeywordsConst) do
 		---@cast kw string
 
-		if kw:StartsWith(typing) and kw ~= typing then
+		if kw:StartsWith(typing) then
 			suggestions[#suggestions + 1] = {
 				name = kw,
-				description = "The keyword " .. kw,
+				desc = "The keyword " .. kw,
 				type = "value",
 
 				replacement = function(self, editor)
@@ -2923,14 +2962,16 @@ function PANEL:AC_populateVariableResults(typing --[[@param typing string?]])
 		end
 
 		if typing:find(".", 1, true) then
-			for funcName in pairs(libData.methods) do
+			for funcName, funcMethod in pairs(libData.methods) do
+				local paramStr = getMethodParamsStr(funcMethod)
+
 				---@cast funcName string
 				local fullName = libName .. "." .. funcName
-	
-				if fullName:StartsWith(typing) and fullName ~= typing then
+
+				if fullName:StartsWith(typing) then
 					suggestions[#suggestions + 1] = {
-						name = funcName,
-						description = "The function " .. fullName,
+						name = funcName .. paramStr,
+						desc = funcMethod.description,
 						type = "value",
 
 						replacement = function(self, editor)
@@ -2948,10 +2989,10 @@ function PANEL:AC_populateVariableResults(typing --[[@param typing string?]])
 		::cont::
 
 		if not foundMethod then
-			if libName:StartsWith(typing) and libName ~= typing then
+			if libName:StartsWith(typing) then
 				suggestions[#suggestions + 1] = {
 					name = libName,
-					description = "The library " .. libName,
+					desc = "The library " .. libName,
 					type = "library",
 
 					replacement = function(self, editor)
@@ -2999,8 +3040,8 @@ function PANEL:AC_populateResults()
 
 	local ret = true
 
-	if self:IsDirectiveLine() then
-		ret = self:AC_populateDirectiveResults()
+	if self:AC_isDirectiveLine() then
+		ret = self:AC_populateDirectiveResults(typing)
 	else
 		local prevWord = self:AC_getPreviousWord()
 
@@ -3028,8 +3069,43 @@ function PANEL:AC_populateResults()
 	return false
 end
 
-function PANEL:AC_applySuggestion(suggestion --[[ @param suggestion Suggestion ]])
+function PANEL:AC_applySuggestion(suggestion --[[ @param suggestion? Suggestion ]])
+	if not suggestion then return false end
+	local ret = false
 
+	-- Get word position
+	local wordStart = self:getWordlikeStart( self.Caret )
+	local wordEnd = self:getWordEnd( self.Caret )
+
+	local replacement, caretOffset = suggestion:replacement(self)
+
+	-- Check if anything needs changing
+	local selection = self:GetArea( { wordStart, wordEnd } )
+	if selection == replacement then -- There's no point in doing anything.
+		return false
+	end
+
+	-- Overwrite selection
+	if replacement and replacement ~= "" then
+		self:SetArea( { wordStart, wordEnd }, replacement )
+
+		-- Move caret
+		if caretOffset then
+			self.Start = { wordStart[1], wordStart[2] + caretOffset }
+			self.Caret = { wordStart[1], wordStart[2] + caretOffset }
+		else
+			self.Start = { wordStart[1],wordStart[2]+#replacement }
+			self.Caret = { wordStart[1],wordStart[2]+#replacement }
+		end
+
+		ret = true
+	end
+
+	self:ScrollCaret()
+
+	self:RequestFocus()
+
+	return ret
 end
 
 local function SimpleWrap( txt, width )
@@ -3049,10 +3125,14 @@ local function SimpleWrap( txt, width )
 	return ret
 end
 
+local function fixDesc(desc)
+	return desc:Trim():gsub("\n%s+", "\n")
+end
+
 function PANEL:AC_fillInfoList(suggestion --[[@param suggestion Suggestion]])
 	local panel = self.AC_panel
 
-	if not suggestion or not suggestion.description then
+	if not suggestion or not suggestion.desc then
 		panel:SetSize( panel.curw, panel.curh )
 		panel.infolist:SetPos( 1000, 1000 )
 		return
@@ -3064,7 +3144,7 @@ function PANEL:AC_fillInfoList(suggestion --[[@param suggestion Suggestion]])
 	local desc_label = vgui.Create("DLabel")
 	infolist:AddItem( desc_label )
 
-	local desc = "description here..."
+	local desc = fixDesc(suggestion.desc)
 
 	local maxw = 164
 	local maxh = 0
@@ -3085,14 +3165,16 @@ function PANEL:AC_fillInfoList(suggestion --[[@param suggestion Suggestion]])
 	desc_label:SizeToContents()
 	local _, texth = surface_GetTextSize( desc )
 
+	local desiredH = math.max(texth, 150)
+
 	-- If it's bigger than the size of the panel, change it
-	if panel.curh < texth + 4 then panel:SetTall( texth + 6 ) else panel:SetTall( panel.curh ) end
-	if maxh + texth > panel:GetTall() then maxw = maxw + 25 end
+	if panel.curh < desiredH + 4 then panel:SetTall( desiredH + 6 ) else panel:SetTall( panel.curh ) end
+	if maxh + desiredH > panel:GetTall() then maxw = maxw + 25 end
 
 	-- Set other positions/sizes/etc
-	panel:SetWide( panel.curw + maxw )
+	panel:SetWide( panel.curw + maxw + 50 )
 	infolist:SetPos( panel.curw, 1 )
-	infolist:SetSize( maxw - 1, panel:GetTall() - 2 )
+	infolist:SetSize( maxw + 50, panel:GetTall() - 2 )
 end
 
 function PANEL:AC_createPanel()
@@ -3226,6 +3308,7 @@ function PANEL:AC_fillList()
 		local txt = vgui.Create("DLabel")
 		txt:SetText( "" )
 		txt:SetCursor("hand")
+		txt.suggestion = suggestion
 
 		txt.Paint = function( pnl, w, h )
 			local backgroundColor
@@ -3269,6 +3352,9 @@ function PANEL:AC_fillList()
 		-- get the width of the widest suggestion
 		local w,_ = surface_GetTextSize( niceName )
 		w = w + 15
+
+		w = math.min(nsf_autocomplete_list_max_width:GetInt(), w)
+
 		if w > maxw then maxw = w end
 	end
 
