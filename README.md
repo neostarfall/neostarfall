@@ -19,7 +19,7 @@
 
 ## Installation
 
-- Run `git clone https://github.com/neostarfall/neostarfall` inside of `steamapps/common/Garrysmod/garrysmod/addons`
+- Run `git clone --recursive https://github.com/neostarfall/neostarfall` inside of `steamapps/common/Garrysmod/garrysmod/addons`
 
 - [Subscribe to the workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3454707364)
 
