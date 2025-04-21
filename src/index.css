@@ -1,8 +1,6 @@
-@import "tailwindcss";
-
-@theme {
-    --color-primary: #4a90e2;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 * {
     scrollbar-width: thin;

@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 import { build, BunPlugin, type BuildConfig } from "bun";
-import plugin from "bun-plugin-tailwind";
 import { existsSync, readFileSync, readSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import path from "node:path";
@@ -141,7 +140,7 @@ const start = performance.now();
 const result = await build({
 	entrypoints: [path.resolve("./src/index.html")],
 	outdir,
-	plugins: [plugin],
+	plugins: [],
 	minify: true,
 	target: "browser",
 	sourcemap: "none",

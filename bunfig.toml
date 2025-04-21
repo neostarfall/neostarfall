@@ -1,4 +1,4 @@
 
 [serve.static]
-plugins = ["bun-plugin-tailwind"]
+plugins = []
 env = "BUN_PUBLIC_*"
