@@ -21,6 +21,9 @@ root.render(<App />);
 const searchParams = new URLSearchParams(window.location.search);
 
 if (!searchParams.get("nofetch")) {
-	const docs = await fetchSFDocs();
-	globalDocManager.setDocs(docs);
+	// Don't use top level await, old versions of CEF don't support it.
+	fetchSFDocs()
+		.then((docs) => {
+			globalDocManager.setDocs(docs);
+		});
 }
