@@ -23,7 +23,7 @@ export default function Contributors() {
 				{contributors.map((c) => (
 					<div
 						key={c.name}
-						className={`flex flex-row items-center ${c.hidden ? "blur-xs hover:blur-none transition duration-200" : ""}`}
+						className={`flex flex-row items-center ${c.hidden ? "blur-sm hover:blur-none transition duration-200" : ""}`}
 					>
 						<a href={c.link} className="mr-2">
 							<img src={c.avatar} className="rounded-lg w-8 h-8" alt={c.name} />
