@@ -2810,7 +2810,7 @@ end
 function PANEL:getWordlikeStart(caret, getword)
 	local line = self:GetRowText(caret[1])
 
-	for startpos, endpos in line:gmatch("()[%w%._]+()") do
+	for startpos, endpos in line:gmatch("()[%w%.:_]+()") do
 		if startpos <= caret[2] and endpos >= caret[2] then
 			return { caret[1], startpos }, getword and line:sub(startpos, endpos-1) or nil
 		end
@@ -2843,10 +2843,6 @@ function PANEL:AC_getPreviousWord()
 	return word, self:GetArea({ { ln, startpos - 1 }, { ln, startpos } })
 end
 
-function PANEL:AC_saveVariables()
-
-end
-
 function PANEL:AC_setVisible( bool )
 	if self.AC_panelVisible == bool or not self.AC_panel then return end
 
@@ -2855,8 +2851,7 @@ function PANEL:AC_setVisible( bool )
 	self.AC_panel.infolist:SetPos( 1000, 1000 )
 end
 
----@alias SuggestionType "library" | "value"
----@alias Suggestion { name: string, desc: string, type: SuggestionType, color: Color, replacement: fun(s: Suggestion, f: PANEL): string, number }
+---@alias Suggestion { name: string, desc: string, color: Color, replacement: fun(s: Suggestion, f: PANEL): string, number }
 
 ---@type Suggestion[]
 PANEL.AC_suggestionsList = {}
@@ -2876,10 +2871,82 @@ local function getMethodParamsStr(method)
 	end
 
 	for _, param in ipairs(method.params) do
-		params[#params + 1] = param.name
+		local paramType = param.type or ""
+		if paramType:find("%.%.%.") then
+			params[#params + 1] = "..." .. param.name
+		else
+			params[#params + 1] = param.name
+		end
 	end
 
 	return "(" .. table.concat(params, ", ") .. ")"
+end
+
+function PANEL:AC_isInCommentOrString()
+	local line = self:GetRowText(self.Caret[1])
+
+	local startPos = line:find("%-%-") or line:find("%-%-%[") or line:find("//") or line:find('"') or line:find("'")
+	return startPos and startPos < self.Caret[2]
+end
+
+function PANEL:AC_populateVariableResults(typing --[[@param typing string?]])
+	if not typing then
+		return false
+	end
+
+	local now = CurTime()
+	if not self.AC_savedVariables or (now - self.AC_savedVariablesTime) > 5 then
+		-- Regenerate list of variables
+		---@type table<string, "var" | "fn">
+		self.AC_savedVariables = {}
+		self.AC_savedVariablesTime = now
+
+		local sourceCode = self:GetCode()
+		for var in sourceCode:gmatch("local%s+([%w_]+)%s*") do
+			---@cast var string
+
+			if var ~= "function" then
+				self.AC_savedVariables[var] = "var"
+			end
+		end
+
+		for paramStr in sourceCode:gmatch("function[^%(]+%(([^%(]+)%)") do
+			local params = string.Split(paramStr, ",")
+			for _, param in ipairs(params) do
+				local paramName = param:Trim()
+				if paramName ~= "" and paramName ~= "function" then
+					self.AC_savedVariables[paramName] = "var"
+				end
+			end
+		end
+
+		for fn in sourceCode:gmatch("function%s+([%w_]+)%s*%(") do
+			---@cast fn string
+
+			self.AC_savedVariables[fn] = "fn"
+		end
+
+		for localFn in sourceCode:gmatch("local%s+function%s+([%w_]+)%s*%(") do
+			---@cast localFn string
+
+			self.AC_savedVariables[localFn] = "fn"
+		end
+	end
+
+	for varName, varType in pairs(self.AC_savedVariables) do
+		if varName:StartsWith(typing) then
+			self.AC_suggestionsList[#self.AC_suggestionsList + 1] = {
+				name = varName,
+				desc = "The variable " .. varName,
+
+				replacement = function(self, editor)
+					return varName, #varName
+				end,
+
+				color = varType == "var" and AC_COLOR_VARIABLE or AC_COLOR_FUNCTION,
+			}
+		end
+	end
 end
 
 function PANEL:AC_populateDirectiveResults(typing --[[@param typing string?]])
@@ -2893,8 +2960,7 @@ function PANEL:AC_populateDirectiveResults(typing --[[@param typing string?]])
 		if dirName:StartsWith(typing) then
 			self.AC_suggestionsList[#self.AC_suggestionsList + 1] = {
 				name = dirName,
-				desc = "The directive " .. dirName,
-				type = "value",
+				desc = dirData.description or ("The directive " .. dirName),
 
 				replacement = function(self, editor)
 					return dirName, #dirName
@@ -2908,7 +2974,7 @@ function PANEL:AC_populateDirectiveResults(typing --[[@param typing string?]])
 	return true
 end
 
-function PANEL:AC_populateVariableResults(typing --[[@param typing string?]])
+function PANEL:AC_populateDocResults(typing --[[@param typing string?]])
 	if not typing then
 		return false
 	end
@@ -2923,7 +2989,6 @@ function PANEL:AC_populateVariableResults(typing --[[@param typing string?]])
 			suggestions[#suggestions + 1] = {
 				name = kw,
 				desc = "The keyword " .. kw,
-				type = "value",
 
 				replacement = function(self, editor)
 					return kw, #kw
@@ -2941,7 +3006,6 @@ function PANEL:AC_populateVariableResults(typing --[[@param typing string?]])
 			suggestions[#suggestions + 1] = {
 				name = kw,
 				desc = "The keyword " .. kw,
-				type = "value",
 
 				replacement = function(self, editor)
 					return kw, #kw
@@ -2961,18 +3025,17 @@ function PANEL:AC_populateVariableResults(typing --[[@param typing string?]])
 			goto cont
 		end
 
-		if typing:find(".", 1, true) then
+		if typing:find(".", 1, true) or libName == "builtins" then
 			for funcName, funcMethod in pairs(libData.methods) do
 				local paramStr = getMethodParamsStr(funcMethod)
 
 				---@cast funcName string
-				local fullName = libName .. "." .. funcName
+				local fullName = libName == "builtins" and funcName or (libName .. "." .. funcName)
 
 				if fullName:StartsWith(typing) then
 					suggestions[#suggestions + 1] = {
 						name = funcName .. paramStr,
 						desc = funcMethod.description,
-						type = "value",
 
 						replacement = function(self, editor)
 							return fullName, #fullName
@@ -2988,12 +3051,11 @@ function PANEL:AC_populateVariableResults(typing --[[@param typing string?]])
 
 		::cont::
 
-		if not foundMethod then
+		if not foundMethod and libName ~= "builtins" then
 			if libName:StartsWith(typing) then
 				suggestions[#suggestions + 1] = {
 					name = libName,
 					desc = "The library " .. libName,
-					type = "library",
 
 					replacement = function(self, editor)
 						return libName, #libName
@@ -3005,48 +3067,80 @@ function PANEL:AC_populateVariableResults(typing --[[@param typing string?]])
 		end
 	end
 
-	self.AC_suggestionsList = suggestions--{ { name = "math", desc = "math lib", type = "library", color = Color(255, 0, 0) } }
+	local selfCall = typing:match("%:([%w_]+)")
+	local dotCall = typing:match("%.([%w_]+)")
+
+	local beginsWithSeparator = typing:find("^[%.:]")
+	local beforeSeparator = typing:match("([^%.:]+)[%.:]")
+
+	if selfCall or dotCall then
+		local methodNameTyping = selfCall or dotCall
+
+		for typeName, typeData in pairs(SF.Docs.Types) do
+			---@cast typeName string
+
+			if not typeData.methods then
+				goto cont
+			end
+
+			for funcName, funcMethod in pairs(typeData.methods) do
+				local paramStr = getMethodParamsStr(funcMethod)
+
+				---@cast funcName string
+				local callSeparator = selfCall and ":" or "."
+				local fullName = typeName .. callSeparator .. funcName
+
+				-- This is ugly but I cba to fix it properly
+				local replacement = beginsWithSeparator and (callSeparator .. funcName) or (beforeSeparator .. callSeparator .. funcName)
+
+				if funcName:StartsWith(methodNameTyping) then
+					suggestions[#suggestions + 1] = {
+						name = fullName .. paramStr,
+						desc = funcMethod.description,
+
+						replacement = function(self, editor)
+							return replacement, #replacement
+						end,
+
+						color = AC_COLOR_FUNCTION,
+					}
+				end
+			end
+
+			::cont::
+		end
+	end
+
+	self.AC_suggestionsList = suggestions
 	return true
 end
 
 --- Runs before populating results.
 --- This provides context for the autocompletion, and can return false to abort the operation.
 function PANEL:AC_populateResults()
-	local caret = self:CopyPosition(self.Caret)
-	local tokenname = self:GetTokenAtPosition(caret)
-
-	-- If inside string or comment, don't autocomplete
-	if tokenname and (tokenname == "string" or tokenname == "comment") then
-		caret[2] = caret[2] - 1
-		tokenname = self:GetTokenAtPosition(caret)
-
-		if tokenname and (tokenname == "string" or tokenname == "comment") then
-			self:AC_setVisible(false)
-			return false
-		end
+	if not SF.Docs then
+		return false
 	end
 
-	local start, typing = self:getWordlikeStart(self.Caret, true)
-	if typing then
-		-- Writing a variable. Wait for user to stop writing to avoid running a ton of times.
-		timer.Create("SF_AC_saveVariable", 0.6, 1, function()
-			if self and self.AC_saveVariables then
-				self:AC_saveVariables()
-			end
-		end)
-	end
-
+	local _, typing = self:getWordlikeStart(self.Caret, true)
 	self.AC_suggestionsList = {}
 
 	local ret = true
-
 	if self:AC_isDirectiveLine() then
 		ret = self:AC_populateDirectiveResults(typing)
-	else
+	elseif not self:AC_isInCommentOrString() then
 		local prevWord = self:AC_getPreviousWord()
 
 		if prevWord ~= "function" and prevWord ~= "local" then -- don't autocomplete while writing a function
-			ret = self:AC_populateVariableResults(typing)
+			ret = self:AC_populateDocResults(typing)
+			if ret ~= false then
+				local out = self:AC_populateVariableResults(typing)
+				if out ~= false then
+					ret = table.Add(ret, out)
+				else
+					return false
+				end
+			end
 		end
 	end
 
