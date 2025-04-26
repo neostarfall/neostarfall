@@ -3,6 +3,53 @@ import { useDocs } from "../lib/docs";
 import RealmView from "../components/RealmView";
 import { InlineMethod } from "./Method";
 import { formatDescription } from "../lib/format";
+import { ItemBuilder } from "@/components/LeftPanel";
+import { Item } from "@/components/Tree";
+
+export const getTypeItem: ItemBuilder = (docs, examples, filter) => {
+	const typesSection: Item = {
+		title: <span>Types</span>,
+		key: "types",
+		children: [],
+	};
+
+	for (const [typeName, type] of Object.entries(docs?.Types ?? {})) {
+		let foundValidChild = false;
+
+		const children = [];
+		for (const [methodName, method] of Object.entries(type.methods)) {
+			if (!filter(`${typeName}:${methodName}`)) continue;
+			foundValidChild = true;
+
+			children.push({
+				title: (
+					<span className="flex flex-row gap-1 items-center">
+						<RealmView realm={method.realm} /> {methodName}
+					</span>
+				),
+				key: `types.${typeName}.${methodName}`,
+				callback() {
+					window.location.hash = `types.${typeName}.${methodName}`;
+				},
+			});
+		}
+
+		if (!foundValidChild) continue;
+
+		typesSection.children.push({
+			title: (
+				<span className="flex flex-row gap-1 items-center">
+					<RealmView realm={type.realm} />
+					{typeName}
+				</span>
+			),
+			key: `types.${typeName}`,
+			children,
+		});
+	}
+
+	return typesSection;
+}
 
 export default function Type(props: { name: string }) {
 	const docs = useDocs();

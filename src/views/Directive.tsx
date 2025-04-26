@@ -1,5 +1,29 @@
 import { getGithubLinkFromPath } from "../lib/src";
 import { useDocs } from "../lib/docs";
+import { Item } from "@/components/Tree";
+import { ItemBuilder } from "@/components/LeftPanel";
+
+export const getDirectiveItem: ItemBuilder = (docs, examples, filter) => {
+	const directivesSection: Item = {
+		title: <span>Directives</span>,
+		key: "directives",
+		children: [],
+	};
+
+	for (const [directiveName, _] of Object.entries(docs?.Directives ?? {})) {
+		if (!filter(directiveName)) continue;
+
+		directivesSection.children.push({
+			title: <span>{`@${directiveName}`}</span>,
+			key: `directives.${directiveName}`,
+			callback() {
+				window.location.hash = `directives.${directiveName}`;
+			},
+		});
+	}
+
+	return directivesSection;
+}
 
 export default function Directive(props: { name: string }) {
 	const docs = useDocs();

@@ -1,4 +1,24 @@
+import { ItemBuilder } from "@/components/LeftPanel";
 import { useContributors } from "../lib/contributors";
+import { Item } from "@/components/Tree";
+import { IoStar } from "react-icons/io5";
+
+export const getContributorsItem: ItemBuilder = () => {
+	const contributorsSection: Item = {
+		title: (
+			<div className="flex flex-row gap-1">
+				<IoStar />
+				Contributors
+			</div>
+		),
+		key: "contributors",
+		callback() {
+			window.location.hash = "contributors";
+		},
+	};
+
+	return contributorsSection;
+}
 
 export default function Contributors() {
 	const contributors = useContributors();

@@ -1,16 +1,25 @@
 import { useEffect, useRef, useState } from "react";
-import { IoLogoGithub, IoSearch, IoStar } from "react-icons/io5";
+import { IoLogoGithub, IoSearch } from "react-icons/io5";
 import Tree, { type Item } from "./Tree";
 
-import { useDocs } from "../lib/docs";
-import RealmView from "./RealmView";
+import { type SFDocs, useDocs } from "../lib/docs";
 import { FaDiscord } from "react-icons/fa";
+import { getLibraryItem } from "@/views/Library";
+import { getTypeItem } from "@/views/Type";
+import { getHookItem } from "@/views/Hook";
+import { getDirectiveItem } from "@/views/Directive";
+import { getContributorsItem } from "@/views/Contributors";
+import { Example, useExamples } from "@/lib/examples";
+import { getExampleItem } from "@/views/Example";
+
+export type ItemBuilder = (docs: SFDocs, examples: Example[], filter: (name: string) => boolean) => Item;
 
 export default function LeftPanel(props: { className?: string }) {
 	const searchInputRef = useRef<HTMLInputElement>(null);
 	const [search, setSearch] = useState<string>("");
 	const [items, setItems] = useState<Item[]>([]);
 	const docs = useDocs();
+	const examples = useExamples();
 
 	useEffect(() => {
 		const callback = () => {
@@ -38,149 +47,18 @@ export default function LeftPanel(props: { className?: string }) {
 
 		const filter = (name: string) => {
 			if (search === "") return true;
-
 			return name.toLowerCase().includes(lowerSearch);
 		};
 
-		const librariesSection: Item = {
-			title: <span>Libraries</span>,
-			key: "libraries",
-			children: [],
-		};
-		for (const [libName, lib] of Object.entries(docs?.Libraries ?? {})) {
-			let foundValidChild = false;
-
-			const children: Item[] = [];
-			for (const [methodName, method] of Object.entries(lib.methods)) {
-				if (!filter(`${libName}.${methodName}`)) continue;
-				foundValidChild = true;
-
-				children.push({
-					title: (
-						<span className="flex flex-row gap-1 items-center">
-							<RealmView realm={method.realm} /> {methodName}
-						</span>
-					),
-					key: `libraries.${libName}.${methodName}`,
-					callback() {
-						window.location.hash = `libraries.${libName}.${methodName}`;
-					},
-				});
-			}
-
-			if (!foundValidChild) continue;
-
-			librariesSection.children.push({
-				title: (
-					<span className="flex flex-row gap-1 items-center">
-						<RealmView realm={lib.realm} />
-						{libName}
-					</span>
-				),
-				key: `libraries.${libName}`,
-				children,
-			});
-		}
-
-		items.push(librariesSection);
-
-		const typesSection: Item = {
-			title: <span>Types</span>,
-			key: "types",
-			children: [],
-		};
-		for (const [typeName, type] of Object.entries(docs?.Types ?? {})) {
-			let foundValidChild = false;
-
-			const children = [];
-			for (const [methodName, method] of Object.entries(type.methods)) {
-				if (!filter(`${typeName}:${methodName}`)) continue;
-				foundValidChild = true;
-
-				children.push({
-					title: (
-						<span className="flex flex-row gap-1 items-center">
-							<RealmView realm={method.realm} /> {methodName}
-						</span>
-					),
-					key: `types.${typeName}.${methodName}`,
-					callback() {
-						window.location.hash = `types.${typeName}.${methodName}`;
-					},
-				});
-			}
-
-			if (!foundValidChild) continue;
-
-			typesSection.children.push({
-				title: (
-					<span className="flex flex-row gap-1 items-center">
-						<RealmView realm={type.realm} />
-						{typeName}
-					</span>
-				),
-				key: `types.${typeName}`,
-				children,
-			});
-		}
-		items.push(typesSection);
-
-		const hooksSection: Item = {
-			title: <span>Hooks</span>,
-			key: "hooks",
-			children: [],
-		};
-		for (const [hookName, hook] of Object.entries(docs?.Hooks ?? {})) {
-			if (!filter(hookName)) continue;
-
-			hooksSection.children.push({
-				title: (
-					<span className="flex flex-row gap-1 items-center">
-						<RealmView realm={hook.realm} /> {hookName}
-					</span>
-				),
-				key: `hooks.${hookName}`,
-				callback() {
-					window.location.hash = `hooks.${hookName}`;
-				},
-			});
-		}
-		items.push(hooksSection);
-
-		const directivesSection: Item = {
-			title: <span>Directives</span>,
-			key: "directives",
-			children: [],
-		};
-		for (const [directiveName, _] of Object.entries(docs?.Directives ?? {})) {
-			if (!filter(directiveName)) continue;
-
-			directivesSection.children.push({
-				title: <span>{`@${directiveName}`}</span>,
-				key: `directives.${directiveName}`,
-				callback() {
-					window.location.hash = `directives.${directiveName}`;
-				},
-			});
-		}
-		items.push(directivesSection);
-
-		const contributorsSection: Item = {
-			title: (
-				<div className="flex flex-row gap-1">
-					<IoStar />
-					Contributors
-				</div>
-			),
-			key: "contributors",
-			callback() {
-				window.location.hash = "contributors";
-			},
-		};
-		items.push(contributorsSection);
+		items.push(getLibraryItem(docs, examples, filter));
+		items.push(getTypeItem(docs, examples, filter));
+		items.push(getHookItem(docs, examples, filter));
+		items.push(getDirectiveItem(docs, examples, filter));
+		items.push(getExampleItem(docs, examples, filter));
+		items.push(getContributorsItem(docs, examples, filter));
 
 		setItems(items);
-	}, [docs, search]);
+	}, [docs, examples, search]);
 
 	return (
 		<div

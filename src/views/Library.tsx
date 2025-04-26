@@ -2,6 +2,53 @@ import { getGithubLinkFromPath } from "../lib/src";
 import { useDocs } from "../lib/docs";
 import RealmView from "../components/RealmView";
 import { InlineMethod } from "./Method";
+import { ItemBuilder } from "@/components/LeftPanel";
+import { Item } from "@/components/Tree";
+
+export const getLibraryItem: ItemBuilder = (docs, examples, filter) => {
+	const librariesSection: Item = {
+		title: <span>Libraries</span>,
+		key: "libraries",
+		children: [],
+	};
+
+	for (const [libName, lib] of Object.entries(docs.Libraries ?? {})) {
+		let foundValidChild = false;
+
+		const children: Item[] = [];
+		for (const [methodName, method] of Object.entries(lib.methods)) {
+			if (!filter(`${libName}.${methodName}`)) continue;
+			foundValidChild = true;
+
+			children.push({
+				title: (
+					<span className="flex flex-row gap-1 items-center">
+						<RealmView realm={method.realm} /> {methodName}
+					</span>
+				),
+				key: `libraries.${libName}.${methodName}`,
+				callback() {
+					window.location.hash = `libraries.${libName}.${methodName}`;
+				},
+			});
+		}
+
+		if (!foundValidChild) continue;
+
+		librariesSection.children.push({
+			title: (
+				<span className="flex flex-row gap-1 items-center">
+					<RealmView realm={lib.realm} />
+					{libName}
+				</span>
+			),
+			key: `libraries.${libName}`,
+			children,
+		});
+	}
+
+	return librariesSection;
+}
 
 export default function Library(props: { name: string }) {
 	const docs = useDocs();

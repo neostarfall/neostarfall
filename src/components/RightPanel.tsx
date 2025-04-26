@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import Hook from "../views/Hook";
 import Directive from "@/views/Directive";
 import Type from "../views/Type";
-import Contributors from "./Contributors";
+import Contributors from "../views/Contributors";
 import Library from "../views/Library";
+import Example from "@/views/Example";
 
 export default function RightPanel(props: { className?: string }) {
 	const hash = useHash();
 	const [parts, setParts] = useState<string[]>([]);
+	const afterFirstDot = hash.indexOf(".") && hash.slice(hash.indexOf(".") + 1);
 
 	useEffect(() => {
 		const withoutHash = hash.slice(1);
@@ -62,6 +64,14 @@ export default function RightPanel(props: { className?: string }) {
 
 	if (parts[0] === "contributors") {
 		return <Contributors />;
+	}
+
+	if (parts[0] === "examples") {
+		const exampleFileName = afterFirstDot;
+
+		if (exampleFileName) {
+			return <Example name={exampleFileName} />;
+		}
 	}
 
 	return <Contributors />;

@@ -4,6 +4,35 @@ import { useDocs } from "../lib/docs";
 import TypeView from "../components/TypeView";
 import RealmView from "../components/RealmView";
 import { formatDescription } from "../lib/format";
+import { ItemBuilder } from "@/components/LeftPanel";
+import { Item } from "@/components/Tree";
+
+export const getHookItem: ItemBuilder = (docs, examples, filter) => {
+	const hooksSection: Item = {
+		title: <span>Hooks</span>,
+		key: "hooks",
+		children: [],
+	};
+
+	for (const [hookName, hook] of Object.entries(docs.Hooks ?? {})) {
+		if (!filter(hookName)) continue;
+
+		hooksSection.children.push({
+			title: (
+				<span className="flex flex-row gap-1 items-center">
+					<RealmView realm={hook.realm} /> {hookName}
+				</span>
+			),
+			key: `hooks.${hookName}`,
+			callback() {
+				window.location.hash = `hooks.${hookName}`;
+			},
+		});
+	}
+
+	return hooksSection;
+}
+
 
 export default function Hook(props: { name: string }) {
 	const docs = useDocs();
