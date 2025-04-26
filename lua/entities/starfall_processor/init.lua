@@ -87,8 +87,12 @@ function ENT:SendCode(recipient)
 	local others = {}
 	for _, ply in ipairs(recipient and (istable(recipient) and recipient or { recipient }) or player.GetHumans()) do
 		if ply:GetInfoNum("sf_enabled_cl", 0)==0 then continue end
-		if ply==self.owner and self.sfownerdata then
-			SF.SendStarfall("starfall_processor_download", self.sfownerdata, self.owner)
+		if ply==self.owner then
+		    if self.sfownerdata then
+			    SF.SendStarfall("starfall_processor_download", self.sfownerdata, self.owner)
+			else
+                SF.SendStarfall("starfall_processor_download", self.sforiginalsenddata, self.owner)
+			end
 		else
 			others[#others+1] = ply
 		end

@@ -148,6 +148,7 @@ SF.Preprocessor = {
 			local ownersenddata
 
 			local files = {} for k, v in pairs(sfdata.files) do files[k] = v end
+			local originalFiles = {} for k, v in pairs(sfdata.files) do originalFiles[k] = v end
 
 			local isMainFileObfuscated = sfdata.mainfile and self.files[sfdata.mainfile].obfuscate
 
@@ -200,7 +201,15 @@ SF.Preprocessor = {
 			senddata.files = files
 			senddata.compressed = SF.CompressFiles(files)
 
-			return senddata, ownersenddata
+			local originalSendData = {
+                owner = sfdata.owner,
+                mainfile = senddata.mainfile,
+                proc = sfdata.proc,
+                files = originalFiles,
+                compressed = SF.CompressFiles(originalFiles)
+            }
+
+			return senddata, ownersenddata, originalSendData
 		end,
 	},
 

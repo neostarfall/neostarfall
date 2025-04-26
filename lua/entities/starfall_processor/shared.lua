@@ -43,7 +43,7 @@ function ENT:Compile(sfdata)
 				pcall(function() self:SetCustomModel(SF.CheckModel(mainpp.model, self.owner, true)) end)
 			end
 
-			self.sfsenddata, self.sfownerdata = instance.ppdata:GetSendData(sfdata)
+			self.sfsenddata, self.sfownerdata, self.sforiginalsenddata = instance.ppdata:GetSendData(sfdata)
 			self:SendCode()
 		end
 	end
