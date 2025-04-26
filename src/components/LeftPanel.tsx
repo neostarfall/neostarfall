@@ -14,7 +14,10 @@ export default function LeftPanel(props: { className?: string }) {
 
 	useEffect(() => {
 		const callback = () => {
-			searchInputRef.current?.focus();
+			// Check if there is no text selected before focusing
+			if (!window.getSelection()?.toString()) {
+				searchInputRef.current?.focus();
+			}
 		};
 
 		window.addEventListener("keydown", callback);

@@ -6,7 +6,7 @@
   "main": "src/index.tsx",
   "module": "src/index.tsx",
   "scripts": {
-    "dev": "bun --hot src/index.tsx",
+    "dev": "bun build:css && bun --hot src/index.tsx",
     "start": "NODE_ENV=production bun src/index.tsx",
     "build:css": "bunx tailwindcss -i ./src/index.css -o ./src/output.css --minify",
     "build": "bun build:css && bun run build.ts"
