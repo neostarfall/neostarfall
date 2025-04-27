@@ -1,5 +1,4 @@
 import { createRoot } from "react-dom/client";
-// import "./index.css";
 
 import LeftPanel from "./components/LeftPanel";
 import RightPanel from "./components/RightPanel";
@@ -22,8 +21,7 @@ const searchParams = new URLSearchParams(window.location.search);
 
 if (!searchParams.get("nofetch")) {
 	// Don't use top level await, old versions of CEF don't support it.
-	fetchSFDocs()
-		.then((docs) => {
-			globalDocManager.setDocs(docs);
-		});
+	fetchSFDocs().then((docs) => {
+		globalDocManager.setDocs(docs);
+	});
 }

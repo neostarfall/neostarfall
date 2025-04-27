@@ -6,7 +6,7 @@ export type Item = ({ children: Item[] } | { callback: () => void }) & {
 	key: string;
 };
 
-function Item(props: { item: Item; expand?: boolean }) {
+export function Item(props: { item: Item; expand?: boolean }) {
 	const hash = useHash();
 	const [hidden, setHidden] = useState(!props.expand);
 
@@ -65,14 +65,15 @@ function Item(props: { item: Item; expand?: boolean }) {
 	);
 }
 
+// TODO: Delete this and exclusively use the Item component
 export default function Tree(props: {
 	items: Item[];
-	expandAll?: boolean;
+	expand?: boolean;
 }) {
 	return (
 		<ol className="font-mono text-sm lg:text-base w-full max-h-[400px] md:max-h-[600px] overflow-y-auto overflow-x-clip">
 			{props.items.map((item) => (
-				<Item item={item} key={item.key} expand={props.expandAll} />
+				<Item item={item} key={item.key} expand={props.expand} />
 			))}
 		</ol>
 	);

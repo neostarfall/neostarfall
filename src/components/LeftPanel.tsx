@@ -4,15 +4,26 @@ import Tree, { type Item } from "./Tree";
 
 import { type SFDocs, useDocs } from "../lib/docs";
 import { FaDiscord } from "react-icons/fa";
-import { getLibraryItem } from "@/views/Library";
+import { getGlobalsItem, getLibraryItem } from "@/views/Library";
 import { getTypeItem } from "@/views/Type";
 import { getHookItem } from "@/views/Hook";
 import { getDirectiveItem } from "@/views/Directive";
 import { getContributorsItem } from "@/views/Contributors";
-import { Example, useExamples } from "@/lib/examples";
+import { type Example, useExamples } from "@/lib/examples";
 import { getExampleItem } from "@/views/Example";
 
-export type ItemBuilder = (docs: SFDocs, examples: Example[], filter: (name: string) => boolean) => Item;
+export type ItemBuilder = (
+	docs: SFDocs,
+	examples: Example[],
+	filter: (name: string) => boolean,
+) => Item;
+
+function recursiveSort(item: Item) {
+	if ("children" in item) {
+		item.children.sort((a, b) => a.key.localeCompare(b.key));
+		item.children.forEach(recursiveSort);
+	}
+}
 
 export default function LeftPanel(props: { className?: string }) {
 	const searchInputRef = useRef<HTMLInputElement>(null);
@@ -50,12 +61,15 @@ export default function LeftPanel(props: { className?: string }) {
 			return name.toLowerCase().includes(lowerSearch);
 		};
 
+		items.push(getGlobalsItem(docs, examples, filter));
 		items.push(getLibraryItem(docs, examples, filter));
 		items.push(getTypeItem(docs, examples, filter));
 		items.push(getHookItem(docs, examples, filter));
 		items.push(getDirectiveItem(docs, examples, filter));
 		items.push(getExampleItem(docs, examples, filter));
 		items.push(getContributorsItem(docs, examples, filter));
+
+		items.forEach(recursiveSort);
 
 		setItems(items);
 	}, [docs, examples, search]);
@@ -100,7 +114,7 @@ export default function LeftPanel(props: { className?: string }) {
 						/>
 					</div>
 
-					<Tree items={items} expandAll={search !== ""} />
+					<Tree items={items} expand={search !== ""} />
 				</div>
 			</div>
 

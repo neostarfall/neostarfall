@@ -2,8 +2,37 @@ import { getGithubLinkFromPath } from "../lib/src";
 import { useDocs } from "../lib/docs";
 import RealmView from "../components/RealmView";
 import { InlineMethod } from "./Method";
-import { ItemBuilder } from "@/components/LeftPanel";
-import { Item } from "@/components/Tree";
+import type { ItemBuilder } from "@/components/LeftPanel";
+import type { Item } from "@/components/Tree";
+
+export const getGlobalsItem: ItemBuilder = (docs, examples, filter) => {
+	const globalsSection: Item = {
+		title: <span>Globals</span>,
+		key: "globals",
+		children: [],
+	};
+
+	for (const [name, global] of Object.entries(
+		docs.Libraries.builtins.methods ?? {},
+	)) {
+		if (!filter(name)) continue;
+
+		globalsSection.children.push({
+			title: (
+				<span className="flex flex-row gap-1 items-center">
+					<RealmView realm={global.realm} />
+					{name}
+				</span>
+			),
+			key: `libraries.builtins.${name}`,
+			callback() {
+				window.location.hash = `libraries.builtins.${name}`;
+			},
+		});
+	}
+
+	return globalsSection;
+};
 
 export const getLibraryItem: ItemBuilder = (docs, examples, filter) => {
 	const librariesSection: Item = {
@@ -13,6 +42,8 @@ export const getLibraryItem: ItemBuilder = (docs, examples, filter) => {
 	};
 
 	for (const [libName, lib] of Object.entries(docs.Libraries ?? {})) {
+		if (libName === "builtins") continue;
+
 		let foundValidChild = false;
 
 		const children: Item[] = [];
@@ -48,7 +79,7 @@ export const getLibraryItem: ItemBuilder = (docs, examples, filter) => {
 	}
 
 	return librariesSection;
-}
+};
 
 export default function Library(props: { name: string }) {
 	const docs = useDocs();

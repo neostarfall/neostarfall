@@ -18,13 +18,10 @@ export function InlineMethod(props: {
 
 	let method: SFDocMethodEntry | undefined;
 	let separator = ".";
-	let realm: Realm | undefined;
 	if (props.lib) {
 		method = docs?.Libraries[props.lib].methods[props.name];
-		realm = docs?.Libraries[props.lib].realm;
 	} else if (props.type) {
 		method = docs?.Types[props.type].methods[props.name];
-		realm = docs?.Types[props.type].realm;
 		separator = ":";
 	}
 
@@ -39,7 +36,10 @@ export function InlineMethod(props: {
 					type="button"
 					className="text-lg lg:text-2xl font-bold px-2 py-1 rounded-md outline-none bg-zinc-900 w-fit flex flex-row justify-start items-center font-mono"
 				>
-					<RealmView realm={realm} className="mr-2 size-6 hidden md:inline" />
+					<RealmView
+						realm={method.realm}
+						className="mr-2 size-6 hidden md:inline"
+					/>
 
 					{(() => {
 						if (props.lib !== "builtins") {
