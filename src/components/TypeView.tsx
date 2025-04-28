@@ -11,8 +11,9 @@ export default function TypeView(props: { name: string; className?: string }) {
 		return props.name;
 	}
 
-	// It's a base type
-	if (!docs.Types[props.name]) {
+	const classData = docs.Types[props.name];
+	if (!classData) {
+		// It's a native type, or a struct (todo)
 		return (
 			<span className={`${NATIVE_TYPE_COLOR} ${props.className ?? ""}`}>
 				{props.name}
@@ -20,17 +21,15 @@ export default function TypeView(props: { name: string; className?: string }) {
 		);
 	}
 
-	const type = docs.Types[props.name];
-
 	return (
 		<button
 			type="button"
 			className={`${SF_TYPE_COLOR} ${props.className ?? ""} hover:cursor-pointer`}
 			onClick={() => {
-				window.location.hash = `#types.${type.name}`;
+				window.location.hash = `#classes.${classData.name}`;
 			}}
 		>
-			{type.name}
+			{classData.name}
 		</button>
 	);
 }

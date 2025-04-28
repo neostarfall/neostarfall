@@ -3,7 +3,7 @@ import { useHash } from "../lib/hash";
 import { useEffect, useState } from "react";
 import Hook from "../views/Hook";
 import Directive from "@/views/Directive";
-import Type from "../views/Type";
+import Type from "../views/Class";
 import Contributors from "../views/Contributors";
 import Library from "../views/Library";
 import Example from "@/views/Example";
@@ -20,7 +20,7 @@ export default function RightPanel(props: { className?: string }) {
 		setParts(parts);
 	}, [hash]);
 
-	if (parts[0] === "types") {
+	if (parts[0] === "classes" || parts[0] === "types" /* Compatibility */) {
 		const typeName = parts[1];
 		const methodName = parts[2];
 

@@ -51,7 +51,7 @@ export function InlineMethod(props: {
 										onClick={() => {
 											window.location.hash = props.lib
 												? `libraries.${props.lib}`
-												: `types.${props.type}`;
+												: `classes.${props.type}`;
 										}}
 									>
 										{props.lib ?? props.type}

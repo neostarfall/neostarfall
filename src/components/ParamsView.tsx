@@ -26,16 +26,20 @@ export default function ParamsView(props: {
 			{(() => {
 				if (showParams) {
 					return innerParams;
-				} else {
-					return (
-						<>
-							{innerParams.slice(0, 5)}
-							<button onClick={() => setShowParams(true)} className="text-gray-400 text-nowrap">
-								[+{params.length - 5} more]
-							</button>
-						</>
-					)
 				}
+
+				return (
+					<>
+						{innerParams.slice(0, 5)}
+						<button
+							type="button"
+							onClick={() => setShowParams(true)}
+							className="text-gray-400 text-nowrap"
+						>
+							[+{params.length - 5} more]
+						</button>
+					</>
+				);
 			})()}
 			<span>)</span>
 		</div>

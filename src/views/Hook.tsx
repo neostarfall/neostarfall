@@ -4,8 +4,8 @@ import { useDocs } from "../lib/docs";
 import TypeView from "../components/TypeView";
 import RealmView from "../components/RealmView";
 import { formatDescription } from "../lib/format";
-import { ItemBuilder } from "@/components/LeftPanel";
-import { Item } from "@/components/Tree";
+import type { ItemBuilder } from "@/components/LeftPanel";
+import type { Item } from "@/components/Tree";
 
 export const getHookItem: ItemBuilder = (docs, examples, filter) => {
 	const hooksSection: Item = {
@@ -31,8 +31,7 @@ export const getHookItem: ItemBuilder = (docs, examples, filter) => {
 	}
 
 	return hooksSection;
-}
-
+};
 
 export default function Hook(props: { name: string }) {
 	const docs = useDocs();

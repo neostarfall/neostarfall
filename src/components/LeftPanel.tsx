@@ -5,7 +5,7 @@ import Tree, { type Item } from "./Tree";
 import { type SFDocs, useDocs } from "../lib/docs";
 import { FaDiscord } from "react-icons/fa";
 import { getGlobalsItem, getLibraryItem } from "@/views/Library";
-import { getTypeItem } from "@/views/Type";
+import { getClassItem } from "@/views/Class";
 import { getHookItem } from "@/views/Hook";
 import { getDirectiveItem } from "@/views/Directive";
 import { getContributorsItem } from "@/views/Contributors";
@@ -63,7 +63,7 @@ export default function LeftPanel(props: { className?: string }) {
 
 		items.push(getGlobalsItem(docs, examples, filter));
 		items.push(getLibraryItem(docs, examples, filter));
-		items.push(getTypeItem(docs, examples, filter));
+		items.push(getClassItem(docs, examples, filter));
 		items.push(getHookItem(docs, examples, filter));
 		items.push(getDirectiveItem(docs, examples, filter));
 		items.push(getExampleItem(docs, examples, filter));

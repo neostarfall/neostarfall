@@ -1,7 +1,7 @@
 import { getGithubLinkFromPath } from "../lib/src";
 import { useDocs } from "../lib/docs";
-import { Item } from "@/components/Tree";
-import { ItemBuilder } from "@/components/LeftPanel";
+import type { Item } from "@/components/Tree";
+import type { ItemBuilder } from "@/components/LeftPanel";
 
 export const getDirectiveItem: ItemBuilder = (docs, examples, filter) => {
 	const directivesSection: Item = {
@@ -23,7 +23,7 @@ export const getDirectiveItem: ItemBuilder = (docs, examples, filter) => {
 	}
 
 	return directivesSection;
-}
+};
 
 export default function Directive(props: { name: string }) {
 	const docs = useDocs();
