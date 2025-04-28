@@ -208,7 +208,10 @@ if SERVER then
 	--- Returns the 2D head direction of the NPC.
 	-- @return Vector The head direction
 	function npc_methods:getHeadDirection()
-		return vwrap(getnpc(self):GetHeadDirection())
+		local headDirection = getnpc(self):GetHeadDirection()
+		headDirection[3] = 0 -- This is garbage data
+
+		return vwrap(headDirection)
 	end
 
 	--- Returns whether the NPC is moving or not.
