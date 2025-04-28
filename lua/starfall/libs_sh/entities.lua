@@ -2100,7 +2100,7 @@ end
 -- @shared
 -- @return boolean Whether the entity is considered alive or not.
 function ents_methods:isAlive()
-	return getent(self):IsAlive()
+	return getent(self):Alive()
 end
 
 
