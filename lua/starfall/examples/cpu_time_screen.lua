@@ -14,7 +14,7 @@ end
 
 render.createRenderTarget("Background")
 -- Standard render hook.
-hook.add("render", "", function ()
+hook.add("render", "", function()
 	local maxQuota = 0.1
 	render.setColor(Color(255, 255, 255))
 	-- Print some stats to the screen
@@ -23,7 +23,9 @@ hook.add("render", "", function ()
 	render.drawText(10, 50, "Quota Max: " .. math.round(quotaMax() * 1000000) .. "us")
 
 	local quota = quotaAverage() / quotaMax()
-	if quota >= maxQuota then render.setColor(Color(255, 0, 0)) end
+	if quota >= maxQuota then
+		render.setColor(Color(255, 0, 0))
+	end
 	render.drawText(10, 70, "Percent: " .. math.round(quota * 100, 2) .. "%")
 
 	-- Set the rendertarget to our background so that we can make a bluring effect

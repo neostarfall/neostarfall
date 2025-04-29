@@ -3,21 +3,28 @@
 local urlrestrictor = SF.StringRestrictor(false)
 
 local function checkWhitelist(instance, url, key)
-	if TypeID(url) ~= TYPE_STRING then return false, "The url is not a string" end
+	if TypeID(url) ~= TYPE_STRING then
+		return false, "The url is not a string"
+	end
 
-	if not string.match(url,"^(%w-)://") then
-		url = "http://"..url
+	if not string.match(url, "^(%w-)://") then
+		url = "http://" .. url
 	end
 
 	local result = hook.Run("CanAccessUrl", url)
-	if result==true then return true
-	elseif result==false then return false, "The url was blocked"
+	if result == true then
+		return true
+	elseif result == false then
+		return false, "The url was blocked"
 	end
 
-	local prefix, site, data = string.match(url,"^(%w-)://([^/]*)/?(.*)")
-	if not site then return false, "This url is malformed" end
-	site = site.."/"..(data or "") -- Make sure there is / at the end of site
-	return urlrestrictor:check(site), "This url is not whitelisted. See https://github.com/neostarfall/neostarfall/wiki/Whitelist for more information."
+	local prefix, site, data = string.match(url, "^(%w-)://([^/]*)/?(.*)")
+	if not site then
+		return false, "This url is malformed"
+	end
+	site = site .. "/" .. (data or "") -- Make sure there is / at the end of site
+	return urlrestrictor:check(site),
+		"This url is not whitelisted. See https://github.com/neostarfall/neostarfall/wiki/Whitelist for more information."
 end
 
 local P = {}
@@ -33,7 +40,9 @@ P.checks = {
 if CLIENT then
 	P.settingsoptions[3] = "Disabled for owner"
 	P.checks[3] = function(instance, url, player)
-		if instance.player == LocalPlayer() then return true end
+		if instance.player == LocalPlayer() then
+			return true
+		end
 		return checkWhitelist(instance, url, player)
 	end
 end
@@ -41,19 +50,19 @@ end
 SF.Permissions.registerProvider(P)
 
 local function pattern(txt)
-	txt = "^"..txt.."$"
+	txt = "^" .. txt .. "$"
 	urlrestrictor:addWhitelistEntry(txt)
 end
 local function simple(txt)
-	txt = "^"..string.PatternSafe(txt).."/.*"
+	txt = "^" .. string.PatternSafe(txt) .. "/.*"
 	urlrestrictor:addWhitelistEntry(txt)
 end
 local function blacklist(txt)
-	txt = "^"..string.PatternSafe(txt)..".*"
+	txt = "^" .. string.PatternSafe(txt) .. ".*"
 	urlrestrictor:addBlacklistEntry(txt)
 end
 local function blacklistpattern(txt)
-	txt = "^"..txt.."$"
+	txt = "^" .. txt .. "$"
 	urlrestrictor:addBlacklistEntry(txt)
 end
 
@@ -66,48 +75,48 @@ end
 ---  https://dl.dropboxusercontent.com/u/12345/abc123/abc123.bin
 ---  https://www.dropbox.com/s/abcd123/efg123.txt?dl=0
 ---  https://dl.dropboxusercontent.com/content_link/abc123/file?dl=1
-simple [[dl.dropboxusercontent.com]]
-pattern [[%w+%.dl%.dropboxusercontent%.com/(.+)]]
-simple [[www.dropbox.com]]
-simple [[dl.dropbox.com]] --Sometimes redirects to usercontent link
+simple([[dl.dropboxusercontent.com]])
+pattern([[%w+%.dl%.dropboxusercontent%.com/(.+)]])
+simple([[www.dropbox.com]])
+simple([[dl.dropbox.com]]) --Sometimes redirects to usercontent link
 
 -- OneDrive
 --- Examples:
 ---  https://onedrive.live.com/redir?resid=123!178&authkey=!gweg&v=3&ithint=abcd%2cefg
-simple [[onedrive.live.com]]
-simple [[api.onedrive.com]]
+simple([[onedrive.live.com]])
+simple([[api.onedrive.com]])
 
 -- Google Drive
 --- Examples:
 ---  https://docs.google.com/uc?export=download&confirm=UYyi&id=0BxUpZqVaDxVPeENDM1RtZDRvaTA
-pattern [[docs%.google%.com/uc.+]]
-pattern [[drive%.google%.com/uc.+]]
+pattern([[docs%.google%.com/uc.+]])
+pattern([[drive%.google%.com/uc.+]])
 
 -- Backblaze B2
 --- Examples:
 --- https://f002.backblazeb2.com/file/djje-CDN/ShareX/0221/1613775658.png
-pattern [[(%w+)%.backblazeb2%.com/(.+)]]
+pattern([[(%w+)%.backblazeb2%.com/(.+)]])
 
 -- Imgur
 --- Examples:
 ---  http://i.imgur.com/abcd123.xxx
-simple [[i.imgur.com]]
+simple([[i.imgur.com]])
 
 -- Gyazo
 --- Examples:
 --- https://i.gyazo.com/c3eb33a90ada4de716100e7491fa1a8d.png
-simple [[i.gyazo.com]]
+simple([[i.gyazo.com]])
 
 -- pastebin
 --- Examples:
 ---  http://pastebin.com/abcdef
-simple [[pastebin.com]]
+simple([[pastebin.com]])
 
 -- gitlab
-simple [[gitlab.com]]
+simple([[gitlab.com]])
 
 -- bitbucket
-simple [[bitbucket.org]]
+simple([[bitbucket.org]])
 
 -- github / gist
 --- Examples:
@@ -116,46 +125,45 @@ simple [[bitbucket.org]]
 ---  https://raw.github.com/github/explore/master/topics/lua/lua.png
 ---  https://user-images.githubusercontent.com/13347909/103649539-ef956e80-4f5e-11eb-94dc-d22ee20380e9.png
 ---  https://avatars2.githubusercontent.com/u/6713261?s=460&v=4
-simple [[raw.githubusercontent.com]]
-simple [[gist.githubusercontent.com]]
-simple [[raw.github.com]]
-simple [[cloud.githubusercontent.com]]
-simple [[user-images.githubusercontent.com]]
-pattern [[avatars(%d*)%.githubusercontent%.com/(.+)]]
+simple([[raw.githubusercontent.com]])
+simple([[gist.githubusercontent.com]])
+simple([[raw.github.com]])
+simple([[cloud.githubusercontent.com]])
+simple([[user-images.githubusercontent.com]])
+pattern([[avatars(%d*)%.githubusercontent%.com/(.+)]])
 
 -- TinyPic
 --- Examples:
 ---  http://i68.tinypic.com/24b3was.gif
-pattern [[i([%w-_]+)%.tinypic%.com/(.+)]]
+pattern([[i([%w-_]+)%.tinypic%.com/(.+)]])
 
 -- paste.ee
 --- Examples:
 ---  https://paste.ee/r/J3jle
-simple [[paste.ee]]
+simple([[paste.ee]])
 
 -- hastebin
 --- Examples:
 ---  http://hastebin.com/icuvacogig.txt
 
-simple [[hastebin.com]]
+simple([[hastebin.com]])
 
 -- puush
 --- Examples:
 ---  http://puu.sh/asd/qwe.obj
-simple [[puu.sh]]
+simple([[puu.sh]])
 
 -- Steam
 --- Examples:
 ---  http://images.akamai.steamusercontent.com/ugc/367407720941694853/74457889F41A19BD66800C71663E9077FA440664/
 ---  https://steamuserimages-a.akamaihd.net/ugc/1475443067859980096/685F2468519E31C5C214959EC3AA0B0757B01E1B/
 ---  https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/4000/dca12980667e32ab072d79f5dbe91884056a03a2.jpg
-simple [[steamcommunity.com/profiles]]
-simple [[steamuserimages-a.akamaihd.net]]
-simple [[steamcdn-a.akamaihd.net]]
-pattern [[images%.[%w-_]+%.steamusercontent%.com/(.+)]]
-pattern [[avatars%.[%w-_]+%.steamstatic%.com/(.+)]]
-blacklist [[steamcommunity.com/linkfilter]]
-
+simple([[steamcommunity.com/profiles]])
+simple([[steamuserimages-a.akamaihd.net]])
+simple([[steamcdn-a.akamaihd.net]])
+pattern([[images%.[%w-_]+%.steamusercontent%.com/(.+)]])
+pattern([[avatars%.[%w-_]+%.steamstatic%.com/(.+)]])
+blacklist([[steamcommunity.com/linkfilter]])
 
 -----------------
 -- End of GURL --
@@ -178,91 +186,91 @@ blacklist [[steamcommunity.com/linkfilter]]
 ---  https://cdn.discordapp.com/attachments/269175189382758400/421572398689550338/unknown.png
 ---  https://images-ext-2.discordapp.net/external/UVPTeOLUWSiDXGwwtZ68cofxU1uaA2vMb2ZCjRY8XXU/https/i.imgur.com/j0QGfKN.jpg?width=1202&height=67
 ---  https://media.discordapp.net/attachments/695591357158391879/1096409191792508958/image.png?width=1432&height=88
-pattern [[cdn[%w-_]*.discordapp%.com/(.+)]]
-pattern [[images-([%w%-]+)%.discordapp%.net/external/(.+)]]
-pattern [[media%.discordapp%.net/attachments/(.+)]]
+pattern([[cdn[%w-_]*.discordapp%.com/(.+)]])
+pattern([[images-([%w%-]+)%.discordapp%.net/external/(.+)]])
+pattern([[media%.discordapp%.net/attachments/(.+)]])
 
 -- Reddit
 --- Examples:
 ---  https://i.redd.it/u46wumt13an01.jpg
 ---  https://i.redditmedia.com/RowF7of6hQJAdnJPfgsA-o7ioo_uUzhwX96bPmnLo0I.jpg?w=320&s=116b72a949b6e4b8ac6c42487ffb9ad2
 ---  https://preview.redd.it/injjlk3t6lb51.jpg?width=640&height=800&crop=smart&auto=webp&s=19261cc37b68ae0216bb855f8d4a77ef92b76937
-simple [[i.redditmedia.com]]
-simple [[i.redd.it]]
-simple [[preview.redd.it]]
+simple([[i.redditmedia.com]])
+simple([[i.redd.it]])
+simple([[preview.redd.it]])
 
 -- ipfs
 --- Examples:
 --- https://ipfs.io/ipfs/QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco/I/m/Ellis_Sigil.jpg
-simple [[ipfs.io]]
+simple([[ipfs.io]])
 
 -- neocities
 --- Examples:
 --- https://fauux.neocities.org/LainDressSlow.gif
-pattern [[([%w-_]+)%.neocities%.org/(.+)]]
+pattern([[([%w-_]+)%.neocities%.org/(.+)]])
 
 -- Soundcloud
 --- Examples:
 --- https://i1.sndcdn.com/artworks-000046176006-0xtkjy-large.jpg
-pattern [[(%w+)%.sndcdn%.com/(.+)]]
+pattern([[(%w+)%.sndcdn%.com/(.+)]])
 
 -- Shoutcast
 --- Examples:
 --- http://yp.shoutcast.com/sbin/tunein-station.pls?id=567807
-simple [[yp.shoutcast.com]]
+simple([[yp.shoutcast.com]])
 
 -- Google Translate API
 --- Examples:
 --- http://translate.google.com/translate_tts?&q=Hello%20World&ie=utf-8&client=tw-ob&tl=en
-simple [[translate.google.com]]
+simple([[translate.google.com]])
 
 -- Youtube Image Hosting
 --- Examples:
 --- https://i.ytimg.com/vi_webp/NTw9LRFdUeE/maxresdefault.webp
-simple [[i.ytimg.com]]
+simple([[i.ytimg.com]])
 
 -- Spotify Image CDN
 --- Examples:
 --- https://i.scdn.co/image/ab67616d0000b27343e93700df19c025747eebd2
-simple [[i.scdn.co]]
+simple([[i.scdn.co]])
 
 -- Deezer Image CDN
 --- Examples:
 --- https://e-cdns-images.dzcdn.net/images/cover/dfa0fb51f7c872d87309943e17e30e81/1000x1000-000000-80-0-0.jpg
-pattern [[([%w-_]+)%.dzcdn%.net/(.+)]]
+pattern([[([%w-_]+)%.dzcdn%.net/(.+)]])
 
 -- DECTalk Online
 -- Examples:
 -- https://tts.cyzon.us/tts?text=test
-pattern [[tts.cyzon.us/(.+)]]
+pattern([[tts.cyzon.us/(.+)]])
 
 -- Revolt
 --- Examples:
 ---  https://static.revolt.chat/emoji/mutant/1f440.svg?rev=3
 ---  https://autumn.revolt.chat/emojis/01G7J9RTHKEPJM8DM19TX35M8N
 ---  https://autumn.revolt.chat/attachments/mmCR_bFMLEfBAE8mweH2u4o9_x6DiDtU9JXoSbdvZE/live-bocchi-reaction.gif
-simple [[static.revolt.chat]]
-simple [[autumn.revolt.chat]]
+simple([[static.revolt.chat]])
+simple([[autumn.revolt.chat]])
 
 -- Youtube Converter API
 --- Examples:
 ---  https://youtube.michaelbelgium.me/storage/5zrORMBb0-8.mp3
-simple [[youtube.michaelbelgium.me]]
+simple([[youtube.michaelbelgium.me]])
 
 -- Nekoweb
 --- Examples:
 ---  https://website.nekoweb.org/path/to/resource
-pattern [[([%w-_]+)%.nekoweb%.org/(.+)]]
+pattern([[([%w-_]+)%.nekoweb%.org/(.+)]])
 
 -- RawGit (raw.githack.com)
 --- Examples:
 --- https://rawcdn.githack.com/Metastruct/garrysmod-chatsounds/63658b902893e11710e51b3d94b9e57f0daaf379/sound/chatsounds/autoadd/anime/i%20love%20you.ogg
 --- https://raw.githack.com/Metastruct/garrysmod-chatsounds/master/sound/chatsounds/autoadd/anime/i%20love%20you.ogg
-simple [[raw.githack.com]]
-simple [[rawcdn.githack.com]]
+simple([[raw.githack.com]])
+simple([[rawcdn.githack.com]])
 
 -- Statically CDN
 --- Examples:
 --- https://cdn.statically.io/gh/Metastruct/garrysmod-chatsounds/master/sound/chatsounds/autoadd/anime/i%20love%20you.ogg
 --- https://cdn.statically.io/img/statically.dev/w=300,h=500/cat.jpg
-simple [[cdn.statically.io]]
+simple([[cdn.statically.io]])

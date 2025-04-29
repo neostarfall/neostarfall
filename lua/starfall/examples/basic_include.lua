@@ -3,4 +3,4 @@
 
 -- You don't need to provide an include directive, if the include is a literal string.
 local MyLibrary = require("included.txt")
-print( MyLibrary.add(2, 3) )
+print(MyLibrary.add(2, 3))

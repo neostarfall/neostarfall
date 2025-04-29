@@ -5,12 +5,16 @@ local registerprivilege = SF.Permissions.registerPrivilege
 
 --Can only return if you are the first argument
 local function returnOnlyOnYourself(instance, args, ply)
-	if args[1] and instance.player == ply then return args[2] end
+	if args[1] and instance.player == ply then
+		return args[2]
+	end
 end
 
 --Can only return false on yourself
 local function returnOnlyOnYourselfFalse(instance, args, ply)
-	if args[1] and instance.player == ply and args[2]==false then return false end
+	if args[1] and instance.player == ply and args[2] == false then
+		return false
+	end
 end
 
 local add = SF.hookAdd
@@ -85,7 +89,7 @@ if SERVER then
 	-- @server
 	-- @param Player ply The player who has unfrozen an entity
 	-- @param Entity ent The unfrozen entity
-	-- @param PhysObj physobj The physics object of the unfrozen entity 
+	-- @param PhysObj physobj The physics object of the unfrozen entity
 	add("PlayerUnfrozeObject")
 
 	--- Called when a player dies
@@ -155,7 +159,6 @@ if SERVER then
 	-- @param Vehicle vehicle Vehicle that was left
 	add("PlayerLeaveVehicle")
 
-
 	--- Called when a player sends a chat message
 	-- @name PlayerSay
 	-- @class hook
@@ -165,12 +168,12 @@ if SERVER then
 	-- @param boolean teamChat True if team chat
 	-- @return string? New text. "" to stop from displaying. Nil to keep original.
 	add("PlayerSay", nil, nil, returnOnlyOnYourself, true)
-	
+
 	-- Serverside implementation of playerchat
 	gameevent.Listen("player_say")
 	add("player_say", "playerchat", function(instance, data)
 		local ply = Player(data.userid)
-		return true, {instance.WrapObject(ply), data.text, data.teamonly, not ply:Alive()}
+		return true, { instance.WrapObject(ply), data.text, data.teamonly, not ply:Alive() }
 	end)
 
 	--- Called when a players sprays their logo
@@ -206,7 +209,12 @@ if SERVER then
 	add("PlayerCanPickupWeapon", nil, nil, returnOnlyOnYourselfFalse)
 
 	-- Register privileges
-	registerprivilege("entities.blockDamage", "Block Damage", "Allows the user to block incoming entity damage", { entities = {} })
+	registerprivilege(
+		"entities.blockDamage",
+		"Block Damage",
+		"Allows the user to block incoming entity damage",
+		{ entities = {} }
+	)
 
 	--- Called when an entity is damaged
 	-- @name EntityTakeDamage
@@ -221,17 +229,22 @@ if SERVER then
 	-- @param Vector force Force of the damage
 	-- @return boolean? Return true to prevent the entity from taking damage
 	add("EntityTakeDamage", nil, function(instance, target, dmg)
-		return true, {
-			instance.WrapObject(target),
-			instance.WrapObject(dmg:GetAttacker()),
-			instance.WrapObject(dmg:GetInflictor()),
-			dmg:GetDamage(),
-			dmg:GetDamageType(),
-			instance.Types.Vector.Wrap(dmg:GetDamagePosition()),
-			instance.Types.Vector.Wrap(dmg:GetDamageForce())
-		}
+		return true,
+			{
+				instance.WrapObject(target),
+				instance.WrapObject(dmg:GetAttacker()),
+				instance.WrapObject(dmg:GetInflictor()),
+				dmg:GetDamage(),
+				dmg:GetDamageType(),
+				instance.Types.Vector.Wrap(dmg:GetDamagePosition()),
+				instance.Types.Vector.Wrap(dmg:GetDamageForce()),
+			}
 	end, function(instance, args, target)
-		if args[1] and args[2] == true and (instance.player == SF.Superuser or haspermission(instance, target, "entities.blockDamage")) then
+		if
+			args[1]
+			and args[2] == true
+			and (instance.player == SF.Superuser or haspermission(instance, target, "entities.blockDamage"))
+		then
 			return true
 		end
 	end)
@@ -262,7 +275,7 @@ else
 	-- @client
 	-- @param boolean isTeamChat Whether they're typing in team chat
 	add("StartChat")
-	
+
 	--- Called when the local player closes their chat window.
 	-- @name FinishChat
 	-- @class hook
@@ -279,7 +292,9 @@ else
 	-- @param boolean isdead Whether the message was send from a dead player
 	-- @return boolean Return true to hide the message. Can only be done for the owner of the chip
 	add("OnPlayerChat", "playerchat", nil, function(instance, ret)
-		if ret[1] and instance.player == LocalPlayer() and ret[2] then return true end
+		if ret[1] and instance.player == LocalPlayer() and ret[2] then
+			return true
+		end
 	end)
 
 	--- Called when the player's chat box text changes.
@@ -315,7 +330,8 @@ else
 	-- Check serverside playerhurt for docs
 	gameevent.Listen("player_hurt")
 	SF.hookAdd("player_hurt", "playerhurt", function(instance, data)
-		return true, {instance.WrapObject(Player(data.userid)), instance.WrapObject(Player(data.attacker)), data.health}
+		return true,
+			{ instance.WrapObject(Player(data.userid)), instance.WrapObject(Player(data.attacker)), data.health }
 	end)
 
 	--- Called when a player starts using voice chat.
@@ -373,14 +389,14 @@ add("PlayerNoClip")
 -- @param number volume Volume of the footstep
 -- @return boolean? Return true to prevent default step sound (only on chip owner)
 add("PlayerFootstep", nil, function(instance, ply, pos, foot, sound, volume)
-    return true, {
-        instance.WrapObject(ply),
-        instance.Types.Vector.Wrap(pos),
-        foot,
-        sound,
-        volume,
-    }
-end, returnOnlyOnYourself )
+	return true, {
+		instance.WrapObject(ply),
+		instance.Types.Vector.Wrap(pos),
+		foot,
+		sound,
+		volume,
+	}
+end, returnOnlyOnYourself)
 
 --- Called when a player jumps.
 -- @name OnPlayerJump
@@ -526,7 +542,7 @@ end, true)
 add("PostEntityFireBullets", nil, function(instance, ent, data)
 	local ret = SF.StructWrapper(instance, data, "Bullet")
 	ret.Trace = SF.StructWrapper(instance, data.Trace, "TraceResult")
-	return true, {instance.WrapObject(ent), ret}
+	return true, { instance.WrapObject(ent), ret }
 end)
 
 --- Called whenever a sound has been played. This will not be called clientside if the server played the sound without the client also calling Entity:EmitSound.
@@ -536,9 +552,13 @@ end)
 -- @param table data Information about the played sound. Changes done to this table can be applied by returning true from this hook. See https://wiki.facepunch.com/gmod/Structures/EmitSoundInfo.
 -- @return boolean? Return false to prevent the sound from playing or nothing to play the sound without altering it.
 add("EntityEmitSound", nil, function(instance, data)
-	return true, {SF.StructWrapper(instance, data, "EmitSoundInfo")}
+	return true, { SF.StructWrapper(instance, data, "EmitSoundInfo") }
 end, function(instance, ret, data)
-	if ret[1] and ret[2]==false and (instance.player == SF.Superuser or haspermission(instance, data.Entity, "entities.emitSound")) then
+	if
+		ret[1]
+		and ret[2] == false
+		and (instance.player == SF.Superuser or haspermission(instance, data.Entity, "entities.emitSound"))
+	then
 		return ret[2]
 	end
 end)
@@ -575,7 +595,7 @@ add("Tick")
 -- @param Player|Entity ply Who's fault it errored. World-entity if it was a server error, or player that the script errored if on client
 -- @param string err Error message
 add("StarfallError", nil, function(instance, ent, owner, errply, _, err)
-	return true, {instance.WrapObject(ent), instance.WrapObject(errply), err}
+	return true, { instance.WrapObject(ent), instance.WrapObject(errply), err }
 end)
 
 -- Game Events
@@ -589,7 +609,7 @@ end)
 -- @param string newname Name after change.
 gameevent.Listen("player_changename")
 add("player_changename", "playerchangename", function(instance, data)
-	return true, {instance.WrapObject(Player(data.userid)), data.oldname, data.newname}
+	return true, { instance.WrapObject(Player(data.userid)), data.oldname, data.newname }
 end)
 
 --- Called when a player connects to the server. (Game Event)
@@ -602,7 +622,7 @@ end)
 -- @param boolean isbot False if the player isn't a bot, true if they are.
 gameevent.Listen("player_connect")
 add("player_connect", "playerconnect", function(instance, data)
-	return true, {data.networkid, data.name, data.userid, data.bot == 1}
+	return true, { data.networkid, data.name, data.userid, data.bot == 1 }
 end)
 
 --- Called when a player disconnects from the server. (Game Event)
@@ -616,7 +636,7 @@ end)
 -- @param boolean isbot False if the player isn't a bot, true if they are.
 gameevent.Listen("player_disconnect")
 add("player_disconnect", "playerdisconnect", function(instance, data)
-	return true, {data.networkid, data.name, instance.WrapObject(Player(data.userid)), data.reason, data.bot == 1}
+	return true, { data.networkid, data.name, instance.WrapObject(Player(data.userid)), data.reason, data.bot == 1 }
 end)
 
 --- Deals with hooks
@@ -625,130 +645,133 @@ end)
 -- @libtbl hook_library
 SF.RegisterLibrary("hook")
 
-
 return function(instance)
+	local getent
+	instance:AddHook("initialize", function()
+		getent = instance.Types.Entity.GetEntity
+	end)
 
-local getent
-instance:AddHook("initialize", function()
-	getent = instance.Types.Entity.GetEntity
-end)
+	instance:AddHook("deinitialize", function()
+		SF.HookDestroyInstance(instance)
+	end)
 
-instance:AddHook("deinitialize", function()
-	SF.HookDestroyInstance(instance)
-end)
+	local hook_library = instance.Libraries.hook
+	local ent_meta, ewrap, eunwrap = instance.Types.Entity, instance.Types.Entity.Wrap, instance.Types.Entity.Unwrap
+	local pwrap = instance.Types.Player.Wrap
 
-local hook_library = instance.Libraries.hook
-local ent_meta, ewrap, eunwrap = instance.Types.Entity, instance.Types.Entity.Wrap, instance.Types.Entity.Unwrap
-local pwrap = instance.Types.Player.Wrap
+	--- Sets a hook function
+	-- @param string hookname Name of the event
+	-- @param string name Unique identifier
+	-- @param function func Function to run
+	function hook_library.add(hookname, name, func)
+		checkluatype(hookname, TYPE_STRING)
+		checkluatype(name, TYPE_STRING)
+		checkluatype(func, TYPE_FUNCTION)
 
---- Sets a hook function
--- @param string hookname Name of the event
--- @param string name Unique identifier
--- @param function func Function to run
-function hook_library.add(hookname, name, func)
-	checkluatype (hookname, TYPE_STRING)
-	checkluatype (name, TYPE_STRING)
-	checkluatype (func, TYPE_FUNCTION)
+		hookname = string.lower(hookname)
+		local hooks = instance.hooks[hookname]
+		if not hooks then
+			hooks = SF.HookTable()
+			instance.hooks[hookname] = hooks
+		end
+		hooks:add(name, func)
 
-	hookname = string.lower(hookname)
-	local hooks = instance.hooks[hookname]
-	if not hooks then
-		hooks = SF.HookTable()
-		instance.hooks[hookname] = hooks
+		SF.HookAddInstance(instance, hookname)
 	end
-	hooks:add(name, func)
 
-	SF.HookAddInstance(instance, hookname)
-end
+	--- Run a hook and return the result
+	-- @shared
+	-- @param string hookname The hook name
+	-- @param ... arguments Arguments to pass to the hook
+	-- @return ... returns Return result(s) of the hook ran
+	function hook_library.run(hookname, ...)
+		checkluatype(hookname, TYPE_STRING)
 
---- Run a hook and return the result
--- @shared
--- @param string hookname The hook name
--- @param ... arguments Arguments to pass to the hook
--- @return ... returns Return result(s) of the hook ran
-function hook_library.run(hookname, ...)
-	checkluatype (hookname, TYPE_STRING)
-
-	hookname = string.lower(hookname)
-	local hooks = instance.hooks[hookname]
-	if hooks then
-		local tbl
-		for name, func in hooks:pairs() do
-			tbl = { func(...) }
-			if tbl[1]~=nil then
-				return unpack(tbl)
+		hookname = string.lower(hookname)
+		local hooks = instance.hooks[hookname]
+		if hooks then
+			local tbl
+			for name, func in hooks:pairs() do
+				tbl = { func(...) }
+				if tbl[1] ~= nil then
+					return unpack(tbl)
+				end
 			end
 		end
 	end
-end
 
---- Remote hook.
--- This hook can be called from other instances
--- @name Remote
--- @class hook
--- @shared
--- @param Entity sender The entity that caused the hook to run
--- @param Player owner The owner of the sender
--- @param ... payload The payload that was supplied when calling the hook
+	--- Remote hook.
+	-- This hook can be called from other instances
+	-- @name Remote
+	-- @class hook
+	-- @shared
+	-- @param Entity sender The entity that caused the hook to run
+	-- @param Player owner The owner of the sender
+	-- @param ... payload The payload that was supplied when calling the hook
 
-local hookrun = hook_library.run
+	local hookrun = hook_library.run
 
---- Run a hook remotely.
--- This will call the hook "remote" on either a specified entity or all instances on the server/client
--- @shared
--- @param Entity? recipient Starfall entity to call the hook on. Nil to run on every starfall entity
--- @param ... payload Parameters that will be passed when calling hook functions
--- @return table A list of the resultset of each called hook
-function hook_library.runRemote(recipient, ...)
-	local recipients
-	if recipient then
-		local ent = getent(recipient)
-		if not ent.instance then SF.Throw("Entity has no neostarfall instance", 2) end
-		recipients = {
-			[ent.instance] = true
-		}
-	else
-		recipients = SF.allInstances
-	end
-
-	local argn = select("#", ...)
-	local unsanitized = instance.Unsanitize({...})
-	local results = {}
-	for k, _ in pairs(recipients) do
-		local result
-		if k==instance then
-			result = { true, hookrun("remote", ewrap(instance.entity), pwrap(instance.player), ...) }
+	--- Run a hook remotely.
+	-- This will call the hook "remote" on either a specified entity or all instances on the server/client
+	-- @shared
+	-- @param Entity? recipient Starfall entity to call the hook on. Nil to run on every starfall entity
+	-- @param ... payload Parameters that will be passed when calling hook functions
+	-- @return table A list of the resultset of each called hook
+	function hook_library.runRemote(recipient, ...)
+		local recipients
+		if recipient then
+			local ent = getent(recipient)
+			if not ent.instance then
+				SF.Throw("Entity has no neostarfall instance", 2)
+			end
+			recipients = {
+				[ent.instance] = true,
+			}
 		else
-			result = k:runScriptHookForResult("remote", k.Types.Entity.Wrap(instance.entity), k.Types.Player.Wrap(instance.player), unpack(k.Sanitize(unsanitized), 1, argn))
+			recipients = SF.allInstances
 		end
 
-		if result[1] and result[2]~=nil then
-			results[#results + 1] = instance.Sanitize(k.Unsanitize({unpack(result, 2)}))
-		end
+		local argn = select("#", ...)
+		local unsanitized = instance.Unsanitize({ ... })
+		local results = {}
+		for k, _ in pairs(recipients) do
+			local result
+			if k == instance then
+				result = { true, hookrun("remote", ewrap(instance.entity), pwrap(instance.player), ...) }
+			else
+				result = k:runScriptHookForResult(
+					"remote",
+					k.Types.Entity.Wrap(instance.entity),
+					k.Types.Player.Wrap(instance.player),
+					unpack(k.Sanitize(unsanitized), 1, argn)
+				)
+			end
 
+			if result[1] and result[2] ~= nil then
+				results[#results + 1] = instance.Sanitize(k.Unsanitize({ unpack(result, 2) }))
+			end
+		end
+		return results
 	end
-	return results
-end
 
---- Remove a hook
--- @shared
--- @param string hookname The hook name
--- @param string name The unique name for this hook
-function hook_library.remove(hookname, name)
-	checkluatype (hookname, TYPE_STRING)
-	checkluatype (name, TYPE_STRING)
+	--- Remove a hook
+	-- @shared
+	-- @param string hookname The hook name
+	-- @param string name The unique name for this hook
+	function hook_library.remove(hookname, name)
+		checkluatype(hookname, TYPE_STRING)
+		checkluatype(name, TYPE_STRING)
 
-	hookname = string.lower(hookname)
-	local hooks = instance.hooks[hookname]
-	if hooks then
-		hooks:remove(name)
-		if hooks:isEmpty() then
-			instance.hooks[hookname] = nil
-			SF.HookRemoveInstance(instance, hookname)
+		hookname = string.lower(hookname)
+		local hooks = instance.hooks[hookname]
+		if hooks then
+			hooks:remove(name)
+			if hooks:isEmpty() then
+				instance.hooks[hookname] = nil
+				SF.HookRemoveInstance(instance, hookname)
+			end
 		end
 	end
-end
-
 end
 
 -- Hooks below are not simple gmod hooks and are called by other events in other files.
@@ -811,4 +834,3 @@ end
 -- @name Render
 -- @class hook
 -- @client
-

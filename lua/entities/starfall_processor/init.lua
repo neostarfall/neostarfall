@@ -11,7 +11,7 @@ function ENT:Initialize()
 	self:SetSolid(SOLID_VPHYSICS)
 	self:SetUseType(SIMPLE_USE)
 
-	self:AddEFlags( EFL_FORCE_CHECK_TRANSMIT )
+	self:AddEFlags(EFL_FORCE_CHECK_TRANSMIT)
 
 	self:SetNWInt("State", self.States.None)
 	self:SetColor4Part(255, 0, 0, select(4, self:GetColor4Part()))
@@ -24,7 +24,9 @@ function ENT:UpdateTransmitState()
 end
 
 function ENT:SetCustomModel(model)
-	if self:GetModel() == model then return end
+	if self:GetModel() == model then
+		return
+	end
 	if IsValid(self:GetParent()) then
 		self:SetModel(model)
 	else
@@ -55,9 +57,9 @@ end
 function ENT:Use(activator)
 	if activator:IsPlayer() then
 		net.Start("starfall_processor_used")
-			net.WriteEntity(self)
-			net.WriteEntity(self)
-			net.WriteEntity(activator)
+		net.WriteEntity(self)
+		net.WriteEntity(self)
+		net.WriteEntity(activator)
 		net.Broadcast()
 	end
 
@@ -82,20 +84,28 @@ function ENT:Think()
 end
 
 function ENT:SendCode(recipient)
-	if not (IsValid(self.owner) or IsWorld(self.owner)) then return end
-	if not self.sfsenddata then return end
+	if not (IsValid(self.owner) or IsWorld(self.owner)) then
+		return
+	end
+	if not self.sfsenddata then
+		return
+	end
 	local others = {}
 	for _, ply in ipairs(recipient and (istable(recipient) and recipient or { recipient }) or player.GetHumans()) do
-		if ply:GetInfoNum("sf_enabled_cl", 0)==0 then continue end
-		if ply==self.owner then
-		    if self.sfownerdata then
-			    SF.SendStarfall("starfall_processor_download", self.sfownerdata, self.owner)
+		if ply:GetInfoNum("sf_enabled_cl", 0) == 0 then
+			goto cont
+		end
+		if ply == self.owner then
+			if self.sfownerdata then
+				SF.SendStarfall("starfall_processor_download", self.sfownerdata, self.owner)
 			else
-                SF.SendStarfall("starfall_processor_download", self.sforiginalsenddata, self.owner)
+				SF.SendStarfall("starfall_processor_download", self.sforiginalsenddata, self.owner)
 			end
 		else
-			others[#others+1] = ply
+			others[#others + 1] = ply
 		end
+
+		::cont::
 	end
 	if #others > 0 then
 		SF.SendStarfall("starfall_processor_download", self.sfsenddata, others)
@@ -106,12 +116,17 @@ function ENT:PreEntityCopy()
 	duplicator.ClearEntityModifier(self, "SFDupeInfo")
 	if self.sfdata then
 		local info = WireLib and WireLib.BuildDupeInfo(self) or {}
-		info.starfall = {mainfile = self.sfdata.mainfile, files = SF.CompressFiles(self.sfdata.files), udata = self.starfalluserdata, ver = 4.3}
+		info.starfall = {
+			mainfile = self.sfdata.mainfile,
+			files = SF.CompressFiles(self.sfdata.files),
+			udata = self.starfalluserdata,
+			ver = 4.3,
+		}
 		duplicator.StoreEntityModifier(self, "SFDupeInfo", info)
 	end
 
 	-- Stupid hack to prevent garry dupe from copying everything
-	SF.Copying = {self.sfdata, self.instance}
+	SF.Copying = { self.sfdata, self.instance }
 	self.sfdata = nil
 	self.instance = nil
 end
@@ -123,16 +138,26 @@ end
 
 local function EntityLookup(CreatedEntities)
 	return function(id, default)
-		if id == nil then return default end
-		if id == 0 then return game.GetWorld() end
+		if id == nil then
+			return default
+		end
+		if id == 0 then
+			return game.GetWorld()
+		end
 		local ent = CreatedEntities[id]
-		if IsValid(ent) then return ent else return default end
+		if IsValid(ent) then
+			return ent
+		else
+			return default
+		end
 	end
 end
 function ENT:PostEntityPaste(ply, ent, CreatedEntities)
 	if ent.EntityMods and ent.EntityMods.SFDupeInfo then
 		local info = ent.EntityMods.SFDupeInfo
-		if not ply then ply = game.GetWorld() end
+		if not ply then
+			ply = game.GetWorld()
+		end
 
 		if WireLib then
 			WireLib.ApplyDupeInfo(ply, ent, info, EntityLookup(CreatedEntities))
@@ -141,19 +166,27 @@ function ENT:PostEntityPaste(ply, ent, CreatedEntities)
 		if istable(info.starfall) then
 			local ver = tonumber(info.starfall.ver)
 			if ver == 4.3 then
-				if not isstring(info.starfall.files) then error("Corrupt neostarfall dupe data") end
+				if not isstring(info.starfall.files) then
+					error("Corrupt neostarfall dupe data")
+				end
 				local files = SF.DecompressFiles(info.starfall.files)
 				self.starfalluserdata = info.starfall.udata and tostring(info.starfall.udata) or nil
-				self.sfdata = {owner = ply, files = files, mainfile = tostring(info.starfall.mainfile), proc = self}
-			elseif ver==nil then
+				self.sfdata = { owner = ply, files = files, mainfile = tostring(info.starfall.mainfile), proc = self }
+			elseif ver == nil then
 				-- Legacy duplications
-				if not istable(info.starfall.source) then error("Corrupt neostarfall dupe data") end
+				if not istable(info.starfall.source) then
+					error("Corrupt neostarfall dupe data")
+				end
 				local files = {}
 				for filename, source in pairs(info.starfall.source) do
-					files[tostring(filename)] = string.gsub(source, "[" .. string.char(5) .. string.char(4) .. "]", { [string.char(5)[1]] = "\n", [string.char(4)[1]] = '"' })
+					files[tostring(filename)] = string.gsub(
+						source,
+						"[" .. string.char(5) .. string.char(4) .. "]",
+						{ [string.char(5)[1]] = "\n", [string.char(4)[1]] = '"' }
+					)
 				end
 				self.starfalluserdata = info.starfalluserdata and tostring(info.starfalluserdata) or nil
-				self.sfdata = {owner = ply, files = files, mainfile = tostring(info.starfall.mainfile), proc = self}
+				self.sfdata = { owner = ply, files = files, mainfile = tostring(info.starfall.mainfile), proc = self }
 			else
 				error("This server's neostarfall is too out of date to paste")
 			end
@@ -166,7 +199,7 @@ local function dupefinished(TimedPasteData, TimedPasteDataCurrent)
 	local starfalls = {}
 	for k, v in pairs(entList) do
 		if isentity(v) and IsValid(v) and v:GetClass() == "starfall_processor" and v.sfdata then
-			starfalls[#starfalls+1] = v
+			starfalls[#starfalls + 1] = v
 		end
 	end
 	for k, v in pairs(starfalls) do
@@ -202,8 +235,8 @@ end)
 
 net.Receive("starfall_processor_kill", function(len, ply)
 	local target = net.ReadEntity()
-	if ply:IsAdmin() and IsValid(target) and target:GetClass()=="starfall_processor" then
-		target:Error({message = "Killed by admin", traceback = ""})
+	if ply:IsAdmin() and IsValid(target) and target:GetClass() == "starfall_processor" then
+		target:Error({ message = "Killed by admin", traceback = "" })
 		net.Start("starfall_processor_kill")
 		net.WriteEntity(target)
 		net.Broadcast()
@@ -225,4 +258,3 @@ SF.WaitForPlayerInit(function(ply)
 		v:SendCode(ply)
 	end
 end)
-

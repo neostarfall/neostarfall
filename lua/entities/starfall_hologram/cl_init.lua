@@ -1,6 +1,6 @@
 include("shared.lua")
 
-ENT.DefaultMaterial = Material( "hunter/myplastic" )
+ENT.DefaultMaterial = Material("hunter/myplastic")
 ENT.Material = ENT.DefaultMaterial
 
 local VECTOR_PLAYER_COLOR_DISABLED = Vector(-1, -1, -1)
@@ -9,9 +9,8 @@ local IsValid = FindMetaTable("Entity").IsValid
 local HoloRenderStack = SF.RenderStack({
 	"return function(self, flags)",
 	"self:DrawModel(flags)",
-	"end"
-},
-{
+	"end",
+}, {
 	function(data)
 		if data:GetCullMode() then
 			return "render.CullMode(MATERIAL_CULLMODE_CW)", "render.CullMode(MATERIAL_CULLMODE_CCW)"
@@ -24,18 +23,17 @@ local HoloRenderStack = SF.RenderStack({
 	end,
 	function(data)
 		if data.filter_min then
-			return "render.PushFilterMin("..data.filter_min..")", "render.PopFilterMin()"
+			return "render.PushFilterMin(" .. data.filter_min .. ")", "render.PopFilterMin()"
 		end
 	end,
 	function(data)
 		if data.filter_mag then
-			return "render.PushFilterMag("..data.filter_mag..")", " render.PopFilterMag()"
+			return "render.PushFilterMag(" .. data.filter_mag .. ")", " render.PopFilterMag()"
 		end
 	end,
 	function(data)
 		if next(data.clips) then
-			return 
-[[local clipCount = 0
+			return [[local clipCount = 0
 local prevClip = render.EnableClipping(true)
 for _, clip in pairs(self.clips) do
 	local clipent = clip.entity
@@ -47,7 +45,7 @@ for _, clip in pairs(self.clips) do
 	end
 	clipCount = clipCount + 1
 end]],
-[[for i=1, clipCount do
+				[[for i=1, clipCount do
 	render.PopCustomClipPlane()
 end
 render.EnableClipping(prevClip)]]
@@ -57,7 +55,7 @@ render.EnableClipping(prevClip)]]
 		if data.AutomaticFrameAdvance then
 			return nil, "self:FrameAdvance(0)"
 		end
-	end
+	end,
 })
 
 function ENT:Initialize()
@@ -82,11 +80,11 @@ function ENT:SetClip(index, enabled, normal, origin, entity)
 	local clips = self.clips
 	local prevempty = table.IsEmpty(clips)
 	if enabled then
-		clips[index] = {normal = normal, origin = origin, entity = entity}
+		clips[index] = { normal = normal, origin = origin, entity = entity }
 	else
 		clips[index] = nil
 	end
-	if prevempty~=table.IsEmpty(clips) then
+	if prevempty ~= table.IsEmpty(clips) then
 		self.renderstack:makeDirty()
 	end
 end
@@ -146,7 +144,10 @@ function ENT:GetRenderMesh()
 	local selfTbl = self:GetTable()
 	if selfTbl.custom_mesh then
 		if selfTbl.custom_mesh_data[selfTbl.custom_mesh] then
-			return { Mesh = selfTbl.custom_mesh, Material = selfTbl.Material--[[, Matrix = self.HoloMatrix]] }
+			return {
+				Mesh = selfTbl.custom_mesh,
+				Material = selfTbl.Material --[[, Matrix = self.HoloMatrix]],
+			}
 		else
 			selfTbl.custom_mesh = nil
 		end
@@ -168,9 +169,11 @@ net.Receive("starfall_hologram_clips", function()
 					origin = Vector(clipdata:readFloat(), clipdata:readFloat(), clipdata:readFloat()),
 				}
 				local entind = clipdata:readUInt16()
-				if entind~=0 then
+				if entind ~= 0 then
 					local creationid = clipdata:readUInt32()
-					SF.WaitForEntity(entind, creationid, function(e) clip.entity = e end)
+					SF.WaitForEntity(entind, creationid, function(e)
+						clip.entity = e
+					end)
 				end
 				clips[index] = clip
 			end
@@ -192,7 +195,7 @@ hook.Add("NetworkEntityCreated", "starfall_hologram_rescale", function(holo)
 			holo:EnableMatrix("RenderMultiply", holo.HoloMatrix)
 		end
 
-		if not sf_userrenderbounds then        
+		if not sf_userrenderbounds then
 			local mins, maxs = holo:GetModelBounds()
 			if mins then
 				local scale = holo:GetScale()

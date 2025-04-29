@@ -1,10 +1,11 @@
 AddCSLuaFile()
 
-ENT.Base 		= "base_nextbot"
-ENT.Spawnable		= false
+ENT.Base = "base_nextbot"
+ENT.Spawnable = false
 
 local ENT_META = FindMetaTable("Entity")
-local Ent_GetPos,Ent_GetTable,Ent_InvalidateBoneCache,Ent_SetPoseParameter,Ent_WorldToLocal = ENT_META.GetPos,ENT_META.GetTable,ENT_META.InvalidateBoneCache,ENT_META.SetPoseParameter,ENT_META.WorldToLocal
+local Ent_GetPos, Ent_GetTable, Ent_InvalidateBoneCache, Ent_SetPoseParameter, Ent_WorldToLocal =
+	ENT_META.GetPos, ENT_META.GetTable, ENT_META.InvalidateBoneCache, ENT_META.SetPoseParameter, ENT_META.WorldToLocal
 
 function ENT:BodyUpdate()
 	self:BodyMoveXY()
@@ -17,7 +18,9 @@ function ENT:BodyUpdate()
 	end
 end
 
-if CLIENT then return end
+if CLIENT then
+	return
+end
 
 function ENT:Initialize()
 	local ent_tbl = Ent_GetTable(self)
@@ -26,7 +29,7 @@ function ENT:Initialize()
 	ent_tbl.RUNACT = ACT_RUN
 	ent_tbl.IDLEACT = ACT_IDLE
 	ent_tbl.MoveSpeed = 200
-	
+
 	ent_tbl.DeathCallbacks = SF.HookTable()
 	ent_tbl.InjuredCallbacks = SF.HookTable()
 	ent_tbl.LandCallbacks = SF.HookTable()
@@ -45,32 +48,34 @@ function ENT:GotoBehavior()
 	local ent_tbl = Ent_GetTable(self)
 
 	local startPerfTime = SysTime()
-	
+
 	self:StartActivity(ent_tbl.RUNACT)
 	ent_tbl.loco:SetDesiredSpeed(ent_tbl.MoveSpeed)
 
-	local path = Path( "Follow" )
-	path:SetMinLookAheadDistance( 300 )
-	path:SetGoalTolerance( 20 )
+	local path = Path("Follow")
+	path:SetMinLookAheadDistance(300)
+	path:SetGoalTolerance(20)
 	-- Compute the path towards the enemy's position
-	path:Compute( self, ent_tbl.goTo )
+	path:Compute(self, ent_tbl.goTo)
 	addPerf(ent_tbl.instance, startPerfTime)
 
 	if path:IsValid() then
-		while ( path:IsValid() and ent_tbl.goTo ) do
+		while path:IsValid() and ent_tbl.goTo do
 			startPerfTime = SysTime()
 
-			if ( path:GetAge() > 1 ) then
+			if path:GetAge() > 1 then
 				-- Compute the path towards the enemy's position again
 				path:Compute(self, ent_tbl.goTo)
 			end
 
 			-- This function moves the bot along the path
-			path:Update( self )
+			path:Update(self)
 			addPerf(ent_tbl.instance, startPerfTime)
 
 			-- If we're stuck then call the HandleStuck function and abandon
-			if ( ent_tbl.loco:IsStuck() ) then break end
+			if ent_tbl.loco:IsStuck() then
+				break
+			end
 			coroutine.yield()
 		end
 	end
@@ -113,64 +118,80 @@ end
 
 function ENT:OnInjured(dmginfo)
 	local ent_tbl = Ent_GetTable(self)
-	if ent_tbl.InjuredCallbacks:isEmpty() then return end
+	if ent_tbl.InjuredCallbacks:isEmpty() then
+		return
+	end
 	local inst = ent_tbl.instance
-	ent_tbl.InjuredCallbacks:run(inst,
+	ent_tbl.InjuredCallbacks:run(
+		inst,
 		dmginfo:GetDamage(),
 		inst.WrapObject(dmginfo:GetAttacker()),
 		inst.WrapObject(dmginfo:GetInflictor()),
-		inst.Types.Vector.Wrap(dmginfo:GetDamagePosition()), 
+		inst.Types.Vector.Wrap(dmginfo:GetDamagePosition()),
 		inst.Types.Vector.Wrap(dmginfo:GetDamageForce()),
-		dmginfo:GetDamageType())
+		dmginfo:GetDamageType()
+	)
 end
 
 function ENT:OnKilled(dmginfo)
 	local ent_tbl = Ent_GetTable(self)
 	if not ent_tbl.DeathCallbacks:isEmpty() then
 		local inst = ent_tbl.instance
-		ent_tbl.DeathCallbacks:run(inst,
+		ent_tbl.DeathCallbacks:run(
+			inst,
 			dmginfo:GetDamage(),
 			inst.WrapObject(dmginfo:GetAttacker()),
 			inst.WrapObject(dmginfo:GetInflictor()),
 			inst.Types.Vector.Wrap(dmginfo:GetDamagePosition()),
 			inst.Types.Vector.Wrap(dmginfo:GetDamageForce()),
-			dmginfo:GetDamageType())
+			dmginfo:GetDamageType()
+		)
 	end
-	if ent_tbl.RagdollOnDeath then self:BecomeRagdoll(dmginfo) end
+	if ent_tbl.RagdollOnDeath then
+		self:BecomeRagdoll(dmginfo)
+	end
 end
 
 function ENT:OnLandOnGround(groundent)
 	local ent_tbl = Ent_GetTable(self)
-	if ent_tbl.LandCallbacks:isEmpty() then return end
+	if ent_tbl.LandCallbacks:isEmpty() then
+		return
+	end
 	local inst = ent_tbl.instance
 	ent_tbl.LandCallbacks:run(inst, inst.WrapObject(groundent))
 end
 
 function ENT:OnLeaveGround(groundent)
 	local ent_tbl = Ent_GetTable(self)
-	if ent_tbl.JumpCallbacks:isEmpty() then return end
+	if ent_tbl.JumpCallbacks:isEmpty() then
+		return
+	end
 	local inst = ent_tbl.instance
 	ent_tbl.JumpCallbacks:run(inst, inst.WrapObject(groundent))
 end
 
 function ENT:OnIgnite()
 	local ent_tbl = Ent_GetTable(self)
-	if ent_tbl.IgniteCallbacks:isEmpty() then return end
+	if ent_tbl.IgniteCallbacks:isEmpty() then
+		return
+	end
 	ent_tbl.IgniteCallbacks:run(ent_tbl.instance)
 end
 
 function ENT:OnNavAreaChanged(old, new)
 	local ent_tbl = Ent_GetTable(self)
-	if ent_tbl.NavChangeCallbacks:isEmpty() then return end
+	if ent_tbl.NavChangeCallbacks:isEmpty() then
+		return
+	end
 	local inst = ent_tbl.instance
-	ent_tbl.NavChangeCallbacks:run(inst,
-		inst.Types.NavArea.Wrap(old),
-		inst.Types.NavArea.Wrap(new))
+	ent_tbl.NavChangeCallbacks:run(inst, inst.Types.NavArea.Wrap(old), inst.Types.NavArea.Wrap(new))
 end
 
 function ENT:OnContact(colent)
 	local ent_tbl = Ent_GetTable(self)
-	if ent_tbl.ContactCallbacks:isEmpty() then return end
+	if ent_tbl.ContactCallbacks:isEmpty() then
+		return
+	end
 	local inst = ent_tbl.instance
 	ent_tbl.ContactCallbacks:run(inst, inst.WrapObject(colent))
 end

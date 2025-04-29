@@ -1,6 +1,6 @@
-AddCSLuaFile('cl_init.lua')
-AddCSLuaFile('shared.lua')
-include('shared.lua')
+AddCSLuaFile("cl_init.lua")
+AddCSLuaFile("shared.lua")
+include("shared.lua")
 
 util.AddNetworkString("starfall_custom_prop")
 
@@ -30,7 +30,7 @@ function ENT:Initialize()
 		teleportdistance = 1000,
 	}
 
-	self:AddEFlags( EFL_FORCE_CHECK_TRANSMIT )
+	self:AddEFlags(EFL_FORCE_CHECK_TRANSMIT)
 end
 
 function ENT:EnableCustomPhysics(mode)
@@ -72,7 +72,11 @@ function ENT:TransmitData(recip)
 	net.Start("starfall_custom_prop")
 	net.WriteReliableEntity(self)
 	local stream = net.WriteStream(self.streamdata, nil, true)
-	if recip then net.Send(recip) else net.Broadcast() end
+	if recip then
+		net.Send(recip)
+	else
+		net.Broadcast()
+	end
 	return stream
 end
 

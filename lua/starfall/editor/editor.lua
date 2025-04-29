@@ -15,33 +15,37 @@ AddCSLuaFile("docs.lua")
 AddCSLuaFile("themes.lua")
 AddCSLuaFile("xml.lua")
 
-
 -----------------
 -- Tab Handlers
 ------------------
 
 if CLIENT then
-	SF.Editor.TabHandlers = { }
+	SF.Editor.TabHandlers = {}
 	SF.Editor.CurrentTabHandler = CreateClientConVar("sf_editor_tab_editor", "wire", true, false)
 end
 
 local l = file.Find("starfall/editor/tabhandlers/tab_*.lua", "LUA")
 for _, name in pairs(l) do
-	name = name:sub(5,-5)
-	AddCSLuaFile("starfall/editor/tabhandlers/tab_"..name..".lua")
+	name = name:sub(5, -5)
+	AddCSLuaFile("starfall/editor/tabhandlers/tab_" .. name .. ".lua")
 	if CLIENT then
-		SF.Editor.TabHandlers[name] = include("starfall/editor/tabhandlers/tab_"..name..".lua")
+		SF.Editor.TabHandlers[name] = include("starfall/editor/tabhandlers/tab_" .. name .. ".lua")
 	end
 end
 
 local DEFAULT_DOC_URL = "https://neostarfall.pages.dev?nofetch=true"
 
-SF.Editor.HelperURL = CreateConVar("sf_editor_helperurl", DEFAULT_DOC_URL, {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "URL for website used by SF Helper, change to allow custom documentation.")
+SF.Editor.HelperURL = CreateConVar(
+	"sf_editor_helperurl",
+	DEFAULT_DOC_URL,
+	{ FCVAR_ARCHIVE, FCVAR_REPLICATED },
+	"URL for website used by SF Helper, change to allow custom documentation."
+)
 
 local currentValue = SF.Editor.HelperURL:GetString()
 
 -- Switch from old URLs
-if currentValue:match("thegrb93%.github%.io/StarfallEx") then
+if currentValue:match("\x74\x68\x65\x67\x72\x62\x39\x33\x2E\x67\x69\x74\x68\x75\x62\x2E\x69\x6F\x2F\x53\x74\x61\x72\x66\x61\x6C\x6C\x45\x78") then
 	SF.Editor.HelperURL:SetString(DEFAULT_DOC_URL)
 elseif currentValue:match("neostarfall%.github%.io") then
 	SF.Editor.HelperURL:SetString(DEFAULT_DOC_URL)
@@ -65,15 +69,25 @@ if CLIENT then
 
 	-- Colors
 	SF.Editor.colors = {}
-	SF.Editor.colors.brandHSV = {39, 0.96, 0.97} -- Neostarfall's branding color expressed in HSV
-	SF.Editor.colors.dark = HSVToColor(SF.Editor.colors.brandHSV[1], SF.Editor.colors.brandHSV[2] * 0.6, SF.Editor.colors.brandHSV[3] * 0.15)
-	SF.Editor.colors.meddark = HSVToColor(SF.Editor.colors.brandHSV[1], SF.Editor.colors.brandHSV[2] * 0.9, SF.Editor.colors.brandHSV[3] * 0.3)
-	SF.Editor.colors.med = HSVToColor(SF.Editor.colors.brandHSV[1], SF.Editor.colors.brandHSV[2], SF.Editor.colors.brandHSV[3] * 0.4)
-	SF.Editor.colors.medlight = HSVToColor(SF.Editor.colors.brandHSV[1], SF.Editor.colors.brandHSV[2], SF.Editor.colors.brandHSV[3] * 0.6)
-	SF.Editor.colors.light = HSVToColor(SF.Editor.colors.brandHSV[1], SF.Editor.colors.brandHSV[2], SF.Editor.colors.brandHSV[3] * 0.9)
+	SF.Editor.colors.brandHSV = { 39, 0.96, 0.97 } -- Neostarfall's branding color expressed in HSV
+	SF.Editor.colors.dark = HSVToColor(
+		SF.Editor.colors.brandHSV[1],
+		SF.Editor.colors.brandHSV[2] * 0.6,
+		SF.Editor.colors.brandHSV[3] * 0.15
+	)
+	SF.Editor.colors.meddark =
+		HSVToColor(SF.Editor.colors.brandHSV[1], SF.Editor.colors.brandHSV[2] * 0.9, SF.Editor.colors.brandHSV[3] * 0.3)
+	SF.Editor.colors.med =
+		HSVToColor(SF.Editor.colors.brandHSV[1], SF.Editor.colors.brandHSV[2], SF.Editor.colors.brandHSV[3] * 0.4)
+	SF.Editor.colors.medlight =
+		HSVToColor(SF.Editor.colors.brandHSV[1], SF.Editor.colors.brandHSV[2], SF.Editor.colors.brandHSV[3] * 0.6)
+	SF.Editor.colors.light =
+		HSVToColor(SF.Editor.colors.brandHSV[1], SF.Editor.colors.brandHSV[2], SF.Editor.colors.brandHSV[3] * 0.9)
 
 	function SF.Editor.init()
-		if SF.Editor.initialized or SF.Editor.editor then return end
+		if SF.Editor.initialized or SF.Editor.editor then
+			return
+		end
 
 		if not SF.Docs and not SF.WaitingForDocs then
 			SF.WaitingForDocs = true
@@ -97,18 +111,24 @@ if CLIENT then
 	end
 
 	function SF.Editor.open()
-		if not SF.Editor.initialized then SF.Editor.init() end
+		if not SF.Editor.initialized then
+			SF.Editor.init()
+		end
 		SF.Editor.editor:Open()
 		RunConsoleCommand("starfall_event", "editor_open")
 	end
 
 	function SF.Editor.openFile(fl, forceNewTab)
-		if not SF.Editor.initialized then SF.Editor.init() end
+		if not SF.Editor.initialized then
+			SF.Editor.init()
+		end
 		SF.Editor.editor:Open(fl, nil, forceNewTab)
 	end
 
 	function SF.Editor.openWithCode(name, code, forceNewTab, checkFileExists)
-		if not SF.Editor.initialized then SF.Editor.init() end
+		if not SF.Editor.initialized then
+			SF.Editor.init()
+		end
 		SF.Editor.editor:Open(name, code, forceNewTab, checkFileExists)
 	end
 
@@ -136,7 +156,7 @@ if CLIENT then
 	-- Every code which goes into the editor is normalized first.
 	-- Note: remember to normalize every input file when comparing it to already open files to avoid inconsistencies.
 	function SF.Editor.normalizeCode(code)
-		return string.gsub(code, "[\r\t]", {["\r"]="", ["\t"]="    "})
+		return string.gsub(code, "[\r\t]", { ["\r"] = "", ["\t"] = "    " })
 	end
 
 	function SF.Editor.renameFile(oldFile, newFile)
@@ -160,11 +180,15 @@ if CLIENT then
 	function SF.Editor.createEditor()
 		local editor = vgui.Create("StarfallEditorFrame") --Should define own frame later
 
-		if SF.Editor.editor then SF.Editor.editor:Remove() end
+		if SF.Editor.editor then
+			SF.Editor.editor:Remove()
+		end
 		SF.Editor.editor = editor
 
 		for k, v in pairs(SF.Editor.TabHandlers) do
-			if v.Init then v:Init() end
+			if v.Init then
+				v:Init()
+			end
 		end
 
 		editor:Setup("Neostarfall Editor (" .. GetGlobalString("SF.Version") .. ")", "starfall", "Starfall")
@@ -179,7 +203,7 @@ if CLIENT then
 		end
 		local permsPanel = vgui.Create("StarfallPermissions")
 
-		SF.Permissions.refreshSettingsCache () -- Refresh cache first
+		SF.Permissions.refreshSettingsCache() -- Refresh cache first
 		local clientProviders = SF.Permissions.providers
 
 		if LocalPlayer():IsSuperAdmin() and server then
@@ -207,7 +231,9 @@ if CLIENT then
 	end
 
 	function SF.Editor.BuildIncludesTable(mainfile, success, err)
-		if not SF.Editor.initialized then SF.Editor.init() end
+		if not SF.Editor.initialized then
+			SF.Editor.init()
+		end
 
 		local opentabs = {}
 		for i = 1, SF.Editor.editor:GetNumTabs() do
@@ -221,11 +247,22 @@ if CLIENT then
 			end
 		end
 
-		local openfiles = setmetatable({},{__index = function(t,k) if opentabs[k] then local r=opentabs[k]:GetCode() t[k]=r return r end end})
+		local openfiles = setmetatable({}, {
+			__index = function(t, k)
+				if opentabs[k] then
+					local r = opentabs[k]:GetCode()
+					t[k] = r
+					return r
+				end
+			end,
+		})
 
 		if not (mainfile and (opentabs[mainfile] or file.Exists("starfall/" .. mainfile, "DATA"))) then
 			mainfile = SF.Editor.getOpenFile() or "main"
-			if #mainfile == 0 then err("Invalid main file") return end
+			if #mainfile == 0 then
+				err("Invalid main file")
+				return
+			end
 			openfiles[mainfile] = SF.Editor.getCode()
 		end
 
@@ -236,10 +273,10 @@ if CLIENT then
 		local frame = vgui.Create("StarfallFrame")
 		frame:SetTitle("Model Viewer - Click an icon to insert model filename into editor")
 		frame:SetVisible(false)
-		frame:SetSize(800,600)
+		frame:SetSize(800, 600)
 		frame:Center()
 
-		function frame:OnOpen ()
+		function frame:OnOpen()
 			if not self.initialized then
 				self:Initialize()
 			end
@@ -250,14 +287,16 @@ if CLIENT then
 			sidebarPanel:Dock(LEFT)
 			sidebarPanel:SetSize(190, 10)
 			sidebarPanel:DockMargin(0, 0, 4, 0)
-			sidebarPanel.Paint = function () end
+			sidebarPanel.Paint = function() end
 
 			frame.ContentNavBar = vgui.Create("ContentSidebar", sidebarPanel)
 			frame.ContentNavBar:Dock(FILL)
 			frame.ContentNavBar:DockMargin(0, 0, 0, 0)
 			frame.ContentNavBar.Tree:SetBackgroundColor(Color(240, 240, 240))
-			frame.ContentNavBar.Tree.OnNodeSelected = function (self, node)
-				if not IsValid(node.propPanel) then return end
+			frame.ContentNavBar.Tree.OnNodeSelected = function(self, node)
+				if not IsValid(node.propPanel) then
+					return
+				end
 
 				if IsValid(frame.PropPanel.selected) then
 					frame.PropPanel.selected:SetVisible(false)
@@ -275,7 +314,7 @@ if CLIENT then
 
 			frame.PropPanel = vgui.Create("StarfallPanel", frame)
 			frame.PropPanel:Dock(FILL)
-			function frame.PropPanel:Paint (w, h)
+			function frame.PropPanel:Paint(w, h)
 				draw.RoundedBox(0, 0, 0, w, h, Color(240, 240, 240))
 			end
 
@@ -293,7 +332,7 @@ if CLIENT then
 			root.info = {}
 			root.info.id = 0
 
-			local function hasGame (name)
+			local function hasGame(name)
 				for k, v in pairs(engine.GetGames()) do
 					if v.folder == name and v.mounted then
 						return true
@@ -302,19 +341,18 @@ if CLIENT then
 				return false
 			end
 
-			local function addModel (container, obj)
-
+			local function addModel(container, obj)
 				local icon = vgui.Create("SpawnIcon", container)
 
-				if (obj.body) then
+				if obj.body then
 					obj.body = string.Trim(tostring(obj.body), "B")
 				end
 
-				if (obj.wide) then
+				if obj.wide then
 					icon:SetWide(obj.wide)
 				end
 
-				if (obj.tall) then
+				if obj.tall then
 					icon:SetTall(obj.tall)
 				end
 
@@ -324,72 +362,114 @@ if CLIENT then
 
 				icon:SetTooltip(string.Replace(string.GetFileFromFilename(obj.model), ".mdl", ""))
 
-				icon.DoClick = function (icon)
-					SF.Editor.pasteCode("\"" .. string.gsub(obj.model, "\\", "/") .. "\"")
-					SF.AddNotify(LocalPlayer(), "\"" .. string.gsub(obj.model, "\\", "/") .. "\" inserted into editor.", "GENERIC", 5, "DRIP1")
+				icon.DoClick = function(icon)
+					SF.Editor.pasteCode('"' .. string.gsub(obj.model, "\\", "/") .. '"')
+					SF.AddNotify(
+						LocalPlayer(),
+						'"' .. string.gsub(obj.model, "\\", "/") .. '" inserted into editor.',
+						"GENERIC",
+						5,
+						"DRIP1"
+					)
 					frame:Close()
 				end
-				icon.OpenMenu = function (icon)
-
+				icon.OpenMenu = function(icon)
 					local menu = DermaMenu()
-					local submenu = menu:AddSubMenu("Re-Render", function () icon:RebuildSpawnIcon() end)
-					submenu:AddOption("This Icon", function () icon:RebuildSpawnIcon() end)
-					submenu:AddOption("All Icons", function () container:RebuildAll() end)
+					local submenu = menu:AddSubMenu("Re-Render", function()
+						icon:RebuildSpawnIcon()
+					end)
+					submenu:AddOption("This Icon", function()
+						icon:RebuildSpawnIcon()
+					end)
+					submenu:AddOption("All Icons", function()
+						container:RebuildAll()
+					end)
 
-					local ChangeIconSize = function (w, h)
-
+					local ChangeIconSize = function(w, h)
 						icon:SetSize(w, h)
 						icon:InvalidateLayout(true)
 						container:OnModified()
 						container:Layout()
 						icon:SetModel(obj.model, obj.skin or 0, obj.body)
-
 					end
 
-					local submenu = menu:AddSubMenu("Resize", function () end)
-					submenu:AddOption("64 x 64 (default)", function () ChangeIconSize(64, 64) end)
-					submenu:AddOption("64 x 128", function () ChangeIconSize(64, 128) end)
-					submenu:AddOption("64 x 256", function () ChangeIconSize(64, 256) end)
-					submenu:AddOption("64 x 512", function () ChangeIconSize(64, 512) end)
+					local submenu = menu:AddSubMenu("Resize", function() end)
+					submenu:AddOption("64 x 64 (default)", function()
+						ChangeIconSize(64, 64)
+					end)
+					submenu:AddOption("64 x 128", function()
+						ChangeIconSize(64, 128)
+					end)
+					submenu:AddOption("64 x 256", function()
+						ChangeIconSize(64, 256)
+					end)
+					submenu:AddOption("64 x 512", function()
+						ChangeIconSize(64, 512)
+					end)
 					submenu:AddSpacer()
-					submenu:AddOption("128 x 64", function () ChangeIconSize(128, 64) end)
-					submenu:AddOption("128 x 128", function () ChangeIconSize(128, 128) end)
-					submenu:AddOption("128 x 256", function () ChangeIconSize(128, 256) end)
-					submenu:AddOption("128 x 512", function () ChangeIconSize(128, 512) end)
+					submenu:AddOption("128 x 64", function()
+						ChangeIconSize(128, 64)
+					end)
+					submenu:AddOption("128 x 128", function()
+						ChangeIconSize(128, 128)
+					end)
+					submenu:AddOption("128 x 256", function()
+						ChangeIconSize(128, 256)
+					end)
+					submenu:AddOption("128 x 512", function()
+						ChangeIconSize(128, 512)
+					end)
 					submenu:AddSpacer()
-					submenu:AddOption("256 x 64", function () ChangeIconSize(256, 64) end)
-					submenu:AddOption("256 x 128", function () ChangeIconSize(256, 128) end)
-					submenu:AddOption("256 x 256", function () ChangeIconSize(256, 256) end)
-					submenu:AddOption("256 x 512", function () ChangeIconSize(256, 512) end)
+					submenu:AddOption("256 x 64", function()
+						ChangeIconSize(256, 64)
+					end)
+					submenu:AddOption("256 x 128", function()
+						ChangeIconSize(256, 128)
+					end)
+					submenu:AddOption("256 x 256", function()
+						ChangeIconSize(256, 256)
+					end)
+					submenu:AddOption("256 x 512", function()
+						ChangeIconSize(256, 512)
+					end)
 					submenu:AddSpacer()
-					submenu:AddOption("512 x 64", function () ChangeIconSize(512, 64) end)
-					submenu:AddOption("512 x 128", function () ChangeIconSize(512, 128) end)
-					submenu:AddOption("512 x 256", function () ChangeIconSize(512, 256) end)
-					submenu:AddOption("512 x 512", function () ChangeIconSize(512, 512) end)
+					submenu:AddOption("512 x 64", function()
+						ChangeIconSize(512, 64)
+					end)
+					submenu:AddOption("512 x 128", function()
+						ChangeIconSize(512, 128)
+					end)
+					submenu:AddOption("512 x 256", function()
+						ChangeIconSize(512, 256)
+					end)
+					submenu:AddOption("512 x 512", function()
+						ChangeIconSize(512, 512)
+					end)
 
 					menu:AddSpacer()
-					menu:AddOption("Delete", function () icon:Remove() end)
+					menu:AddOption("Delete", function()
+						icon:Remove()
+					end)
 					menu:Open()
-
 				end
 
 				icon:InvalidateLayout(true)
 
-				if (IsValid(container)) then
+				if IsValid(container) then
 					container:Add(icon)
 				end
 
 				return icon
-
 			end
 
-			local function addBrowseContent (viewPanel, node, name, icon, path, pathid)
+			local function addBrowseContent(viewPanel, node, name, icon, path, pathid)
 				local models = node:AddFolder(name, path .. "models", pathid, false)
 				models:SetIcon(icon)
 
-				models.OnNodeSelected = function (self, node)
-
-					if viewPanel and viewPanel.currentNode and viewPanel.currentNode == node then return end
+				models.OnNodeSelected = function(self, node)
+					if viewPanel and viewPanel.currentNode and viewPanel.currentNode == node then
+						return
+					end
 
 					viewPanel:Clear(true)
 					viewPanel.currentNode = node
@@ -408,11 +488,10 @@ if CLIENT then
 					frame.ContentNavBar.Tree:OnNodeSelected(node)
 
 					viewPanel.currentNode = node
-
 				end
 			end
 
-			local function addAddonContent (panel, folder, path)
+			local function addAddonContent(panel, folder, path)
 				local files, folders = file.Find(folder .. "*", path)
 
 				for k, v in pairs(files) do
@@ -426,9 +505,12 @@ if CLIENT then
 				end
 			end
 
-			local function fillNavBar (propTable, parentNode)
+			local function fillNavBar(propTable, parentNode)
 				for k, v in SortedPairs(propTable) do
-					if v.parentid == parentNode.info.id and (v.needsapp ~= "" and hasGame(v.needsapp) or v.needsapp == "") then
+					if
+						v.parentid == parentNode.info.id
+						and (v.needsapp ~= "" and hasGame(v.needsapp) or v.needsapp == "")
+					then
 						local node = parentNode:AddNode(v.name, v.icon)
 						node:SetExpanded(true)
 						node.info = v
@@ -441,7 +523,9 @@ if CLIENT then
 							if object.type == "model" then
 								addModel(node.propPanel, object)
 							elseif object.type == "header" then
-								if not object.text or type(object.text) ~= "string" then return end
+								if not object.text or type(object.text) ~= "string" then
+									return
+								end
 
 								local label = vgui.Create("ContentHeader", node.propPanel)
 								label:SetText(object.text)
@@ -472,21 +556,27 @@ if CLIENT then
 
 			local games = engine.GetGames()
 			table.insert(games, {
-					title = "All",
-					folder = "GAME",
-					icon = "all",
-					mounted = true
-				})
+				title = "All",
+				folder = "GAME",
+				icon = "all",
+				mounted = true,
+			})
 			table.insert(games, {
-					title = "Garry's Mod",
-					folder = "garrysmod",
-					mounted = true
-				})
+				title = "Garry's Mod",
+				folder = "garrysmod",
+				mounted = true,
+			})
 
 			for _, game in SortedPairsByMemberValue(games, "title") do
-
 				if game.mounted then
-					addBrowseContent(viewPanel, gamesNode, game.title, "games/16/" .. (game.icon or game.folder) .. ".png", "", game.folder)
+					addBrowseContent(
+						viewPanel,
+						gamesNode,
+						game.title,
+						"games/16/" .. (game.icon or game.folder) .. ".png",
+						"",
+						game.folder
+					)
 				end
 			end
 
@@ -497,8 +587,10 @@ if CLIENT then
 			viewPanel:DockMargin(5, 0, 0, 0)
 			viewPanel:SetVisible(false)
 
-			function addonsNode:OnNodeSelected (node)
-				if node == addonsNode then return end
+			function addonsNode:OnNodeSelected(node)
+				if node == addonsNode then
+					return
+				end
 				viewPanel:Clear(true)
 				addAddonContent(viewPanel, "models/", node.addon.title)
 				node.propPanel = viewPanel
@@ -506,7 +598,7 @@ if CLIENT then
 			end
 			for _, addon in SortedPairsByMemberValue(engine.GetAddons(), "title") do
 				if addon.downloaded and addon.mounted and addon.models > 0 then
-					local node = addonsNode:AddNode(addon.title .. " ("..addon.models..")", "icon16/bricks.png")
+					local node = addonsNode:AddNode(addon.title .. " (" .. addon.models .. ")", "icon16/bricks.png")
 					node.addon = addon
 				end
 			end
@@ -523,7 +615,7 @@ if CLIENT then
 			frame.searchBox.propPanel = viewPanel
 
 			frame.searchBox._OnGetFocus = frame.searchBox.OnGetFocus
-			function frame.searchBox:OnGetFocus ()
+			function frame.searchBox:OnGetFocus()
 				if self:GetValue() == "Search..." then
 					self:SetValue("")
 				end
@@ -531,22 +623,26 @@ if CLIENT then
 			end
 
 			frame.searchBox._OnLoseFocus = frame.searchBox.OnLoseFocus
-			function frame.searchBox:OnLoseFocus ()
+			function frame.searchBox:OnLoseFocus()
 				if self:GetValue() == "" then
 					self:SetText("Search...")
 				end
 				frame.searchBox:_OnLoseFocus()
 			end
 
-			function frame.searchBox:updateHeader ()
-				self.header:SetText(frame.searchBox.results .. " Results for \"" .. self.search .. "\"")
+			function frame.searchBox:updateHeader()
+				self.header:SetText(frame.searchBox.results .. ' Results for "' .. self.search .. '"')
 			end
 
 			local searchTime = nil
 
-			function frame.searchBox:getAllModels (time, folder, extension, path)
-				if searchTime and time ~= searchTime then return end
-				if self.results and self.results >= 256 then return end
+			function frame.searchBox:getAllModels(time, folder, extension, path)
+				if searchTime and time ~= searchTime then
+					return
+				end
+				if self.results and self.results >= 256 then
+					return
+				end
 				self.load = self.load + 1
 				local files, folders = file.Find(folder .. "/*", path)
 
@@ -557,24 +653,34 @@ if CLIENT then
 						self.results = self.results + 1
 						self:updateHeader()
 					end
-					if self.results >= 256 then break end
+					if self.results >= 256 then
+						break
+					end
 				end
 
 				for k, v in pairs(folders) do
 					timer.Simple(k * 0.02, function()
-							if searchTime and time ~= searchTime then return end
-							if self.results >= 256 then return end
-							self:getAllModels(time, folder .. v .. "/", extension, path)
-						end)
-				end
-				timer.Simple(1, function ()
-						if searchTime and time ~= searchTime then return end
-						self.load = self.load - 1
+						if searchTime and time ~= searchTime then
+							return
+						end
+						if self.results >= 256 then
+							return
+						end
+						self:getAllModels(time, folder .. v .. "/", extension, path)
 					end)
+				end
+				timer.Simple(1, function()
+					if searchTime and time ~= searchTime then
+						return
+					end
+					self.load = self.load - 1
+				end)
 			end
 
-			function frame.searchBox:OnEnter ()
-				if self:GetValue() == "" then return end
+			function frame.searchBox:OnEnter()
+				if self:GetValue() == "" then
+					return
+				end
 
 				self.propPanel:Clear()
 
@@ -594,16 +700,16 @@ if CLIENT then
 
 				frame.ContentNavBar.Tree:OnNodeSelected(self)
 			end
-			hook.Add("Think", "sf_header_update", function ()
-					if frame.searchBox.loading and frame.searchBox.propPanel:IsVisible() then
-						frame.searchBox.loading:SetText("Loading" .. string.rep(".", math.floor(CurTime()) % 4))
-					end
-					if frame.searchBox.load and frame.searchBox.load <= 0 then
-						frame.searchBox.loading:Remove()
-						frame.searchBox.loading = nil
-						frame.searchBox.load = nil
-					end
-				end)
+			hook.Add("Think", "sf_header_update", function()
+				if frame.searchBox.loading and frame.searchBox.propPanel:IsVisible() then
+					frame.searchBox.loading:SetText("Loading" .. string.rep(".", math.floor(CurTime()) % 4))
+				end
+				if frame.searchBox.load and frame.searchBox.load <= 0 then
+					frame.searchBox.loading:Remove()
+					frame.searchBox.loading = nil
+					frame.searchBox.load = nil
+				end
+			end)
 
 			self.initialized = true
 		end
@@ -620,19 +726,26 @@ if CLIENT then
 	net.Receive("starfall_editor_status", function(len)
 		local ply = net.ReadEntity()
 		local status = net.ReadBit() ~= 0 -- net.ReadBit returns 0 or 1, despite net.WriteBit taking a boolean
-		if not ply:IsValid() or ply == LocalPlayer() then return end
+		if not ply:IsValid() or ply == LocalPlayer() then
+			return
+		end
 
 		busy_players[ply] = status or nil
 	end)
 
 	local rolldelta = math.rad(80)
-	timer.Create("starfall_editor_status", 1 / 3, 0, function ()
+	timer.Create("starfall_editor_status", 1 / 3, 0, function()
 		rolldelta = -rolldelta
 		for ply, _ in pairs(busy_players) do
-			if not ply:IsValid() then continue end
+			if not ply:IsValid() then
+				goto cont
+			end
 			local BoneIndx = ply:LookupBone("ValveBiped.Bip01_Head1") or ply:LookupBone("ValveBiped.HC_Head_Bone") or 0
 			local BonePos, BoneAng = ply:GetBonePosition(BoneIndx)
-			local particle = emitter:Add("radon/starfall2", BonePos + Vector(math.random(-10, 10), math.random(-10, 10), 60 + math.random(0, 10)))
+			local particle = emitter:Add(
+				"radon/starfall2",
+				BonePos + Vector(math.random(-10, 10), math.random(-10, 10), 60 + math.random(0, 10))
+			)
 			if particle then
 				particle:SetColor(math.random(235, 255), math.random(190, 195), math.random(0, 20))
 				particle:SetVelocity(Vector(0, 0, -40))
@@ -648,20 +761,25 @@ if CLIENT then
 
 				particle:SetRollDelta(rolldelta)
 			end
+
+			::cont::
 		end
 	end)
 
 	local forceCloseEditor = function()
-		if not SF.Editor.initialized then return end
+		if not SF.Editor.initialized then
+			return
+		end
 		SF.Editor.editor:Close()
 		for k, v in pairs(SF.Editor.TabHandlers) do
-			if v.Cleanup then v:Cleanup() end
+			if v.Cleanup then
+				v:Cleanup()
+			end
 		end
 		SF.Editor.initialized = false
 		SF.Editor.editor:Remove()
 		SF.Editor.editor = nil
 		timer.Remove("sf_editor_file_auto_reload")
-
 	end
 
 	concommand.Add("sf_editor_reload", function()
@@ -673,7 +791,9 @@ if CLIENT then
 	local function initDocs(data)
 		local ok, docs
 		if data then
-			ok, docs = xpcall(function() return SF.StringToTable(util.Decompress(data)) end, debug.traceback)
+			ok, docs = xpcall(function()
+				return SF.StringToTable(util.Decompress(data))
+			end, debug.traceback)
 		end
 		if ok then
 			SF.Docs = docs
@@ -712,22 +832,25 @@ if CLIENT then
 		end
 	end)
 elseif SERVER then
-
 	util.AddNetworkString("starfall_editor_status")
 	util.AddNetworkString("starfall_docs")
 
 	local starfall_event = {}
 
-	concommand.Add("starfall_event", function (ply, command, args)
+	concommand.Add("starfall_event", function(ply, command, args)
 		local handler = starfall_event[args[1] or ""]
-		if not handler then return end
+		if not handler then
+			return
+		end
 		return handler(ply, args)
 	end)
 
 	function starfall_event.editor_open(ply, args)
 		local t = ply.SF_NextEditorStatus
-		if t and CurTime()<t then return end
-		ply.SF_NextEditorStatus = CurTime()+0.1
+		if t and CurTime() < t then
+			return
+		end
+		ply.SF_NextEditorStatus = CurTime() + 0.1
 
 		net.Start("starfall_editor_status")
 		net.WriteEntity(ply)
@@ -737,8 +860,10 @@ elseif SERVER then
 
 	function starfall_event.editor_close(ply, args)
 		local t = ply.SF_NextEditorStatus
-		if t and CurTime()<t then return end
-		ply.SF_NextEditorStatus = CurTime()+0.1
+		if t and CurTime() < t then
+			return
+		end
+		ply.SF_NextEditorStatus = CurTime() + 0.1
 
 		net.Start("starfall_editor_status")
 		net.WriteEntity(ply)

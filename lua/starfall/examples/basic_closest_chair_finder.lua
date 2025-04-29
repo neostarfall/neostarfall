@@ -16,8 +16,12 @@ local models = { -- List of allowed chair models
 -- Using the `filter` callback we can only allow certain results in our list
 local found_entities = find.byClass("prop_vehicle_prisoner_pod", function(ent)
 	-- Return nothing (dismiss) if the entity isn't owned by us it's model isn't allowed
-	if ent:getOwner() ~= owner() then return end
-	if not models[ent:getModel()] then return end
+	if ent:getOwner() ~= owner() then
+		return
+	end
+	if not models[ent:getModel()] then
+		return
+	end
 	-- Return `true` to accept any entities that passed the tests above
 	return true
 end)

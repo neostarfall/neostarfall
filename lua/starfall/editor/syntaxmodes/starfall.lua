@@ -54,11 +54,15 @@ local keyword_const = {
 	["false"] = kwNoParenthesis,
 	["_G"] = kwCanParenthesis,
 	["self"] = kwCanParenthesis,
-	["..."] = kwNoParenthesis
+	["..."] = kwNoParenthesis,
 }
 
 -- fallback for nonexistant entries:
-local fallback_meta = { __index = function(tbl, index) return {} end }
+local fallback_meta = {
+	__index = function(tbl, index)
+		return {}
+	end,
+}
 setmetatable(keywords, fallback_meta)
 setmetatable(keyword_const, fallback_meta)
 setmetatable(storageTypes, fallback_meta)
@@ -71,10 +75,10 @@ local directives = SF.PreprocessData.directives
 --{foreground color, background color, fontStyle}
 --Style can be: 0 - normal  1 - italic 2 - bold
 
-local colors = { }
+local colors = {}
 
 function EDITOR:LoadSyntaxColors()
-	colors = { }
+	colors = {}
 
 	for k, v in pairs(SF.Editor.Themes.CurrentTheme) do
 		colors[k] = v
@@ -85,13 +89,17 @@ end
 local cols = {}
 local lastcol
 local lasttoken
-local unconnectable = {--Each token of this type shouldnt be connected because editor goes through them
+local unconnectable = { --Each token of this type shouldnt be connected because editor goes through them
 	["bracket"] = true,
 	["keyword"] = true,
 }
 local function addToken(tokenname, tokendata)
-	if not tokendata or #tokendata < 0 then error("EMPTY TOKEN") end
-	if not tokenname then tokenname = "notfound" end
+	if not tokendata or #tokendata < 0 then
+		error("EMPTY TOKEN")
+	end
+	if not tokenname then
+		tokenname = "notfound"
+	end
 
 	local color = colors[tokenname] or colors["notfound"]
 
@@ -109,7 +117,7 @@ local function addColorToken(tokenname, bgcolor, tokendata)
 	local textcolor
 	if usePigments == 2 then
 		local h, s, v = ColorToHSV(bgcolor) --We're finding high-contrast color
-		h = (h + 180)%360
+		h = (h + 180) % 360
 		s = 1 - s
 		v = 1 - v
 		textcolor = HSVToColor(h, s, v)
@@ -118,7 +126,7 @@ local function addColorToken(tokenname, bgcolor, tokendata)
 	else
 		addToken(tokenname, tokendata)
 	end
-	cols[#cols + 1] = { tokendata, { textcolor, bgcolor, 0 }, "color."..tokenname }
+	cols[#cols + 1] = { tokendata, { textcolor, bgcolor, 0 }, "color." .. tokenname }
 	lastcol = cols[#cols]
 end
 
@@ -153,12 +161,12 @@ function EDITOR:BlockCommentSelection(removecomment)
 		local comment_char = "%-%- "
 		if removecomment then
 			-- shift-TAB with a selection --
-			local tmp = string_gsub("\n"..self:GetSelection(), "\n"..comment_char, "\n")
+			local tmp = string_gsub("\n" .. self:GetSelection(), "\n" .. comment_char, "\n")
 			-- makes sure that the first line is outdented
 			self:SetSelection(tmp:sub(2))
 		else
 			-- plain TAB with a selection --
-			self:SetSelection("-- "..self:GetSelection():gsub("\n", "\n"..comment_char))
+			self:SetSelection("-- " .. self:GetSelection():gsub("\n", "\n" .. comment_char))
 		end
 	else
 		ErrorNoHalt("Invalid block comment style")
@@ -168,7 +176,6 @@ function EDITOR:BlockCommentSelection(removecomment)
 end
 
 function EDITOR:CommentSelection(removecomment)
-
 	local sel_start, sel_caret = self:MakeSelection(self:Selection())
 	local str = self:GetSelection()
 	if removecomment then
@@ -182,7 +189,7 @@ function EDITOR:CommentSelection(removecomment)
 			end
 		end
 	else
-		self:SetSelection("--[[\n" .. str .."\n]]")
+		self:SetSelection("--[[\n" .. str .. "\n]]")
 
 		if sel_caret[1] == sel_start[1] then
 			sel_caret[2] = sel_caret[2] + 4
@@ -194,8 +201,10 @@ function EDITOR:CommentSelection(removecomment)
 end
 
 function EDITOR:ResetTokenizer(row)
-	local p = self.Rows[row-1]
-	if p then p = p[2] end
+	local p = self.Rows[row - 1]
+	if p then
+		p = p[2]
+	end
 	self.multilinestring = p and p["multilinestring"] or false
 	self.blockcomment = p and p["blockcomment"] or false
 	lasttoken = nil
@@ -203,16 +212,59 @@ end
 
 --That code sucks, if you can do any better then DO IT
 local numbpattern = "0?[xb]?%x+"
-local numbpatternG = "("..numbpattern..")"
+local numbpatternG = "(" .. numbpattern .. ")"
 local spacedcomma = "%s*,%s*"
-local spacedcommaG = "("..spacedcomma..")"
-local rgbpattern = "^Color%s*%(%s*"..numbpattern..spacedcomma..numbpattern..spacedcomma..numbpattern.."%s*%)"
-local rgbpatternG = "^(Color%s*)(%(%s*)"..numbpatternG..spacedcommaG..numbpatternG..spacedcommaG..numbpatternG.."(%s*%))"
-local rgbapattern = "^Color%s*%(%s*"..numbpattern..spacedcomma..numbpattern..spacedcomma..numbpattern..spacedcomma..numbpattern.."%s*%)"
-local rgbapatternG = "^(Color%s*)(%(%s*)"..numbpatternG..spacedcommaG..numbpatternG..spacedcommaG..numbpatternG..spacedcommaG..numbpatternG.."(%s*%))"
-local setrgbapattern = "^setRGBA%s*%(%s*"..numbpattern..spacedcomma..numbpattern..spacedcomma..numbpattern..spacedcomma..numbpattern.."%s*%)"
-local setrgbapatternG = "^(setRGBA%s*)(%(%s*)"..numbpatternG..spacedcommaG..numbpatternG..spacedcommaG..numbpatternG..spacedcommaG..numbpatternG.."(%s*%))"
-
+local spacedcommaG = "(" .. spacedcomma .. ")"
+local rgbpattern = "^Color%s*%(%s*"
+	.. numbpattern
+	.. spacedcomma
+	.. numbpattern
+	.. spacedcomma
+	.. numbpattern
+	.. "%s*%)"
+local rgbpatternG = "^(Color%s*)(%(%s*)"
+	.. numbpatternG
+	.. spacedcommaG
+	.. numbpatternG
+	.. spacedcommaG
+	.. numbpatternG
+	.. "(%s*%))"
+local rgbapattern = "^Color%s*%(%s*"
+	.. numbpattern
+	.. spacedcomma
+	.. numbpattern
+	.. spacedcomma
+	.. numbpattern
+	.. spacedcomma
+	.. numbpattern
+	.. "%s*%)"
+local rgbapatternG = "^(Color%s*)(%(%s*)"
+	.. numbpatternG
+	.. spacedcommaG
+	.. numbpatternG
+	.. spacedcommaG
+	.. numbpatternG
+	.. spacedcommaG
+	.. numbpatternG
+	.. "(%s*%))"
+local setrgbapattern = "^setRGBA%s*%(%s*"
+	.. numbpattern
+	.. spacedcomma
+	.. numbpattern
+	.. spacedcomma
+	.. numbpattern
+	.. spacedcomma
+	.. numbpattern
+	.. "%s*%)"
+local setrgbapatternG = "^(setRGBA%s*)(%(%s*)"
+	.. numbpatternG
+	.. spacedcommaG
+	.. numbpatternG
+	.. spacedcommaG
+	.. numbpatternG
+	.. spacedcommaG
+	.. numbpatternG
+	.. "(%s*%))"
 
 --End of monsterous code
 
@@ -228,7 +280,7 @@ function EDITOR:SyntaxColorLine(row)
 
 	if self.blockcomment then -- Closing block comments
 		-- [0; +inf) for Lua comments, -1 for C comments
-		local blockEnd = (self.blockcomment >= 0) and (".-%]"..string.rep('=',self.blockcomment).."%]") or (".-%*/")
+		local blockEnd = (self.blockcomment >= 0) and (".-%]" .. string.rep("=", self.blockcomment) .. "%]") or ".-%*/"
 
 		if self:NextPattern(blockEnd) then
 			self.blockcomment = nil
@@ -238,20 +290,24 @@ function EDITOR:SyntaxColorLine(row)
 
 		addToken("comment", self.tokendata)
 	elseif self.multilinestring then
-		local ending = "%]"..string.rep('=',self.multilinestring).."%]"
+		local ending = "%]" .. string.rep("=", self.multilinestring) .. "%]"
 		while self.character do -- Find the ending ]]
 			if self:NextPattern(ending) then
 				self.multilinestring = nil
 				break
 			end
-			if self.character == "\\" then self:NextCharacter() end
+			if self.character == "\\" then
+				self:NextCharacter()
+			end
 			self:NextCharacter()
 		end
 
 		addToken("string", self.tokendata)
 	end
 	local spaces = self:SkipPattern(" *")
-	if spaces then addToken("whitespace", spaces) end
+	if spaces then
+		addToken("whitespace", spaces)
+	end
 
 	local found = self:SkipPattern("(function)")
 	if found then
@@ -259,13 +315,13 @@ function EDITOR:SyntaxColorLine(row)
 		self.tokendata = "" -- Reset tokendata
 
 		local spaces = self:SkipPattern(" *")
-		if spaces then addToken("whitespace", spaces) end
+		if spaces then
+			addToken("whitespace", spaces)
+		end
 
 		if self:NextPattern("%s*[a-zA-Z][a-zA-Z0-9_]*") then -- function THIS()
-
 			local spaces, funcname = self.tokendata:match("(%s*)(%a[a-zA-Z0-9_]*)")
 			addToken("userfunction", funcname)
-
 		end
 		self.tokendata = ""
 
@@ -281,27 +337,31 @@ function EDITOR:SyntaxColorLine(row)
 		cols.foldable = true
 	end
 	local spaces = self:SkipPattern(" *")
-	if spaces then addToken("whitespace", spaces) end
+	if spaces then
+		addToken("whitespace", spaces)
+	end
 
-	found = self:NextPattern("local%s*function%s+")  -- local function
+	found = self:NextPattern("local%s*function%s+") -- local function
 	if found then
 		local l, spaces, f, spaces2 = self.tokendata:match("(local)(%s*)(function)(%s+)")
 
 		addToken("keyword", l)
-		if #spaces>0 then addToken("whitespace", spaces) end
+		if #spaces > 0 then
+			addToken("whitespace", spaces)
+		end
 		addToken("storageType", f) -- Add "function"
 		addToken("whitespace", spaces2)
 
 		self.tokendata = "" -- Reset tokendata
 
 		local spaces = self:SkipPattern(" *")
-		if spaces then addToken("whitespace", spaces) end
+		if spaces then
+			addToken("whitespace", spaces)
+		end
 
 		if self:NextPattern("%s*[a-zA-Z][a-zA-Z0-9_]*") then -- local function THIS()
-
 			local spaces, funcname = self.tokendata:match("(%s*)(%a[a-zA-Z0-9_]*)")
 			addToken("userfunction", funcname)
-
 		end
 		self.tokendata = ""
 
@@ -322,8 +382,12 @@ function EDITOR:SyntaxColorLine(row)
 
 		-- eat all spaces
 		local spaces = self:SkipPattern(" *")
-		if spaces then addToken("whitespace", spaces) end
-		if not self.character then break end
+		if spaces then
+			addToken("whitespace", spaces)
+		end
+		if not self.character then
+			break
+		end
 
 		-- eat next token
 		if usePigments then
@@ -404,7 +468,7 @@ function EDITOR:SyntaxColorLine(row)
 			tokenname = "number"
 		elseif self:NextPattern("^%:[a-zA-Z][a-zA-Z0-9_]*") then -- Methods
 			addToken("operator", self.tokendata:sub(1, 1)) -- Adding : as operator
-			self.tokendata = self.tokendata:sub(2)  -- Operator was handled, so remove it from tokendata
+			self.tokendata = self.tokendata:sub(2) -- Operator was handled, so remove it from tokendata
 			if libmap["Methods"][self.tokendata] then
 				tokenname = "method"
 			else
@@ -459,8 +523,9 @@ function EDITOR:SyntaxColorLine(row)
 				if self:NextPattern("^%.") then -- We found a dot, looking for library method/constant
 					addToken("operator", self.tokendata)
 					self.tokendata = ""
-					if sstr=="render" and usePigments and self:NextPattern(setrgbapattern) then -- setRGBA(r,g,b)
-						local fname, bracket1, r, comma1, g, comma2, b, comma3, a, bracket2 = self.tokendata:match(setrgbapatternG)
+					if sstr == "render" and usePigments and self:NextPattern(setrgbapattern) then -- setRGBA(r,g,b)
+						local fname, bracket1, r, comma1, g, comma2, b, comma3, a, bracket2 =
+							self.tokendata:match(setrgbapatternG)
 						local cr, cg, cb, ca = tonumber(r), tonumber(g), tonumber(b), tonumber(a)
 						local col
 						if cr and cg and cb and ca then
@@ -494,7 +559,6 @@ function EDITOR:SyntaxColorLine(row)
 						addColorToken("bracket", col, bracket2)
 						tokenname = "" -- It's custom token
 						self.tokendata = ""
-
 					elseif self:NextPattern("^[a-zA-Z][a-zA-Z0-9_]*") then
 						local t = libmap[sstr][self.tokendata]
 						if t then -- Valid function, woohoo
@@ -513,13 +577,15 @@ function EDITOR:SyntaxColorLine(row)
 			end
 		elseif self:NextPattern("%[=*%[") then -- Multiline strings
 			local reps = #self.tokendata:match("%[(=*)%[")
-			local ending = "%]"..string.rep("=",reps).."%]"
+			local ending = "%]" .. string.rep("=", reps) .. "%]"
 			while self.character do -- Find the ending ]] if it isnt really multline(who does that?! Shame on you!)
 				if self:NextPattern(ending) then
 					tokenname = "string"
 					break
 				end
-				if self.character == "\\" then self:NextCharacter() end
+				if self.character == "\\" then
+					self:NextCharacter()
+				end
 				self:NextCharacter()
 			end
 
@@ -535,7 +601,9 @@ function EDITOR:SyntaxColorLine(row)
 					tokenname = "string"
 					break
 				end
-				if self.character == "\\" then self:NextCharacter() end
+				if self.character == "\\" then
+					self:NextCharacter()
+				end
 				self:NextCharacter()
 			end
 
@@ -552,7 +620,9 @@ function EDITOR:SyntaxColorLine(row)
 					tokenname = "string"
 					break
 				end
-				if self.character == "\\" then self:NextCharacter() end
+				if self.character == "\\" then
+					self:NextCharacter()
+				end
 				self:NextCharacter()
 			end
 			if tokenname == "" then -- If no ending " was found...
@@ -561,15 +631,16 @@ function EDITOR:SyntaxColorLine(row)
 				self:NextCharacter()
 			end
 		elseif self:NextPattern("%-%-") then -- Comments
-			
 			if self:NextPattern("%[=*%[") then -- Block comment
 				local reps = #self.tokendata:match("%[(=*)%[")
 				while self.character do
-					if self:NextPattern("%]"..string.rep("=",reps).."%]") then
+					if self:NextPattern("%]" .. string.rep("=", reps) .. "%]") then
 						tokenname = "comment"
 						break
 					end
-					if self.character == "\\" then self:NextCharacter() end
+					if self.character == "\\" then
+						self:NextCharacter()
+					end
 					self:NextCharacter()
 				end
 
@@ -600,7 +671,9 @@ function EDITOR:SyntaxColorLine(row)
 					tokenname = "comment"
 					break
 				end
-				if self.character == "\\" then self:NextCharacter() end
+				if self.character == "\\" then
+					self:NextCharacter()
+				end
 				self:NextCharacter()
 			end
 
@@ -637,30 +710,34 @@ function EDITOR:SyntaxColorLine(row)
 	return cols
 end
 
-local incBlock = {["function"]=true,["then"]=true,["do"]=true,["else"]=true}
-local decBlock = {["end"]=true,["elseif"]=true,["else"]=true}
+local incBlock = { ["function"] = true, ["then"] = true, ["do"] = true, ["else"] = true }
+local decBlock = { ["end"] = true, ["elseif"] = true, ["else"] = true }
 local BracketPairs = {
-	["{"] = {Removes = {["}"]=true}, Adds = {["{"]=true}},
-	["["] = {Removes = {["]"]=true}, Adds = {["["]=true}},
-	["("] = {Removes = {[")"]=true}, Adds = {["("]=true}},
-	["then"] = {Adds = incBlock, Removes = decBlock},
-	["function"] = {Adds = incBlock, Removes = decBlock},
-	["do"] = {Adds = incBlock, Removes = decBlock},
-	["else"] = {Adds = incBlock, Removes = decBlock},
+	["{"] = { Removes = { ["}"] = true }, Adds = { ["{"] = true } },
+	["["] = { Removes = { ["]"] = true }, Adds = { ["["] = true } },
+	["("] = { Removes = { [")"] = true }, Adds = { ["("] = true } },
+	["then"] = { Adds = incBlock, Removes = decBlock },
+	["function"] = { Adds = incBlock, Removes = decBlock },
+	["do"] = { Adds = incBlock, Removes = decBlock },
+	["else"] = { Adds = incBlock, Removes = decBlock },
 }
 local BracketPairs2 = {
-	["}"] = {Adds = {["}"]=true}, Removes = {["{"]=true}},
-	["]"] = {Adds = {["]"]=true}, Removes = {["["]=true}},
-	[")"] = {Adds = {[")"]=true}, Removes = {["("]=true}},
-	["end"] = {Removes = incBlock, Adds = decBlock},
-	["elseif"] = {Removes = incBlock, Adds = decBlock},
+	["}"] = { Adds = { ["}"] = true }, Removes = { ["{"] = true } },
+	["]"] = { Adds = { ["]"] = true }, Removes = { ["["] = true } },
+	[")"] = { Adds = { [")"] = true }, Removes = { ["("] = true } },
+	["end"] = { Removes = incBlock, Adds = decBlock },
+	["elseif"] = { Removes = incBlock, Adds = decBlock },
 }
 
 function EDITOR:PopulateContextMenu(menu)
 	local caret = self:CursorToCaret()
-	if not caret then return end
+	if not caret then
+		return
+	end
 	local token = self:GetTokenAtPosition(caret)
-	if not token then return end
+	if not token then
+		return
+	end
 	token = token[3]:Split(".") -- It can have subtoken after dot
 
 	local subtoken = token[2]
@@ -670,7 +747,7 @@ function EDITOR:PopulateContextMenu(menu)
 	self:NextCharacter()
 
 	if token == "color" then
-		local startpos,endpos
+		local startpos, endpos
 		if subtoken == "number" or subtoken == "notfound" or subtoken == "bracket" then
 			while self.character do
 				if self.character == "(" then
@@ -704,19 +781,19 @@ function EDITOR:PopulateContextMenu(menu)
 			end
 		end
 		if startpos and endpos then
-			local colorstr = self.line:sub(startpos,endpos)
-			local r,g,b,a = unpack(colorstr:Split(","))
+			local colorstr = self.line:sub(startpos, endpos)
+			local r, g, b, a = unpack(colorstr:Split(","))
 			r, g, b = tonumber(r), tonumber(g), tonumber(b)
 			if a then
 				a = tonumber(a)
 			end
 
-			menu:AddOption("Colorpicker",function()
+			menu:AddOption("Colorpicker", function()
 				local ColorPicker = vgui.Create("StarfallColorPicker")
 				ColorPicker:SetColor(Color(r, g, b, a or 255))
 				ColorPicker.OnColorPicked = function(_, color)
-					self.Start = {caret[1], startpos}
-					self.Caret = {caret[1], endpos + 1}
+					self.Start = { caret[1], startpos }
+					self.Caret = { caret[1], endpos + 1 }
 					if a or color.a ~= 255 then
 						self:SetSelection(string.format("%d, %d, %d, %d", color.r, color.g, color.b, color.a))
 					else
@@ -727,10 +804,9 @@ function EDITOR:PopulateContextMenu(menu)
 			end)
 		end
 	end
-
 end
 function EDITOR:PaintTextOverlay()
-	local bracket,bracketindex = self:GetTokenAtPosition(self.Caret)
+	local bracket, bracketindex = self:GetTokenAtPosition(self.Caret)
 	local width, height = self.FontWidth, self.FontHeight
 	local lines = #self.RowTexts
 	if bracket then
@@ -749,24 +825,28 @@ function EDITOR:PaintTextOverlay()
 			local lookup = BracketPairs[bracket]
 			while line < lines and not y do
 				tokens = self:GetRowCache(line)
-				if not tokens then break end
+				if not tokens then
+					break
+				end
 				x = 0
 				for I = 1, #tokens do
 					local text = tokens[I][1]
 					if I < startPos then
 						x = x + #text
 						cBracketPos = x
-						continue
+						goto cont
 					end
-					if lookup.Removes[text] and sum>0 then
+					if lookup.Removes[text] and sum > 0 then
 						sum = sum - 1
-						if lookup.Adds[text] and sum>0 then
+						if lookup.Adds[text] and sum > 0 then
 							sum = sum + 1
 						end
 					elseif lookup.Adds[text] then
 						sum = sum + 1
 					end
-					if sum < 0 then return end
+					if sum < 0 then
+						return
+					end
 					if sum == 0 then
 						y = line
 						x = x + 1
@@ -774,11 +854,12 @@ function EDITOR:PaintTextOverlay()
 						break
 					end
 					x = x + #text
+					::cont::
 				end
 				startPos = 1
 				line = line + 1
 			end
-		else--Reverse search
+		else --Reverse search
 			local lookup = BracketPairs2[bracket]
 			startPos = bracketindex
 			line = self.Caret[1]
@@ -790,11 +871,11 @@ function EDITOR:PaintTextOverlay()
 					if I > startPos then
 						x = x + #text
 						cBracketPos = x
-						continue
+						goto cont
 					end
-					if lookup.Removes[text] and sum>0 then
+					if lookup.Removes[text] and sum > 0 then
 						sum = sum - 1
-						if lookup.Adds[text] and sum>0 then
+						if lookup.Adds[text] and sum > 0 then
 							sum = sum + 1
 						end
 					elseif lookup.Adds[text] then
@@ -808,24 +889,37 @@ function EDITOR:PaintTextOverlay()
 						break
 					end
 					x = x + #text
+					::cont::
 				end
 				line = line - 1
-				if line < 1 then break end
+				if line < 1 then
+					break
+				end
 				tokens = self:GetRowCache(line)
-				if not tokens then break end
+				if not tokens then
+					break
+				end
 				startPos = #tokens
 			end
 		end
 		if x and y then
 			if not self.Rows[y][3] then
-				surface_SetDrawColor(colors.word_highlight.r,colors.word_highlight.g,colors.word_highlight.b,100)
-				surface_DrawRect((x-self.Scroll[2]) * width + self.LineNumberWidth + self.FontWidth - 1, (y - self:GetRowOffset(y) -self.Scroll[1]) * height + 1, length*width-2, height-2)
+				surface_SetDrawColor(colors.word_highlight.r, colors.word_highlight.g, colors.word_highlight.b, 100)
+				surface_DrawRect(
+					(x - self.Scroll[2]) * width + self.LineNumberWidth + self.FontWidth - 1,
+					(y - self:GetRowOffset(y) - self.Scroll[1]) * height + 1,
+					length * width - 2,
+					height - 2
+				)
 			end
-			surface_SetDrawColor(colors.word_highlight.r,colors.word_highlight.g,colors.word_highlight.b,100)
-			surface_DrawRect((cBracketPos-self.Scroll[2] +1) * width + self.LineNumberWidth + self.FontWidth - 1, (self.Caret[1] - self:GetRowOffset(self.Caret[1]) -self.Scroll[1]) * height + 1, bracketLength*width-2, height-2)
-
+			surface_SetDrawColor(colors.word_highlight.r, colors.word_highlight.g, colors.word_highlight.b, 100)
+			surface_DrawRect(
+				(cBracketPos - self.Scroll[2] + 1) * width + self.LineNumberWidth + self.FontWidth - 1,
+				(self.Caret[1] - self:GetRowOffset(self.Caret[1]) - self.Scroll[1]) * height + 1,
+				bracketLength * width - 2,
+				height - 2
+			)
 		end
 	end
-
 end
 return EDITOR

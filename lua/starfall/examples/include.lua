@@ -7,8 +7,8 @@
 local filesWantToInclude = { "included.txt" }
 
 for _, file in ipairs(filesWantToInclude) do
-    local ret = require(file)
-    print(ret)
+	local ret = require(file)
+	print(ret)
 end
 
 -- You can also do this via requiredir and includedir instead.

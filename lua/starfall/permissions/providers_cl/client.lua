@@ -11,14 +11,15 @@ P.overridable = true
 
 P.checks = {
 	function(instance, target, key)
-		return LocalPlayer()==instance.player, "This function can only be used on the player's own chip"
+		return LocalPlayer() == instance.player, "This function can only be used on the player's own chip"
 	end,
 	function(instance, target, key)
 		local owner = instance.player
-		return LocalPlayer()==owner or (IsValid(owner) and owner:GetFriendStatus()=="friend"), "This function can only be used on the player's or their friends' chips"
+		return LocalPlayer() == owner or (IsValid(owner) and owner:GetFriendStatus() == "friend"),
+			"This function can only be used on the player's or their friends' chips"
 	end,
 	"allow",
-	"block"
+	"block",
 }
 
 SF.Permissions.registerProvider(P)
