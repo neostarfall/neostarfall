@@ -7,9 +7,14 @@ SF.Permissions = {}
 local P = SF.Permissions
 P.privileges = {}
 P.providers = {}
-P.settings = setmetatable({},{__index = function(t,k) local r={} t[k]=r return r end})
+P.settings = setmetatable({}, {
+	__index = function(t, k)
+		local r = {}
+		t[k] = r
+		return r
+	end,
+})
 P.filename = SERVER and "sf_perms2_sv.txt" or "sf_perms2_cl.txt"
-
 
 local Privilege = {
 	__index = {
@@ -22,10 +27,14 @@ local Privilege = {
 				local provider = P.providers[providerid]
 				if provider then
 					local check = provider.checks[P.settings[self.id][providerid]]
-					if provider.overridable then overridable = true end
+					if provider.overridable then
+						overridable = true
+					end
 					if check == "block" then
 						if overridable then
-							check = function() return false, "This function's permission is blocked!" end
+							check = function()
+								return false, "This function's permission is blocked!"
+							end
 						else
 							allAllow = false
 							anyBlock = true
@@ -34,25 +43,33 @@ local Privilege = {
 					end
 					if check ~= "allow" then
 						allAllow = false
-						checks[#checks+1] = check
+						checks[#checks + 1] = check
 					end
 				end
 			end
 
 			if allAllow then
-				self.check = function() return true end
+				self.check = function()
+					return true
+				end
 			elseif anyBlock then
-				self.check = function() return false, "This function's permission is blocked!" end
-			elseif #checks==0 then
+				self.check = function()
+					return false, "This function's permission is blocked!"
+				end
+			elseif #checks == 0 then
 				allAllow = true
-				self.check = function() return true end
-			elseif #checks==1 then
+				self.check = function()
+					return true
+				end
+			elseif #checks == 1 then
 				self.check = checks[1]
 			else
 				self.check = function(instance, target)
 					for k, v in ipairs(checks) do
 						local ok, reason = v(instance, target)
-						if not ok then return false, reason end
+						if not ok then
+							return false, reason
+						end
 					end
 					return true
 				end
@@ -61,12 +78,13 @@ local Privilege = {
 			if overridable and not allAllow then
 				local check = self.check
 				self.check = function(instance, target)
-					if instance.permissionOverrides[self.id] then return true end
+					if instance.permissionOverrides[self.id] then
+						return true
+					end
 					return check(instance, target)
 				end
 			end
 			self.overridable = overridable
-
 		end,
 		applySetting = function(self, providerid, setting)
 			P.settings[self.id][providerid] = setting
@@ -90,17 +108,23 @@ local Privilege = {
 		end,
 	},
 	__call = function(p, id, name, description, providerconfig)
-		if not providerconfig then providerconfig = {} end
-		if not providerconfig.usergroups then providerconfig.usergroups = {} end
+		if not providerconfig then
+			providerconfig = {}
+		end
+		if not providerconfig.usergroups then
+			providerconfig.usergroups = {}
+		end
 
 		return setmetatable({
 			id = id,
 			name = name,
 			description = description,
 			providerconfig = providerconfig,
-			check = function() error("Check function isn't set! id="..id.." name="..name) end
+			check = function()
+				error("Check function isn't set! id=" .. id .. " name=" .. name)
+			end,
 		}, p)
-	end
+	end,
 }
 setmetatable(Privilege, Privilege)
 
@@ -114,7 +138,9 @@ end
 
 function P.check(instance, target, key)
 	local ok, reason = P.privileges[key].check(instance, target)
-	if not ok then SF.Throw("Permission " .. key .. ": " .. reason, 3) end
+	if not ok then
+		SF.Throw("Permission " .. key .. ": " .. reason, 3)
+	end
 end
 
 function P.hasAccess(instance, target, key)
@@ -137,14 +163,27 @@ local invalidators = {
 	[1669008186] = { -- Nov 21, 2022
 		message = "HTTP's URL whitelisting was misconfigured, and set by default to Disabled",
 		realm = CLIENT,
-		invalidate = {"http.get", "http.post"},
+		invalidate = { "http.get", "http.post" },
 		check = function()
 			return P.settings["http.get"]["urlwhitelist"] == 2 or P.settings["http.post"]["urlwhitelist"] == 2
-		end
-	}
+		end,
+	},
 }
 
-local printC = function(...) (SERVER and MsgC or chat.AddText)(Color(255, 255, 255), "[", Color(11, 147, 234), "Starfall", Color(255, 255, 255), "]: ", ...) if SERVER then MsgC("\n") end end
+local printC = function(...)
+	(SERVER and MsgC or chat.AddText)(
+		Color(255, 255, 255),
+		"[",
+		Color(11, 147, 234),
+		"Starfall",
+		Color(255, 255, 255),
+		"]: ",
+		...
+	)
+	if SERVER then
+		MsgC("\n")
+	end
+end
 
 function P.savePermissions()
 	local meta = getmetatable(P.settings)
@@ -167,7 +206,7 @@ function P.loadPermissionsSafe()
 
 	local settingsTime = file.Time(P.filename, "DATA") or math.huge
 	for issueTime, issue in pairs(invalidators) do
-		if settingsTime < issueTime and issue.realm and (issue.check == nil or issue.check()) then 
+		if settingsTime < issueTime and issue.realm and (issue.check == nil or issue.check()) then
 			printC("Your configuration has been modified due to a misconfiguration.")
 			printC("Reason: " .. issue.message)
 			printC("Changes: " .. table.concat(issue.invalidate, ", "))
@@ -179,7 +218,9 @@ function P.loadPermissionsSafe()
 	end
 
 	for k, v in pairs(P.privileges) do
-		if v:initSettings() then saveSettings = true end
+		if v:initSettings() then
+			saveSettings = true
+		end
 	end
 
 	if saveSettings then
@@ -190,29 +231,29 @@ end
 -- Find and include all provider files.
 function P.includePermissions()
 	local sv_dir = "starfall/permissions/providers_sv/"
-	local sv_files = file.Find(sv_dir.."*.lua", "LUA")
+	local sv_files = file.Find(sv_dir .. "*.lua", "LUA")
 	local sh_dir = "starfall/permissions/providers_sh/"
-	local sh_files = file.Find(sh_dir.."*.lua", "LUA")
+	local sh_files = file.Find(sh_dir .. "*.lua", "LUA")
 	local cl_dir = "starfall/permissions/providers_cl/"
-	local cl_files = file.Find(cl_dir.."*.lua", "LUA")
+	local cl_files = file.Find(cl_dir .. "*.lua", "LUA")
 
 	if SERVER then
 		for _, file in pairs(sv_files) do
-			include(sv_dir..file)
+			include(sv_dir .. file)
 		end
 		for _, file in pairs(sh_files) do
-			AddCSLuaFile(sh_dir..file)
-			include(sh_dir..file)
+			AddCSLuaFile(sh_dir .. file)
+			include(sh_dir .. file)
 		end
 		for _, file in pairs(cl_files) do
-			AddCSLuaFile(cl_dir..file)
+			AddCSLuaFile(cl_dir .. file)
 		end
 	else
 		for _, file in pairs(sh_files) do
-			include(sh_dir..file)
+			include(sh_dir .. file)
 		end
 		for _, file in pairs(cl_files) do
-			include(cl_dir..file)
+			include(cl_dir .. file)
 		end
 	end
 end
@@ -223,18 +264,28 @@ local function changePermission(ply, arg)
 		if privilege then
 			if arg[2] and privilege.providerconfig[arg[2]] then
 				local val = tonumber(arg[3])
-				if val and val>=1 and val<=#P.providers[arg[2]].settingsoptions then
+				if val and val >= 1 and val <= #P.providers[arg[2]].settingsoptions then
 					privilege:applySetting(arg[2], math.floor(val))
 				else
 					ply:PrintMessage(HUD_PRINTCONSOLE, "The setting's value is out of bounds or not a number.\n")
 				end
 			else
-				ply:PrintMessage(HUD_PRINTCONSOLE, "Permission, " .. tostring(arg[2]) .. ", couldn't be found.\nHere's a list of permissions.\n")
-				for id, _ in pairs(privilege.providerconfig) do ply:PrintMessage(HUD_PRINTCONSOLE, id.."\n") end
+				ply:PrintMessage(
+					HUD_PRINTCONSOLE,
+					"Permission, " .. tostring(arg[2]) .. ", couldn't be found.\nHere's a list of permissions.\n"
+				)
+				for id, _ in pairs(privilege.providerconfig) do
+					ply:PrintMessage(HUD_PRINTCONSOLE, id .. "\n")
+				end
 			end
 		else
-			ply:PrintMessage(HUD_PRINTCONSOLE, "Privilege, " .. tostring(arg[1]) .. ", couldn't be found.\nHere's a list of privileges.\n")
-			for id, _ in SortedPairs(P.privileges) do ply:PrintMessage(HUD_PRINTCONSOLE, id.."\n") end
+			ply:PrintMessage(
+				HUD_PRINTCONSOLE,
+				"Privilege, " .. tostring(arg[1]) .. ", couldn't be found.\nHere's a list of privileges.\n"
+			)
+			for id, _ in SortedPairs(P.privileges) do
+				ply:PrintMessage(HUD_PRINTCONSOLE, id .. "\n")
+			end
 		end
 	else
 		ply:PrintMessage(HUD_PRINTCONSOLE, "Usage: sf_permission <privilege> <permission> <value>.\n")
@@ -244,7 +295,9 @@ end
 -- Console commands for changing permissions.
 if SERVER then
 	concommand.Add("sf_permission", function(ply, com, arg)
-		if ply:IsValid() and not ply:IsSuperAdmin() then return end
+		if ply:IsValid() and not ply:IsSuperAdmin() then
+			return
+		end
 		changePermission(ply, arg)
 	end)
 else
@@ -258,7 +311,7 @@ if SERVER then
 	util.AddNetworkString("sf_permissionsettings")
 	net.Receive("sf_permissionsettings", function(len, ply)
 		if ply:IsSuperAdmin() then
-			P.refreshSettingsCache () -- Refresh cache first
+			P.refreshSettingsCache() -- Refresh cache first
 			net.Start("sf_permissionsettings")
 
 			net.WriteUInt(table.Count(P.providers), 8)
@@ -284,19 +337,21 @@ if SERVER then
 else
 	local reqCallback, reqTimeout
 	function P.requestPermissions(callback)
-		if not reqCallback or (reqTimeout and reqTimeout<CurTime()) then
+		if not reqCallback or (reqTimeout and reqTimeout < CurTime()) then
 			reqCallback = callback
 			reqTimeout = CurTime() + 2
 			net.Start("sf_permissionsettings")
 			net.SendToServer()
 		end
 	end
-	function P.permissionRequestSatisfied( instance )
+	function P.permissionRequestSatisfied(instance)
 		if not instance.permissionRequest then
-			SF.Throw( 'There is no permission request' )
+			SF.Throw("There is no permission request")
 		end
-		for id, _ in pairs( instance.permissionRequest.overrides ) do
-			if not instance.permissionOverrides[ id ] then return false end
+		for id, _ in pairs(instance.permissionRequest.overrides) do
+			if not instance.permissionOverrides[id] then
+				return false
+			end
 		end
 		return true
 	end
@@ -309,7 +364,7 @@ else
 					id = net.ReadString(),
 					name = net.ReadString(),
 					settings = {},
-					settingsoptions = {}
+					settingsoptions = {},
 				}
 				local noptions = net.ReadUInt(8)
 				for j = 1, noptions do

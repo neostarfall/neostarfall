@@ -2,12 +2,21 @@
 -- SF Preprocessor.
 -- Processes code for compile time directives.
 -------------------------------------------------------------------------------
-local minifyAllScripts = CreateConVar("sf_minify_all_scripts", "1", FCVAR_ARCHIVE, "Minify all scripts on server-to-client transmission", 0, 1)
+local minifyAllScripts = CreateConVar(
+	"sf_minify_all_scripts",
+	"1",
+	FCVAR_ARCHIVE,
+	"Minify all scripts on server-to-client transmission",
+	0,
+	1
+)
 
 SF.PreprocessData = {
 	directives = {
 		include = function(self, args)
-			if #args == 0 then return "Empty include directive" end
+			if #args == 0 then
+				return "Empty include directive"
+			end
 
 			if self.includes[args] then
 				return "Duplicate include directive: " .. args
@@ -16,7 +25,9 @@ SF.PreprocessData = {
 			if string.match(args, "^https?://") then
 				-- HTTP approach
 				local httpUrl, httpName = string.match(args, "^(.+)%s+as%s+(.+)$")
-				if not httpUrl then return "Bad include format - Expected '--@include http://url as filename'" end
+				if not httpUrl then
+					return "Bad include format - Expected '--@include http://url as filename'"
+				end
 				self.httpincludes[httpName] = httpUrl
 			else
 				-- Standard/Filesystem approach
@@ -25,7 +36,9 @@ SF.PreprocessData = {
 		end,
 
 		includedata = function(self, args)
-			if #args == 0 then return "Empty includedata directive" end
+			if #args == 0 then
+				return "Empty includedata directive"
+			end
 
 			if self.includesdata[args] then
 				return "Duplicate includesdata directive: " .. args
@@ -36,7 +49,9 @@ SF.PreprocessData = {
 		end,
 
 		includedir = function(self, args)
-			if #args == 0 then return "Empty includedir directive" end
+			if #args == 0 then
+				return "Empty includedir directive"
+			end
 
 			if self.includesdata[args] then
 				return "Duplicate includedir directive: " .. args
@@ -46,24 +61,46 @@ SF.PreprocessData = {
 		end,
 
 		model = function(self, args)
-			if #args == 0 then return "Empty model directive" end
+			if #args == 0 then
+				return "Empty model directive"
+			end
 			self.model = args
 		end,
 
 		precachemodel = function(self, args)
-			if #args == 0 then return "Empty precachemodel directive" end
+			if #args == 0 then
+				return "Empty precachemodel directive"
+			end
 			self.precachemodels[#self.precachemodels + 1] = args
 		end,
 
-		name = function(self, args) self.scriptname = string.sub(args, 1, 64) end,
-		author = function(self, args) self.scriptauthor = string.sub(args, 1, 64) end,
-		server = function(self, _) self.serverorclient = "server" end,
-		client = function(self, _) self.serverorclient = "client" end,
-		shared = function(self, _) self.serverorclient = nil end,
-		clientmain = function(self, args) self.clientmain = args end,
-		superuser = function(self, _) self.superuser = true end,
-		owneronly = function(self, _) self.owneronly = true end,
-		obfuscate = function(self, _) self.obfuscate = true end,
+		name = function(self, args)
+			self.scriptname = string.sub(args, 1, 64)
+		end,
+		author = function(self, args)
+			self.scriptauthor = string.sub(args, 1, 64)
+		end,
+		server = function(self, _)
+			self.serverorclient = "server"
+		end,
+		client = function(self, _)
+			self.serverorclient = "client"
+		end,
+		shared = function(self, _)
+			self.serverorclient = nil
+		end,
+		clientmain = function(self, args)
+			self.clientmain = args
+		end,
+		superuser = function(self, _)
+			self.superuser = true
+		end,
+		owneronly = function(self, _)
+			self.owneronly = true
+		end,
+		obfuscate = function(self, _)
+			self.obfuscate = true
+		end,
 	},
 	__index = {
 		FindError = function(self, args)
@@ -79,7 +116,9 @@ SF.PreprocessData = {
 				local func = SF.PreprocessData.directives[directive]
 				if func then
 					local err = func(self, string.Trim(args))
-					if err then error("In file " .. self.path .. ":" .. self:FindError(wholedirective) .. ", " .. err) end
+					if err then
+						error("In file " .. self.path .. ":" .. self:FindError(wholedirective) .. ", " .. err)
+					end
 				end
 			end
 
@@ -106,16 +145,18 @@ SF.PreprocessData = {
 		end,
 		Postprocess = function(self, processor)
 			if self.clientmain then
-				self.clientmain = processor:ResolvePath(self.clientmain, self.path) or error("Bad --@clientmain " .. self.clientmain .. " in file " .. self.path)
+				self.clientmain = processor:ResolvePath(self.clientmain, self.path)
+					or error("Bad --@clientmain " .. self.clientmain .. " in file " .. self.path)
 			end
 
 			for incdata in pairs(self.includesdata) do
-				incdata = processor:ResolvePath(incdata, self.path) or error("Bad --@includedata " .. incdata .. " in file " .. self.path)
+				incdata = processor:ResolvePath(incdata, self.path)
+					or error("Bad --@includedata " .. incdata .. " in file " .. self.path)
 				local fdata = processor.files[incdata]
 				fdata.datafile = true
 				fdata.serverorclient = self.serverorclient
 			end
-		end
+		end,
 	},
 	__call = function(t, path, code)
 		return setmetatable({
@@ -127,7 +168,7 @@ SF.PreprocessData = {
 			httpincludes = {},
 			precachemodels = {},
 		}, t)
-	end
+	end,
 }
 setmetatable(SF.PreprocessData, SF.PreprocessData)
 
@@ -143,23 +184,31 @@ SF.Preprocessor = {
 			local senddata = {
 				owner = sfdata.owner,
 				mainfile = self.files[sfdata.mainfile].clientmain or sfdata.mainfile,
-				proc = sfdata.proc
+				proc = sfdata.proc,
 			}
 			local ownersenddata
 
-			local files = {} for k, v in pairs(sfdata.files) do files[k] = v end
-			local originalFiles = {} for k, v in pairs(sfdata.files) do originalFiles[k] = v end
+			local files = {}
+			for k, v in pairs(sfdata.files) do
+				files[k] = v
+			end
+			local originalFiles = {}
+			for k, v in pairs(sfdata.files) do
+				originalFiles[k] = v
+			end
 
 			local isMainFileObfuscated = sfdata.mainfile and self.files[sfdata.mainfile].obfuscate
 
 			for path, fdata in pairs(self.files) do
-				if fdata.owneronly then ownersenddata = true end
+				if fdata.owneronly then
+					ownersenddata = true
+				end
 				if fdata.serverorclient == "server" then
 					files[path] = table.concat({
 						"--@name " .. (fdata.scriptname or ""),
 						"--@author " .. (fdata.scriptauthor or ""),
 						"--@server",
-						""
+						"",
 					}, "\n")
 				end
 
@@ -176,7 +225,10 @@ SF.Preprocessor = {
 			end
 
 			if ownersenddata then
-				local ownerfiles = {} for k, v in pairs(files) do ownerfiles[k] = v end
+				local ownerfiles = {}
+				for k, v in pairs(files) do
+					ownerfiles[k] = v
+				end
 
 				for path, fdata in pairs(self.files) do
 					if fdata.owneronly then
@@ -184,7 +236,7 @@ SF.Preprocessor = {
 							"--@name " .. (fdata.scriptname or ""),
 							"--@author " .. (fdata.scriptauthor or ""),
 							"--@owneronly",
-							""
+							"",
 						}, "\n")
 					end
 				end
@@ -194,7 +246,7 @@ SF.Preprocessor = {
 					mainfile = senddata.mainfile,
 					proc = sfdata.proc,
 					files = ownerfiles,
-					compressed = SF.CompressFiles(ownerfiles)
+					compressed = SF.CompressFiles(ownerfiles),
 				}
 			end
 
@@ -202,12 +254,12 @@ SF.Preprocessor = {
 			senddata.compressed = SF.CompressFiles(files)
 
 			local originalSendData = {
-                owner = sfdata.owner,
-                mainfile = senddata.mainfile,
-                proc = sfdata.proc,
-                files = originalFiles,
-                compressed = SF.CompressFiles(originalFiles)
-            }
+				owner = sfdata.owner,
+				mainfile = senddata.mainfile,
+				proc = sfdata.proc,
+				files = originalFiles,
+				compressed = SF.CompressFiles(originalFiles),
+			}
 
 			return senddata, ownersenddata, originalSendData
 		end,
@@ -215,8 +267,12 @@ SF.Preprocessor = {
 
 	__call = function(t, files)
 		local self = setmetatable({
-			files = setmetatable({}, {__index = function(_, k) error("Invalid file: " .. k) end}),
-			mainfile = ""
+			files = setmetatable({}, {
+				__index = function(_, k)
+					error("Invalid file: " .. k)
+				end,
+			}),
+			mainfile = "",
 		}, t)
 
 		if files then
@@ -231,7 +287,7 @@ SF.Preprocessor = {
 		end
 
 		return self
-	end
+	end,
 }
 setmetatable(SF.Preprocessor, SF.Preprocessor)
 
@@ -248,14 +304,18 @@ SF.FileLoader = {
 		end,
 
 		AddFileToLoad = function(self, path)
-			if self.files[path] then return end
+			if self.files[path] then
+				return
+			end
 			local fdata = SF.PreprocessData(path, self:GetInclude(path))
 			self.filesToLoad[#self.filesToLoad + 1] = fdata
 			self.files[path] = fdata
 		end,
 
 		LoadUrl = function(self, name, url)
-			if self.files[name] then return end
+			if self.files[name] then
+				return
+			end
 
 			local cache = self.httpCache[url]
 			if cache then
@@ -268,7 +328,7 @@ SF.FileLoader = {
 			self.httpCache[url] = fdata
 			self.httpRequests = self.httpRequests + 1
 
-			HTTP {
+			HTTP({
 				method = "GET",
 				url = url,
 				success = function(_, contents)
@@ -278,15 +338,19 @@ SF.FileLoader = {
 					self:Start()
 				end,
 				failed = function(reason)
-					if self.errored then return end
+					if self.errored then
+						return
+					end
 					self.errored = true
 					self.onfail(string.format("Could not fetch --@include link (%s): %s", url, reason))
 				end,
-			}
+			})
 		end,
 
 		LoadFile = function(self, fdata)
-			if self.dontParseTbl[fdata.path] then return end
+			if self.dontParseTbl[fdata.path] then
+				return
+			end
 
 			fdata:Preprocess()
 
@@ -309,13 +373,15 @@ SF.FileLoader = {
 		end,
 
 		Start = function(self, mainfile)
-			if self.errored then return end
+			if self.errored then
+				return
+			end
 
 			local ok, err = pcall(function()
 				if mainfile then
 					self:AddFileToLoad(mainfile)
 				end
-				while #self.filesToLoad>0 do
+				while #self.filesToLoad > 0 do
 					self:LoadFile(table.remove(self.filesToLoad))
 				end
 			end)
@@ -328,7 +394,9 @@ SF.FileLoader = {
 		end,
 
 		Finish = function(self)
-			if self.httpRequests > 0 then return end
+			if self.httpRequests > 0 then
+				return
+			end
 			self.errored = true
 
 			local ok, err = pcall(function()
@@ -341,7 +409,10 @@ SF.FileLoader = {
 				end
 				self.onsuccess(files, self.mainfile)
 			end)
-			if not ok then self.onfail(err) return end
+			if not ok then
+				self.onfail(err)
+				return
+			end
 		end,
 	},
 	__call = function(t, mainfile, openfiles, onsuccess, onfail)
@@ -357,6 +428,6 @@ SF.FileLoader = {
 			onsuccess = onsuccess,
 			onfail = onfail,
 		}, t):Start(mainfile)
-	end
+	end,
 }
 setmetatable(SF.FileLoader, SF.FileLoader)

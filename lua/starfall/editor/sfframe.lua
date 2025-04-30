@@ -12,10 +12,10 @@ if not Derma_StringRequestNoBlur then
 		function math.max(...)
 			local ret = f(...)
 
-			for i = 1,20 do
+			for i = 1, 20 do
 				local name, value = debug.getlocal(2, i)
 				if name == "Window" then
-					value:SetBackgroundBlur( false )
+					value:SetBackgroundBlur(false)
 					break
 				end
 			end
@@ -25,7 +25,9 @@ if not Derma_StringRequestNoBlur then
 		local ok, ret = xpcall(Derma_StringRequest, debug.traceback, ...)
 		math.max = f
 
-		if not ok then error(ret, 0) end
+		if not ok then
+			error(ret, 0)
+		end
 		return ret
 	end
 end
@@ -36,10 +38,10 @@ local function Derma_QueryNoBlur(...)
 	function math.max(...)
 		local ret = f(...)
 
-		for i = 1,20 do
+		for i = 1, 20 do
 			local name, value = debug.getlocal(2, i)
 			if name == "Window" then
-				value:SetBackgroundBlur( false )
+				value:SetBackgroundBlur(false)
 				break
 			end
 		end
@@ -49,19 +51,30 @@ local function Derma_QueryNoBlur(...)
 	local ok, ret = xpcall(Derma_Query, debug.traceback, ...)
 	math.max = f
 
-	if not ok then error(ret, 0) end
+	if not ok then
+		error(ret, 0)
+	end
 	return ret
 end
 
 local Editor = {}
 
 local function GetTabHandler(name)
-	if name then return SF.Editor.TabHandlers[name] end
+	if name then
+		return SF.Editor.TabHandlers[name]
+	end
 	local handler = SF.Editor.TabHandlers[SF.Editor.CurrentTabHandler:GetString()]
 	if not handler then
 		local handlern
-		for k, v in pairs(SF.Editor.TabHandlers) do if v.IsEditor then handlern, handler = k, v break end end
-		if not handlern then error("No editors found!") end
+		for k, v in pairs(SF.Editor.TabHandlers) do
+			if v.IsEditor then
+				handlern, handler = k, v
+				break
+			end
+		end
+		if not handlern then
+			error("No editors found!")
+		end
 		SF.Editor.CurrentTabHandler:SetString(handlern)
 	end
 	return handler
@@ -76,8 +89,20 @@ Editor.OpenOldTabsVar = CreateClientConVar("sf_editor_openoldtabs", "1", true, f
 Editor.WorldClickerVar = CreateClientConVar("sf_editor_worldclicker", "0", true, false)
 Editor.LayoutVar = CreateClientConVar("sf_editor_layout", "0", true, false)
 Editor.StartHelperUndocked = CreateClientConVar("sf_helper_startundocked", "0", true, false)
-Editor.EditorFileAutoReload = CreateClientConVar("sf_editor_file_auto_reload", "0", true, false, "Controls the auto reload functionality of Neostarfall's Editor")
-Editor.EditorFileAutoReloadInterval = CreateClientConVar("sf_editor_file_auto_reload_interval", "1", true, false, "Controls the polling interval of the auto reload functionality of Neostarfall's Editor")
+Editor.EditorFileAutoReload = CreateClientConVar(
+	"sf_editor_file_auto_reload",
+	"0",
+	true,
+	false,
+	"Controls the auto reload functionality of Neostarfall's Editor"
+)
+Editor.EditorFileAutoReloadInterval = CreateClientConVar(
+	"sf_editor_file_auto_reload_interval",
+	"1",
+	true,
+	false,
+	"Controls the polling interval of the auto reload functionality of Neostarfall's Editor"
+)
 
 function SF.DefaultCode()
 	if file.Exists("starfall/default.txt", "DATA") then
@@ -95,7 +120,7 @@ function SF.DefaultCode()
 
 	local code = [=[
 --@name Untitled
---@author ]=] .. string.gsub(LocalPlayer():Nick(), "[^%w%s%p_]", "") ..[=[
+--@author ]=] .. string.gsub(LocalPlayer():Nick(), "[^%w%s%p_]", "") .. [=[
 
 --@shared
 
@@ -119,8 +144,7 @@ end)
 
 Editor.CreatedFonts = {}
 local function createFont(name, fontName, size, antialiasing)
-	local fontTable =
-	{
+	local fontTable = {
 		font = fontName,
 		size = size,
 		weight = 400,
@@ -131,28 +155,30 @@ local function createFont(name, fontName, size, antialiasing)
 	}
 	surface.CreateFont(name, fontTable)
 	fontTable.weight = 800
-	surface.CreateFont(name.."_Bold", fontTable)
+	surface.CreateFont(name .. "_Bold", fontTable)
 	fontTable.weight = 400
-	fontTable.italic = false--true
-	surface.CreateFont(name.."_Italic", fontTable)
-
+	fontTable.italic = false --true
+	surface.CreateFont(name .. "_Italic", fontTable)
 end
 function Editor:GetFont(fontName, size, antialiasing)
-	if not fontName or fontName == "" or not size then return end
+	if not fontName or fontName == "" or not size then
+		return
+	end
 	local name = "sf_" .. fontName .. "_" .. size .. "_" .. (antialiasing and 1 or 0)
 
 	-- If font is not already created, create it.
 	if not self.CreatedFonts[name] then
 		self.CreatedFonts[name] = true
 		createFont(name, fontName, size, antialiasing)
-		timer.Simple(0, function() createFont(name, fontName, size, antialiasing) end) --Fix for bug explained there https://wiki.facepunch.com/gmod/surface.CreateFont
+		timer.Simple(0, function()
+			createFont(name, fontName, size, antialiasing)
+		end) --Fix for bug explained there https://wiki.facepunch.com/gmod/surface.CreateFont
 	end
 
 	surface.SetFont(name)
 	local width, height = surface.GetTextSize("_")
 	return name, width, height
 end
-
 
 ------------------------------------------------------------------------
 
@@ -170,7 +196,9 @@ local invalid_filename_chars = {
 -- overwritten commands
 function Editor:Init()
 	-- don't use any of the default DFrame UI components
-	for _, v in pairs(self:GetChildren()) do v:Remove() end
+	for _, v in pairs(self:GetChildren()) do
+		v:Remove()
+	end
 	self.Title = ""
 	self.subTitle = ""
 	self.LastClick = 0
@@ -186,9 +214,12 @@ function Editor:Init()
 	-- Controls the auto reload functionality
 	self.autoReloadEnabled = Editor.EditorFileAutoReload:GetBool()
 	self.autoReloadInterval = Editor.EditorFileAutoReloadInterval:GetFloat()
-	cvars.AddChangeCallback(Editor.EditorFileAutoReload:GetName(), function() self:setFileAutoReload(Editor.EditorFileAutoReload:GetBool()) end)
-	cvars.AddChangeCallback(Editor.EditorFileAutoReloadInterval:GetName(), function() self:setFileAutoReloadInterval(Editor.EditorFileAutoReloadInterval:GetFloat()) end)
-
+	cvars.AddChangeCallback(Editor.EditorFileAutoReload:GetName(), function()
+		self:setFileAutoReload(Editor.EditorFileAutoReload:GetBool())
+	end)
+	cvars.AddChangeCallback(Editor.EditorFileAutoReloadInterval:GetName(), function()
+		self:setFileAutoReloadInterval(Editor.EditorFileAutoReloadInterval:GetFloat())
+	end)
 
 	-- Load border colors, position, & size
 	self:LoadEditorSettings()
@@ -223,7 +254,6 @@ local size = CreateClientConVar("sf_editor_size", "800_600", true, false)
 local pos = CreateClientConVar("sf_editor_pos", "-1_-1", true, false)
 
 function Editor:LoadEditorSettings()
-
 	-- Position & Size
 	local w, h = size:GetString():match("(%d+)_(%d+)")
 	w = tonumber(w)
@@ -287,17 +317,27 @@ function Editor:PerformLayout()
 	for i = 1, #self.Components do
 		local c = self.Components[i]
 		local c_x, c_y, c_w, c_h = c.Bounds.x, c.Bounds.y, c.Bounds.w, c.Bounds.h
-		if (c_x < 0) then c_x = w + c_x end
-		if (c_y < 0) then c_y = h + c_y end
-		if (c_w < 0) then c_w = w + c_w - c_x end
-		if (c_h < 0) then c_h = h + c_h - c_y end
+		if c_x < 0 then
+			c_x = w + c_x
+		end
+		if c_y < 0 then
+			c_y = h + c_y
+		end
+		if c_w < 0 then
+			c_w = w + c_w - c_x
+		end
+		if c_h < 0 then
+			c_h = h + c_h - c_y
+		end
 		c:SetPos(c_x, c_y)
 		c:SetSize(c_w, c_h)
 	end
 end
 
 function Editor:OnMousePressed(mousecode)
-	if mousecode ~= 107 then return end -- do nothing if mouseclick is other than left-click
+	if mousecode ~= 107 then
+		return
+	end -- do nothing if mouseclick is other than left-click
 	if not self.pressed then
 		self.pressed = true
 		self.p_x, self.p_y = self:GetPos()
@@ -318,12 +358,16 @@ function Editor:OnMousePressed(mousecode)
 end
 
 function Editor:OnMouseReleased(mousecode)
-	if mousecode ~= 107 then return end -- do nothing if mouseclick is other than left-click
+	if mousecode ~= 107 then
+		return
+	end -- do nothing if mouseclick is other than left-click
 	self.pressed = false
 end
 
 function Editor:Think()
-	if self.fs then return end
+	if self.fs then
+		return
+	end
 	if self.pressed then
 		if not input.IsMouseDown(MOUSE_LEFT) then -- needs this if you let go of the mouse outside the panel
 			self.pressed = false
@@ -333,38 +377,61 @@ function Editor:Think()
 		if self.p_mode == "drag" then
 			local x = self.p_x + movedX
 			local y = self.p_y + movedY
-			if (x < 10 and x > -10) then x = 0 end
-			if (y < 10 and y > -10) then y = 0 end
-			if (x + self.p_w < surface.ScreenWidth() + 10 and x + self.p_w > surface.ScreenWidth() - 10) then x = surface.ScreenWidth() - self.p_w end
-			if (y + self.p_h < surface.ScreenHeight() + 10 and y + self.p_h > surface.ScreenHeight() - 10) then y = surface.ScreenHeight() - self.p_h end
+			if x < 10 and x > -10 then
+				x = 0
+			end
+			if y < 10 and y > -10 then
+				y = 0
+			end
+			if x + self.p_w < surface.ScreenWidth() + 10 and x + self.p_w > surface.ScreenWidth() - 10 then
+				x = surface.ScreenWidth() - self.p_w
+			end
+			if y + self.p_h < surface.ScreenHeight() + 10 and y + self.p_h > surface.ScreenHeight() - 10 then
+				y = surface.ScreenHeight() - self.p_h
+			end
 			self:SetPos(x, y)
 		end
 		if self.p_mode == "sizeBR" then
 			local w = self.p_w + movedX
 			local h = self.p_h + movedY
-			if (self.p_x + w < surface.ScreenWidth() + 10 and self.p_x + w > surface.ScreenWidth() - 10) then w = surface.ScreenWidth() - self.p_x end
-			if (self.p_y + h < surface.ScreenHeight() + 10 and self.p_y + h > surface.ScreenHeight() - 10) then h = surface.ScreenHeight() - self.p_y end
-			if (w < 300) then w = 300 end
-			if (h < 200) then h = 200 end
+			if self.p_x + w < surface.ScreenWidth() + 10 and self.p_x + w > surface.ScreenWidth() - 10 then
+				w = surface.ScreenWidth() - self.p_x
+			end
+			if self.p_y + h < surface.ScreenHeight() + 10 and self.p_y + h > surface.ScreenHeight() - 10 then
+				h = surface.ScreenHeight() - self.p_y
+			end
+			if w < 300 then
+				w = 300
+			end
+			if h < 200 then
+				h = 200
+			end
 			self:SetSize(w, h)
 		end
 		if self.p_mode == "sizeR" then
 			local w = self.p_w + movedX
-			if (w < 300) then w = 300 end
+			if w < 300 then
+				w = 300
+			end
 			self:SetWide(w)
 		end
 		if self.p_mode == "sizeB" then
 			local h = self.p_h + movedY
-			if (h < 200) then h = 200 end
+			if h < 200 then
+				h = 200
+			end
 			self:SetTall(h)
 		end
 	end
 	if not self.pressed then
 		local cursor = "arrow"
 		local mode = self:GetMode()
-		if (mode == "sizeBR") then cursor = "sizenwse"
-		elseif (mode == "sizeR") then cursor = "sizewe"
-		elseif (mode == "sizeB") then cursor = "sizens"
+		if mode == "sizeBR" then
+			cursor = "sizenwse"
+		elseif mode == "sizeR" then
+			cursor = "sizewe"
+		elseif mode == "sizeB" then
+			cursor = "sizens"
 		end
 		if cursor ~= self.cursor then
 			self.cursor = cursor
@@ -375,16 +442,36 @@ function Editor:Think()
 	local x, y = self:GetPos()
 	local w, h = self:GetSize()
 
-	if w < 518 then w = 518 end
-	if h < 200 then h = 200 end
-	if x < 0 then x = 0 end
-	if y < 0 then y = 0 end
-	if x + w > surface.ScreenWidth() then x = surface.ScreenWidth() - w end
-	if y + h > surface.ScreenHeight() then y = surface.ScreenHeight() - h end
-	if y < 0 then y = 0 end
-	if x < 0 then x = 0 end
-	if w > surface.ScreenWidth() then w = surface.ScreenWidth() end
-	if h > surface.ScreenHeight() then h = surface.ScreenHeight() end
+	if w < 518 then
+		w = 518
+	end
+	if h < 200 then
+		h = 200
+	end
+	if x < 0 then
+		x = 0
+	end
+	if y < 0 then
+		y = 0
+	end
+	if x + w > surface.ScreenWidth() then
+		x = surface.ScreenWidth() - w
+	end
+	if y + h > surface.ScreenHeight() then
+		y = surface.ScreenHeight() - h
+	end
+	if y < 0 then
+		y = 0
+	end
+	if x < 0 then
+		x = 0
+	end
+	if w > surface.ScreenWidth() then
+		w = surface.ScreenWidth()
+	end
+	if h > surface.ScreenHeight() then
+		h = surface.ScreenHeight()
+	end
 
 	self:SetPos(x, y)
 	self:SetSize(w, h)
@@ -412,16 +499,22 @@ function Editor:GetMode()
 	local ix = gui.MouseX() - x
 	local iy = gui.MouseY() - y
 
-	if (ix < 0 or ix > w or iy < 0 or iy > h) then return end -- if the mouse is outside the box
-	if (iy < 22) then
+	if ix < 0 or ix > w or iy < 0 or iy > h then
+		return
+	end -- if the mouse is outside the box
+	if iy < 22 then
 		return "drag"
 	end
-	if (iy > h - 10) then
-		if (ix > w - 20) then return "sizeBR" end
+	if iy > h - 10 then
+		if ix > w - 20 then
+			return "sizeBR"
+		end
 		return "sizeB"
 	end
-	if (ix > w - 10) then
-		if (iy > h - 20) then return "sizeBR" end
+	if ix > w - 10 then
+		if iy > h - 20 then
+			return "sizeBR"
+		end
 		return "sizeR"
 	end
 end
@@ -435,7 +528,9 @@ end
 
 local function extractNameFromCode(str)
 	str = string.match(str, "%-%-@name[^\r\n]*")
-	if str==nil then return nil end
+	if str == nil then
+		return nil
+	end
 	return string.match(str, "%-%-@name%s+(.+)")
 end
 
@@ -460,13 +555,21 @@ local function getPreferredTitles(Line, code)
 	return title, tabtext
 end
 
-function Editor:GetLastTab() return self.LastTab end
+function Editor:GetLastTab()
+	return self.LastTab
+end
 
-function Editor:SetLastTab(Tab) self.LastTab = Tab end
+function Editor:SetLastTab(Tab)
+	self.LastTab = Tab
+end
 
-function Editor:GetActiveTab() return self.C.TabHolder:GetActiveTab() end
+function Editor:GetActiveTab()
+	return self.C.TabHolder:GetActiveTab()
+end
 
-function Editor:GetNumTabs() return #self.C.TabHolder.Items end
+function Editor:GetNumTabs()
+	return #self.C.TabHolder.Items
+end
 
 function Editor:UpdateTabText(tab, title)
 	-- Editor subtitle and tab text
@@ -478,7 +581,7 @@ function Editor:UpdateTabText(tab, title)
 	tab:SetToolTip(ed.chosenfile)
 	tabtext = tabtext or "Generic"
 	if not ed:IsSaved() and tabtext:sub(-1) ~= "*" then
-		tabtext = tabtext.." *"
+		tabtext = tabtext .. " *"
 	end
 
 	if tab:GetText() ~= tabtext then
@@ -505,7 +608,11 @@ function Editor:SetActiveTab(val)
 	-- Editor subtitle and tab text
 	local title = getPreferredTitles(self:GetChosenFile(), self:GetCode())
 
-	if title then self:SubTitle("Editing: " .. title) else self:SubTitle() end
+	if title then
+		self:SubTitle("Editing: " .. title)
+	else
+		self:SubTitle()
+	end
 	self:UpdateTabText(self:GetActiveTab())
 end
 
@@ -533,42 +640,58 @@ function Editor:GetTabIndexByFilePath(filepath)
 end
 
 function Editor:SetActiveTabIndex(index)
-	if not self.C.TabHolder.Items[index] then return end
+	if not self.C.TabHolder.Items[index] then
+		return
+	end
 	local tab = self.C.TabHolder.Items[index].Tab
 
-	if not tab then return end
+	if not tab then
+		return
+	end
 
 	self:SetActiveTab(tab)
 end
 
 local old
 function Editor:FixTabFadeTime()
-	if old ~= nil then return end -- It's already being fixed
+	if old ~= nil then
+		return
+	end -- It's already being fixed
 	local old = self.C.TabHolder:GetFadeTime()
 	self.C.TabHolder:SetFadeTime(0)
-	timer.Simple(old, function() self.C.TabHolder:SetFadeTime(old) old = nil end)
+	timer.Simple(old, function()
+		self.C.TabHolder:SetFadeTime(old)
+		old = nil
+	end)
 end
 
 function Editor:CreateTab(forcedTabHandler)
 	local th = GetTabHandler(forcedTabHandler)
 	local content = vgui.Create(th.ControlName)
 	content.parentpanel = self -- That's going to be Deprecated
-	content.GetTabHandler = function() return th end -- add :GetTabHandler()
-	content.IsSaved = function(self) return (not th.IsEditor) or self:GetCode() == self.savedCode or self:GetCode() == SF.DefaultCode() or self:GetCode() == "" end
+	content.GetTabHandler = function()
+		return th
+	end -- add :GetTabHandler()
+	content.IsSaved = function(self)
+		return not th.IsEditor
+			or self:GetCode() == self.savedCode
+			or self:GetCode() == SF.DefaultCode()
+			or self:GetCode() == ""
+	end
 	local sheet = self.C.TabHolder:AddSheet("", content)
 	sheet.Tab.content = content -- For easy access
 
 	sheet.Tab.Paint = function(button, w, h)
-
 		if button.Hovered then
-			draw.RoundedBox(0, 0, 0, w-1, h, button.backgroundHoverCol or SF.Editor.colors.med)
+			draw.RoundedBox(0, 0, 0, w - 1, h, button.backgroundHoverCol or SF.Editor.colors.med)
 		else
-			draw.RoundedBox(0, 0, 0, w-1, h, button.backgroundCol or SF.Editor.colors.meddark)
+			draw.RoundedBox(0, 0, 0, w - 1, h, button.backgroundCol or SF.Editor.colors.meddark)
 		end
-
 	end
 	--sheet.Tab.UpdateColours = function() end
-	sheet.Tab.GetTabHeight = function() return 20 end
+	sheet.Tab.GetTabHeight = function()
+		return 20
+	end
 
 	content.DefaultTitle = th.DefaultTitle
 	content.UpdateTitle = function(_, text)
@@ -586,71 +709,71 @@ function Editor:CreateTab(forcedTabHandler)
 		elseif keycode == MOUSE_RIGHT then
 			local menu = DermaMenu()
 			menu:AddOption("Close", function()
-					--self:FixTabFadeTime()
-					self:CloseTab(pnl)
-				end)
+				--self:FixTabFadeTime()
+				self:CloseTab(pnl)
+			end)
 			menu:AddOption("Close all others", function()
-					self:FixTabFadeTime()
-					self:SetActiveTab(pnl)
-					for i = self:GetNumTabs(), 1, -1 do
-						if self.C.TabHolder.Items[i] ~= sheet then
-							self:CloseTab(i)
-						end
+				self:FixTabFadeTime()
+				self:SetActiveTab(pnl)
+				for i = self:GetNumTabs(), 1, -1 do
+					if self.C.TabHolder.Items[i] ~= sheet then
+						self:CloseTab(i)
 					end
-				end)
+				end
+			end)
 			if th.IsEditor then
 				menu:AddSpacer()
 				menu:AddOption("Save", function()
-						self:FixTabFadeTime()
-						local old = self:GetLastTab()
-						local active = self:GetActiveTab()
+					self:FixTabFadeTime()
+					local old = self:GetLastTab()
+					local active = self:GetActiveTab()
+					self:SetActiveTab(pnl)
+					self:SaveFile(self:GetChosenFile(), false, false, function(strTextOut)
 						self:SetActiveTab(pnl)
-						self:SaveFile(self:GetChosenFile(), false, false, function(strTextOut)
-							self:SetActiveTab(pnl)
-							self:SaveFile(strTextOut, false, false)
-							self:SetActiveTab(active)
-							self:SetLastTab(old)
-						end)
+						self:SaveFile(strTextOut, false, false)
 						self:SetActiveTab(active)
 						self:SetLastTab(old)
 					end)
+					self:SetActiveTab(active)
+					self:SetLastTab(old)
+				end)
 				menu:AddOption("Save As", function()
-						self:FixTabFadeTime()
-						local old = self:GetLastTab()
-						local active = self:GetActiveTab()
-						self:SaveFile(self:GetChosenFile(), false, true, function(strTextOut)
-							self:SetActiveTab(pnl)
-							self:SaveFile(strTextOut, false, false)
-							self:SetActiveTab(active)
-							self:SetLastTab(old)
-						end)
-					end)
-				menu:AddOption("Reload", function()
-						self:FixTabFadeTime()
-						local old = self:GetLastTab()
-						local active = self:GetActiveTab()
+					self:FixTabFadeTime()
+					local old = self:GetLastTab()
+					local active = self:GetActiveTab()
+					self:SaveFile(self:GetChosenFile(), false, true, function(strTextOut)
 						self:SetActiveTab(pnl)
-						self:LoadFile(content.chosenfile, false)
+						self:SaveFile(strTextOut, false, false)
 						self:SetActiveTab(active)
 						self:SetLastTab(old)
 					end)
+				end)
+				menu:AddOption("Reload", function()
+					self:FixTabFadeTime()
+					local old = self:GetLastTab()
+					local active = self:GetActiveTab()
+					self:SetActiveTab(pnl)
+					self:LoadFile(content.chosenfile, false)
+					self:SetActiveTab(active)
+					self:SetLastTab(old)
+				end)
 				menu:AddSpacer()
 				menu:AddOption("Copy file path to clipboard", function()
-						if content.chosenfile and content.chosenfile ~= "" then
-							SetClipboardText(content.chosenfile)
-						end
-					end)
+					if content.chosenfile and content.chosenfile ~= "" then
+						SetClipboardText(content.chosenfile)
+					end
+				end)
 				menu:AddOption("Copy all file paths to clipboard", function()
-						local str = ""
-						for i = 1, self:GetNumTabs() do
-							local chosenfile = self:GetTabContent(i).chosenfile
-							if chosenfile and chosenfile ~= "" then
-								str = str .. chosenfile .. ";"
-							end
+					local str = ""
+					for i = 1, self:GetNumTabs() do
+						local chosenfile = self:GetTabContent(i).chosenfile
+						if chosenfile and chosenfile ~= "" then
+							str = str .. chosenfile .. ";"
 						end
-						str = str:sub(1, -2)
-						SetClipboardText(str)
-					end)
+					end
+					str = str:sub(1, -2)
+					SetClipboardText(str)
+				end)
 			end
 			menu:Open()
 			menu:AddSpacer()
@@ -698,7 +821,7 @@ function Editor:NewTab()
 	self:OpenCode(nil, SF.DefaultCode())
 end
 
-function Editor:CloseTab(_tab,dontask)
+function Editor:CloseTab(_tab, dontask)
 	local activetab, sheetindex
 	if _tab then
 		if isnumber(_tab) then
@@ -730,19 +853,27 @@ function Editor:CloseTab(_tab,dontask)
 		end
 	end
 
-	if not IsValid(activetab) then return end
+	if not IsValid(activetab) then
+		return
+	end
 
 	local ed = activetab:GetPanel()
 	if not ed:IsSaved() and not dontask and not ed.IsOnline then
-
 		local popup = self.closePopups[activetab]
 		if not IsValid(popup) then
-			local newPopup = SF.Editor.Query("Unsaved changes!", string.format("Do you want to close <color=255,30,30>%q</color> ?", activetab:GetText()), "Close", function()
-				self:CloseTab(activetab, true)
-				self.closePopups[activetab] = nil
-			end, "Cancel", function()
-				self.closePopups[activetab] = nil
-			end)
+			local newPopup = SF.Editor.Query(
+				"Unsaved changes!",
+				string.format("Do you want to close <color=255,30,30>%q</color> ?", activetab:GetText()),
+				"Close",
+				function()
+					self:CloseTab(activetab, true)
+					self.closePopups[activetab] = nil
+				end,
+				"Cancel",
+				function()
+					self.closePopups[activetab] = nil
+				end
+			)
 			self.closePopups[activetab] = newPopup
 		end
 
@@ -814,25 +945,29 @@ function Editor:InitComponents()
 	self.C = {}
 
 	local function PaintFlatButton(panel, w, h)
-		if not (panel:IsHovered() or panel:IsDown()) then return end
+		if not (panel:IsHovered() or panel:IsDown()) then
+			return
+		end
 		derma.SkinHook("Paint", "Button", panel, w, h)
 	end
 
 	local DMenuButton = vgui.RegisterTable({
-			Init = function(panel)
-				panel:SetText("")
-				panel:SetSize(24, 20)
-				panel:Dock(LEFT)
-			end,
-			Paint = PaintFlatButton,
-			DoClick = function(panel)
-				local name = panel:GetName()
-				local f = name and name ~= "" and self[name] or nil
-				if f then f(self) end
+		Init = function(panel)
+			panel:SetText("")
+			panel:SetSize(24, 20)
+			panel:Dock(LEFT)
+		end,
+		Paint = PaintFlatButton,
+		DoClick = function(panel)
+			local name = panel:GetName()
+			local f = name and name ~= "" and self[name] or nil
+			if f then
+				f(self)
 			end
-		}, "DButton")
+		end,
+	}, "DButton")
 
-	self.C.ButtonHolder = self:AddComponent(vgui.Create("DPanel", self), -400-4, 4, 400, 22) -- Upper menu
+	self.C.ButtonHolder = self:AddComponent(vgui.Create("DPanel", self), -400 - 4, 4, 400, 22) -- Upper menu
 	self.C.ButtonHolder.Paint = function() end
 	-- AddComponent( panel, x, y, w, h )
 	-- if x, y, w, h is minus, it will stay relative to right or buttom border
@@ -849,8 +984,8 @@ function Editor:InitComponents()
 	self.C.Menu = vgui.Create("DPanel", self.C.MainPane)
 	self.C.Val = vgui.Create("Button", self.C.MainPane) -- Validation line
 	self.C.TabHolder = vgui.Create("DPropertySheet", self.C.MainPane)
-	self.C.TabHolder.tabScroller:MakeDroppable( "sf_tab" )
-	self.C.TabHolder.tabScroller:SetUseLiveDrag( true )
+	self.C.TabHolder.tabScroller:MakeDroppable("sf_tab")
+	self.C.TabHolder.tabScroller:SetUseLiveDrag(true)
 
 	self.C.TabHolder.Paint = DoNothing
 
@@ -903,7 +1038,9 @@ function Editor:InitComponents()
 	self.C.Close:SetText("Close")
 	self.C.Close:DockMargin(10, 0, 0, 0)
 	self.C.Close:Dock(RIGHT)
-	self.C.Close.DoClick = function(btn) self:Close() end
+	self.C.Close.DoClick = function(btn)
+		self:Close()
+	end
 
 	self.C.ConBut:SetImage("icon16/cog.png")
 	self.C.ConBut:Dock(RIGHT)
@@ -922,39 +1059,41 @@ function Editor:InitComponents()
 		self.CreditCount = self.CreditCount + 1
 
 		if self.CreditCount == 6 then
+			http.Fetch(
+				"https://api.github.com/repos/neostarfall/neostarfall/contributors",
+				function(body, len, headers, code)
+					local data = util.JSONToTable(body)
 
-		http.Fetch( "https://api.github.com/repos/neostarfall/neostarfall/contributors",
-			function( body, len, headers, code )
-				local data = util.JSONToTable(body)
-
-				local awesomePeople = "List of awesome people that contributed to Neostarfall:\n";
-				for k,v in ipairs(data) do
-					if v.login ~= "web-flow" then
-						awesomePeople = awesomePeople .. "\n" .. v.login
+					local awesomePeople = "List of awesome people that contributed to Neostarfall:\n"
+					for k, v in ipairs(data) do
+						if v.login ~= "web-flow" then
+							awesomePeople = awesomePeople .. "\n" .. v.login
+						end
 					end
-				end
-				awesomePeople = awesomePeople .. "\n \nThanks!"
-				SF.Editor.openWithCode("Awesome people!", awesomePeople)
-
-			end,
-			function( error )
-			end
-		 )
-
+					awesomePeople = awesomePeople .. "\n \nThanks!"
+					SF.Editor.openWithCode("Awesome people!", awesomePeople)
+				end,
+				function(error) end
+			)
 		end
-
 	end
 
 	self.C.Sav:SetImage("icon16/disk.png")
-	self.C.Sav.DoClick = function(button) self:SaveFile(self:GetChosenFile()) end
+	self.C.Sav.DoClick = function(button)
+		self:SaveFile(self:GetChosenFile())
+	end
 	self.C.Sav:SetToolTip("Save")
 
 	self.C.SavAs:SetImage("icon16/disk_multiple.png")
 	self.C.SavAs:SetToolTip("Save As")
-	self.C.SavAs.DoClick = function(button) self:SaveFile(self:GetChosenFile(), false, true) end
+	self.C.SavAs.DoClick = function(button)
+		self:SaveFile(self:GetChosenFile(), false, true)
+	end
 
 	self.C.NewTab:SetImage("icon16/page_white_add.png")
-	self.C.NewTab.DoClick = function(button) self:NewTab() end
+	self.C.NewTab.DoClick = function(button)
+		self:NewTab()
+	end
 	self.C.NewTab:SetToolTip("New tab")
 
 	self.C.CloseTab:SetImage("icon16/page_white_delete.png")
@@ -971,17 +1110,23 @@ function Editor:InitComponents()
 
 	self.C.Browser.tree.OnNodeSelected = function(tree, node)
 		if node.FileURL then
-			SF.AddNotify(LocalPlayer(), "Downloading example..", "GENERIC" , 4, "DRIP2")
-			http.Fetch( node.FileURL,
-				function( body, len, headers, code )
-					self:Open(node:GetText(), body, false)
-					self:GetActiveTab():GetPanel().IsOnline = true
-				end,
-				function(err)
-						SF.AddNotify(LocalPlayer(), "There was a problem in downloading example.", "ERROR", 7, "ERROR1")
-				end)
+			SF.AddNotify(LocalPlayer(), "Downloading example..", "GENERIC", 4, "DRIP2")
+			http.Fetch(node.FileURL, function(body, len, headers, code)
+				self:Open(node:GetText(), body, false)
+				self:GetActiveTab():GetPanel().IsOnline = true
+			end, function(err)
+				SF.AddNotify(LocalPlayer(), "There was a problem in downloading example.", "ERROR", 7, "ERROR1")
+			end)
 		end
-		if not node:GetFileName() or not (string.GetExtensionFromFilename(node:GetFileName()) == "txt" or string.GetExtensionFromFilename(node:GetFileName()) == "lua") then return end
+		if
+			not node:GetFileName()
+			or not (
+				string.GetExtensionFromFilename(node:GetFileName()) == "txt"
+				or string.GetExtensionFromFilename(node:GetFileName()) == "lua"
+			)
+		then
+			return
+		end
 		self:Open(node:GetFileName(), nil, false)
 	end
 
@@ -996,14 +1141,16 @@ function Editor:InitComponents()
 	self.C.Val.Paint = function(button)
 		local w, h = button:GetSize()
 		draw.RoundedBox(1, 0, 0, w, h, button.bgcolor)
-		if button.Hovered then draw.RoundedBox(0, 1, 1, w - 2, h - 2, Color(0, 0, 0, 128)) end
+		if button.Hovered then
+			draw.RoundedBox(0, 1, 1, w - 2, h - 2, Color(0, 0, 0, 128))
+		end
 	end
 	self.C.Val.OnMousePressed = function(panel, btn)
 		if btn == MOUSE_RIGHT then
 			local menu = DermaMenu()
 			menu:AddOption("Copy to clipboard", function()
-					SetClipboardText(self.C.Val:GetValue():sub(4))
-				end)
+				SetClipboardText(self.C.Val:GetValue():sub(4))
+			end)
 			menu:Open()
 		else
 			self:Validate(true)
@@ -1033,21 +1180,24 @@ function Editor:InitComponents()
 	end
 
 	self.C.Credit:SetTextColor(Color(0, 0, 0, 255))
-	self.C.Credit:SetText("\t\tCREDITS\n\n\tEditor by: \tSyranide and Shandolum\n\n\tTabs (and more) added by Divran.\n\n\tFixed for GMod13 By Ninja101\n\n\tModified for StarfallEx by D.ツ\n\n\tForked by the Neostarfall Team") -- Sure why not ;)
+	self.C.Credit:SetText(
+		"\t\tCREDITS\n\n\tEditor by: \tSyranide and Shandolum\n\n\tTabs (and more) added by Divran.\n\n\tFixed for GMod13 By Ninja101\n\n\tModified for StarfallEx by D.ツ\n\n\tForked by the Neostarfall Team"
+	) -- Sure why not ;)
 	self.C.Credit:SetMultiline(true)
 	self.C.Credit:SetVisible(false)
 	self.C.Credit:SetEditable(false)
 end
 
 function Editor:GetSettings()
-
 	local categories = {}
 	local function AddCategory(panel, name, icon, description)
-		if not name then return end
+		if not name then
+			return
+		end
 		categories[name] = {
 			panel = panel,
 			icon = icon,
-			description = description
+			description = description,
 		}
 	end
 	-- ------------------------------------------- EDITOR TAB
@@ -1065,7 +1215,7 @@ function Editor:GetSettings()
 	local box = vgui.Create("DComboBox")
 	dlist:AddItem(box)
 	box:SetValue(SF.Editor.CurrentTabHandler:GetString())
-	box.OnSelect = function (self, index, value, data)
+	box.OnSelect = function(self, index, value, data)
 		value = value:gsub(" %b()", "") -- Remove description
 		RunConsoleCommand("sf_editor_tab_editor", value)
 		RunConsoleCommand("sf_editor_restart")
@@ -1073,11 +1223,10 @@ function Editor:GetSettings()
 
 	for k, v in pairs(SF.Editor.TabHandlers) do
 		if v.IsEditor then
-			local description = v.Description and " ( "..v.Description.." )" or "Addon"
-			box:AddChoice(k..description)
+			local description = v.Description and " ( " .. v.Description .. " )" or "Addon"
+			box:AddChoice(k .. description)
 		end
 	end
-
 
 	label = vgui.Create("DLabel")
 	dlist:AddItem(label)
@@ -1089,14 +1238,18 @@ function Editor:GetSettings()
 	SaveTabsOnClose:SetConVar("sf_editor_savetabs")
 	SaveTabsOnClose:SetText("Save tabs on close")
 	SaveTabsOnClose:SizeToContents()
-	SaveTabsOnClose:SetTooltip("Save the currently opened tab file paths on shutdown.\nOnly saves tabs whose files are saved.")
+	SaveTabsOnClose:SetTooltip(
+		"Save the currently opened tab file paths on shutdown.\nOnly saves tabs whose files are saved."
+	)
 
 	local OpenOldTabs = vgui.Create("DCheckBoxLabel")
 	dlist:AddItem(OpenOldTabs)
 	OpenOldTabs:SetConVar("sf_editor_openoldtabs")
 	OpenOldTabs:SetText("Open old tabs on load")
 	OpenOldTabs:SizeToContents()
-	OpenOldTabs:SetTooltip("Open the tabs from the last session on load.\nOnly tabs whose files were saved before disconnecting from the server are stored.")
+	OpenOldTabs:SetTooltip(
+		"Open the tabs from the last session on load.\nOnly tabs whose files were saved before disconnecting from the server are stored."
+	)
 
 	local WorldClicker = vgui.Create("DCheckBoxLabel")
 	dlist:AddItem(WorldClicker)
@@ -1134,7 +1287,6 @@ function Editor:GetSettings()
 	local themesPanel = self:CreateThemesPanel()
 	themesPanel:Refresh()
 
-
 	AddCategory(themesPanel, "Themes", "icon16/page_white_paintbrush.png", "Theme settings.")
 
 	----- Tab settings
@@ -1160,8 +1312,7 @@ function Editor:CreateThemesPanel()
 	local label = vgui.Create("DLabel")
 	panel:AddItem(label)
 	label:DockMargin(0, 0, 0, 0)
-	label:SetText("Neostarfall editor supports TextMate themes.\n" ..
-		"You can import them by pressing \"Add\" button.\n")
+	label:SetText("Neostarfall editor supports TextMate themes.\n" .. 'You can import them by pressing "Add" button.\n')
 	label:SetWrap(true)
 
 	-- Theme list
@@ -1179,7 +1330,8 @@ function Editor:CreateThemesPanel()
 		local curTheme = SF.Editor.Themes.ThemeConVar:GetString()
 
 		for k, v in pairs(SF.Editor.Themes.Themes) do
-			local rowPanel = themeList:AddLine(v.Name, v.Version == SF.Editor.Themes.Version and "" or "Not compatible!")
+			local rowPanel =
+				themeList:AddLine(v.Name, v.Version == SF.Editor.Themes.Version and "" or "Not compatible!")
 			rowPanel.theme = k
 
 			if k == curTheme then
@@ -1210,10 +1362,42 @@ function Editor:CreateThemesPanel()
 		local menu = DermaMenu()
 
 		menu:AddOption("From URL", function()
-			Derma_StringRequestNoBlur("Load theme from URL", "Paste the URL to a TextMate theme to the text box",
-				"", function(text)
-				http.Fetch(text, function(body)
-					local parsed, strId, error = SF.Editor.Themes.ParseTextMate(body)
+			Derma_StringRequestNoBlur(
+				"Load theme from URL",
+				"Paste the URL to a TextMate theme to the text box",
+				"",
+				function(text)
+					http.Fetch(text, function(body)
+						local parsed, strId, error = SF.Editor.Themes.ParseTextMate(body)
+
+						if not parsed then
+							Derma_Message(
+								"A problem occured during parsing the XML file: " .. error,
+								"SF Themes",
+								"Close"
+							)
+							return
+						end
+
+						print("Added theme with id " .. strId) -- DEBUG
+
+						SF.Editor.Themes.AddTheme(strId, parsed)
+
+						themeList:Populate()
+					end, function(err)
+						Derma_Message("Downloading the theme failed! Error: " .. err, "SF Themes", "Close")
+					end)
+				end
+			)
+		end)
+
+		menu:AddOption("From text", function()
+			local window = Derma_StringRequestNoBlur(
+				"Load theme from text",
+				"Paste the contents of a TextMate theme file below",
+				"",
+				function(text)
+					local parsed, strId, error = SF.Editor.Themes.ParseTextMate(text)
 
 					if not parsed then
 						Derma_Message("A problem occured during parsing the XML file: " .. error, "SF Themes", "Close")
@@ -1225,28 +1409,8 @@ function Editor:CreateThemesPanel()
 					SF.Editor.Themes.AddTheme(strId, parsed)
 
 					themeList:Populate()
-				end, function(err)
-					Derma_Message("Downloading the theme failed! Error: " .. err, "SF Themes", "Close")
-				end)
-			end)
-		end)
-
-		menu:AddOption("From text", function()
-			local window = Derma_StringRequestNoBlur("Load theme from text", "Paste the contents of a TextMate theme file below",
-				"", function(text)
-				local parsed, strId, error = SF.Editor.Themes.ParseTextMate(text)
-
-				if not parsed then
-					Derma_Message("A problem occured during parsing the XML file: " .. error, "SF Themes", "Close")
-					return
 				end
-
-				print("Added theme with id " .. strId) -- DEBUG
-
-				SF.Editor.Themes.AddTheme(strId, parsed)
-
-				themeList:Populate()
-			end)
+			)
 
 			-- Enable text entry multiline and resize with a hacky method,
 			-- because why design a new derma panel just for this?
@@ -1298,11 +1462,13 @@ function Editor:CreateThemesPanel()
 	panel:AddItem(label)
 	label:DockMargin(0, 0, 0, 0)
 	label:SetFont("SFTitle")
-	label:SetColor(Color(255,32,32))
-	label:SetText("If your theme doesn't work or looks different than it should you can report it by clicking on this text.")
+	label:SetColor(Color(255, 32, 32))
+	label:SetText(
+		"If your theme doesn't work or looks different than it should you can report it by clicking on this text."
+	)
 	label:SetWrap(true)
 	label.DoClick = function()
-		gui.OpenURL( "https://github.com/neostarfall/neostarfall/issues" )
+		gui.OpenURL("https://github.com/neostarfall/neostarfall/issues")
 	end
 	return panel
 end
@@ -1327,13 +1493,20 @@ function Editor:OpenCode(path, code, codeOnDisk, forcenewtab, checkFileExists)
 	code = SF.Editor.normalizeCode(code)
 
 	if path and checkFileExists and file.Exists("starfall/" .. path, "DATA") then
-		if codeOnDisk==nil then codeOnDisk = SF.Editor.normalizeCode(file.Read("starfall/" .. path, "DATA") or "") end
-		if code==codeOnDisk then return end
+		if codeOnDisk == nil then
+			codeOnDisk = SF.Editor.normalizeCode(file.Read("starfall/" .. path, "DATA") or "")
+		end
+		if code == codeOnDisk then
+			return
+		end
 	end
 
 	if not forcenewtab then
 		for i = 1, self:GetNumTabs() do
-			if (path==nil or path==self:GetTabContent(i).chosenfile) and self:GetTabContent(i):GetCode() == code then
+			if
+				(path == nil or path == self:GetTabContent(i).chosenfile)
+				and self:GetTabContent(i):GetCode() == code
+			then
 				self:SetActiveTab(i)
 				return
 			end
@@ -1359,8 +1532,12 @@ function Editor:InitShutdownHook()
 end
 
 function Editor:SaveTabs()
-	if not SF.Editor.initialized or not SF.Editor.editor then return end
-	if not self.TabsLoaded then return end
+	if not SF.Editor.initialized or not SF.Editor.editor then
+		return
+	end
+	if not self.TabsLoaded then
+		return
+	end
 	local tabs = {}
 	local activeTab = self:GetActiveTabIndex()
 	tabs.selectedTab = activeTab
@@ -1370,7 +1547,7 @@ function Editor:SaveTabs()
 			if tabs.selectedTab == i then
 				tabs.selectedTab = 1
 			end
-			continue
+			goto cont
 		end
 		tabs[i] = {}
 		local filename = tabContent.chosenfile
@@ -1379,11 +1556,12 @@ function Editor:SaveTabs()
 			if filename:sub(1, #filedatapath) == filedatapath then -- Temporary fix before we update sf_tabs.txt format
 				filename = nil
 			else
-				filename =  filename:sub(#self.Location + 2)
+				filename = filename:sub(#self.Location + 2)
 			end
 		end
 		tabs[i].filename = filename
 		tabs[i].code = tabContent:GetCode()
+		::cont::
 	end
 
 	file.Write("sf_tabs.txt", util.TableToJSON(tabs))
@@ -1392,16 +1570,23 @@ end
 function Editor:OpenOldTabs()
 	local tabs = util.JSONToTable(file.Read("sf_tabs.txt") or "")
 
-	if istable(tabs) and tabs[1]~=nil then
+	if istable(tabs) and tabs[1] ~= nil then
 		-- Temporarily remove fade time
 		self:FixTabFadeTime()
 
 		local tabsloaded = false
 		for k, v in pairs(tabs) do
-			if not (istable(v) and isstring(v.code)) then continue end
-			if isstring(v.filename) then v.filename = "starfall/"..v.filename else v.filename=nil end
+			if not (istable(v) and isstring(v.code)) then
+				goto cont
+			end
+			if isstring(v.filename) then
+				v.filename = "starfall/" .. v.filename
+			else
+				v.filename = nil
+			end
 			tabsloaded = true
 			self:OpenCode(v.filename, v.code, nil, true)
+			::cont::
 		end
 		if tabsloaded then
 			self:CloseTab(1, true)
@@ -1419,8 +1604,10 @@ function Editor:Validate(gotoerror)
 	end
 
 	local code = self:GetCode()
-	if #code < 1 then return true end -- We wont validate empty scripts
-	local err = SF.CompileString(code , "Validation", false)
+	if #code < 1 then
+		return true
+	end -- We wont validate empty scripts
+	local err = SF.CompileString(code, "Validation", false)
 	local success = not isstring(err)
 	local row, message
 	if success then
@@ -1429,7 +1616,7 @@ function Editor:Validate(gotoerror)
 		row = tonumber(err:match("%d+")) or 0
 		message = err:match(": .+$")
 		message = message and message:sub(3) or "Unknown"
-		message = "Line "..row..":"..message
+		message = "Line " .. row .. ":" .. message
 		self.C.Val:SetBGColor(110, 0, 20, 255)
 		self.C.Val:SetText(" " .. message)
 	end
@@ -1446,8 +1633,10 @@ function Editor:SetValidatorStatus(text, r, g, b, a)
 end
 
 function Editor:SubTitle(sub)
-	if not sub then self.subTitle = ""
-	else self.subTitle = " - " .. sub
+	if not sub then
+		self.subTitle = ""
+	else
+		self.subTitle = " - " .. sub
 	end
 end
 
@@ -1539,7 +1728,9 @@ end
 
 function Editor:PasteCode(code)
 	local content = self:GetCurrentTabContent()
-	if not content:GetTabHandler().IsEditor or not content.PasteCode then return end
+	if not content:GetTabHandler().IsEditor or not content.PasteCode then
+		return
+	end
 	content:PasteCode(code)
 end
 
@@ -1575,9 +1766,14 @@ function Editor:GetCode()
 end
 
 function Editor:Open(Line, code, forcenewtab, checkFileExists)
-	if Line==nil and code==nil and self:IsVisible() then self:Close() return end
+	if Line == nil and code == nil and self:IsVisible() then
+		self:Close()
+		return
+	end
 
-	timer.Create("sfautosave", 5, 0, function() self:SaveTabs() end)
+	timer.Create("sfautosave", 5, 0, function()
+		self:SaveTabs()
+	end)
 	self:SetV(true)
 
 	if code then
@@ -1597,7 +1793,6 @@ function Editor:SaveFile(path, close, SaveAs, Func)
 		if self.C.Browser.File then
 			str = self.C.Browser.File.FileDir -- Get FileDir
 			if str and str ~= "" then -- Check if not nil
-
 				-- Remove "expression2/" or "cpuchip/" etc
 				local n, _ = str:find("/", 1, true)
 				str = str:sub(n + 1, -1)
@@ -1617,10 +1812,15 @@ function Editor:SaveFile(path, close, SaveAs, Func)
 			end
 		end
 
-		Derma_StringRequestNoBlur("Save to New File", "", (str ~= nil and str .. "/" or "") .. self.savefilefn,
+		Derma_StringRequestNoBlur(
+			"Save to New File",
+			"",
+			(str ~= nil and str .. "/" or "") .. self.savefilefn,
 			function(strTextOut)
 				strTextOut = self.Location .. "/" .. string.gsub(strTextOut, ".", invalid_filename_chars)
-				if not string.match(strTextOut, "%.txt$") then strTextOut = strTextOut .. ".txt" end
+				if not string.match(strTextOut, "%.txt$") then
+					strTextOut = strTextOut .. ".txt"
+				end
 				local function save()
 					if Func then
 						Func(strTextOut)
@@ -1630,27 +1830,37 @@ function Editor:SaveFile(path, close, SaveAs, Func)
 				end
 
 				if file.Exists(strTextOut, "DATA") then
-					Derma_QueryNoBlur("File " .. strTextOut .. " already exists!", "File exists!", "Override", save, "Cancel")
+					Derma_QueryNoBlur(
+						"File " .. strTextOut .. " already exists!",
+						"File exists!",
+						"Override",
+						save,
+						"Cancel"
+					)
 				else
 					save()
 				end
-			end)
+			end
+		)
 
 		return
 	end
 
 	path = SF.NormalizePath(path)
 	if SF.FileWrite(path, self:GetCode()) then
-		if path=="starfall/cl_url_whitelist.txt" then SF.ReloadUrlWhitelist() end
+		if path == "starfall/cl_url_whitelist.txt" then
+			SF.ReloadUrlWhitelist()
+		end
 
 		local panel = self.C.Val
-		timer.Simple(0, function() panel.SetText(panel, " Saved as " .. path) end)
+		timer.Simple(0, function()
+			panel.SetText(panel, " Saved as " .. path)
+		end)
 		surface.PlaySound("ambient/water/drip3.wav")
 
 		self:ChosenFile(path, self:GetCode())
 		self:UpdateTabText(self:GetActiveTab())
 		if close then
-
 			GAMEMODE:AddNotify("Source code saved as " .. path .. ".", NOTIFY_GENERIC, 7)
 			self:Close()
 		end
@@ -1660,7 +1870,9 @@ function Editor:SaveFile(path, close, SaveAs, Func)
 end
 
 function Editor:LoadFile(Line, forcenewtab)
-	if not Line or file.IsDir(Line, "DATA") then return end
+	if not Line or file.IsDir(Line, "DATA") then
+		return
+	end
 
 	local str = file.Read(Line, "DATA")
 	if str then
@@ -1674,7 +1886,7 @@ end
 ---Returns the value of the settings `ReloadBeforeUpload` of the editor.
 ---@return boolean
 function Editor:ShouldReloadBeforeUpload()
-    return self.autoReloadEnabled
+	return self.autoReloadEnabled
 end
 
 ---Reloads the tab associated to the file at `filepath`, if there is one.
@@ -1685,7 +1897,9 @@ function Editor:ReloadTab(tabIndex, interactive)
 	local activeTabIndex = self:GetActiveTabIndex()
 	local tab = self:GetTab(tabIndex)
 	local tabContent = self:GetTabContent(tabIndex)
-	if not tabContent:GetTabHandler().IsEditor then return end
+	if not tabContent:GetTabHandler().IsEditor then
+		return
+	end
 
 	local filepath = tabContent.chosenfile
 	if filepath == nil then
@@ -1695,18 +1909,24 @@ function Editor:ReloadTab(tabIndex, interactive)
 	end
 
 	local fileLastModified = file.Time(filepath, "DATA")
-	if fileLastModified == 0 then return end
+	if fileLastModified == 0 then
+		return
+	end
 
 	-- This `autoReloadLastModified` variable is only assigned and read here, other places in the code should not use
 	-- it since they can just call one of the editor's functions.
-	if tabContent.autoReloadLastModified ~= nil and tabContent.autoReloadLastModified >= fileLastModified and tabContent:IsSaved() then
+	if
+		tabContent.autoReloadLastModified ~= nil
+		and tabContent.autoReloadLastModified >= fileLastModified
+		and tabContent:IsSaved()
+	then
 		return
 	end
 
 	local executeReload = function()
 		local fileContent = file.Read(filepath)
 		if fileContent == nil then
-			SF.AddNotify(LocalPlayer(), "Error while reloading, failed to read file: "..filepath, 7, "ERROR1")
+			SF.AddNotify(LocalPlayer(), "Error while reloading, failed to read file: " .. filepath, 7, "ERROR1")
 			return
 		end
 
@@ -1727,12 +1947,19 @@ function Editor:ReloadTab(tabIndex, interactive)
 	elseif interactive then
 		local popup = self.reloadPopups[tab]
 		if not IsValid(popup) then
-			popup = SF.Editor.Query("Unsaved changes!", string.format("Do you want to reload <color=255,30,30>%q</color> ?", tab:GetText()), "Reload", function()
-			executeReload()
-			self.reloadPopups[tab] = nil
-			end, "Cancel", function()
-			self.reloadPopups[tab] = nil
-			end)
+			popup = SF.Editor.Query(
+				"Unsaved changes!",
+				string.format("Do you want to reload <color=255,30,30>%q</color> ?", tab:GetText()),
+				"Reload",
+				function()
+					executeReload()
+					self.reloadPopups[tab] = nil
+				end,
+				"Cancel",
+				function()
+					self.reloadPopups[tab] = nil
+				end
+			)
 			self.reloadPopups[tab] = popup
 		end
 
@@ -1748,7 +1975,9 @@ end
 ---@param interactive boolean See `Editor:ReloadTab`
 function Editor:ReloadFile(filepath, interactive)
 	local tabIndex, tabFound = self:GetTabIndexByFilePath(filepath)
-	if not tabFound then return end
+	if not tabFound then
+		return
+	end
 	self:ReloadTab(tabIndex, interactive)
 end
 
@@ -1805,7 +2034,6 @@ function Editor:Close()
 end
 
 function Editor:Setup(nTitle, nLocation, nEditorType)
-
 	self.Title = nTitle
 	self.Location = nLocation
 	self.EditorType = nEditorType
@@ -1833,7 +2061,9 @@ function Editor:Setup(nTitle, nLocation, nEditorType)
 	SoundBrw:DockMargin(2, 0, 0, 0)
 	SoundBrw:Dock(RIGHT)
 	SoundBrw:SetText("Sound Browser")
-	SoundBrw.DoClick = function() RunConsoleCommand("wire_sound_browser_open") end
+	SoundBrw.DoClick = function()
+		RunConsoleCommand("wire_sound_browser_open")
+	end
 	self.C.SoundBrw = SoundBrw
 
 	--Add "Model Viewer" button
@@ -1862,34 +2092,34 @@ function Editor:Setup(nTitle, nLocation, nEditorType)
 		end
 
 		self.fontEditor = vgui.Create("StarfallFontPicker")
-		self.fontEditor:SetTitle( "Font Editor" )
+		self.fontEditor:SetTitle("Font Editor")
 		self.fontEditor:SetSizable(true)
 		self.fontEditor:SetDeleteOnClose(true)
 		self.fontEditor:Open()
 	end
 	self.C.FontEditor = FontEditor
 
-
 	self:NewTab()
 	if Editor.OpenOldTabsVar:GetBool() then
 		self:OpenOldTabs()
 	end
 	self:InvalidateLayout()
-
 end
 
 vgui.Register("StarfallEditorFrame", Editor, "DFrame")
 
 -- Starfall Users
-PANEL  = {}
+PANEL = {}
 
 function PANEL:UpdatePlayers(players)
 	local sortedplayers = {}
 	for ply in pairs(self.players) do
 		local plyname = ply:GetName()
-		sortedplayers[#sortedplayers+1] = {ply = ply, name = plyname, namel = string.lower(plyname)}
+		sortedplayers[#sortedplayers + 1] = { ply = ply, name = plyname, namel = string.lower(plyname) }
 	end
-	table.sort(sortedplayers, function(a,b) return a.namel<b.namel end)
+	table.sort(sortedplayers, function(a, b)
+		return a.namel < b.namel
+	end)
 
 	self.scrollPanel:Clear()
 	for _, tbl in ipairs(sortedplayers) do
@@ -1900,7 +2130,7 @@ function PANEL:UpdatePlayers(players)
 		header:DockMargin(0, 5, 0, 0)
 		header:SetSize(0, 32)
 		header:Dock(TOP)
-		header:SetBackgroundColor(Color(0,0,0,20))
+		header:SetBackgroundColor(Color(0, 0, 0, 20))
 		header:SetTooltip(tbl.name)
 
 		local blocked = SF.BlockedUsers:isBlocked(steamid)
@@ -1942,7 +2172,7 @@ function PANEL:UpdatePlayers(players)
 			counter:DockMargin(3, 0, 0, 0)
 			counter:SetSize(20, 32)
 			counter:Dock(LEFT)
-			counter:SetBackgroundColor(Color(0,0,0,20))
+			counter:SetBackgroundColor(Color(0, 0, 0, 20))
 			counter:SetTooltip(k)
 
 			local icon = vgui.Create("DImage", counter)
@@ -1959,7 +2189,9 @@ function PANEL:UpdatePlayers(players)
 			counter.nextThink = 0
 			function counter:Think()
 				local t = CurTime()
-				if t < self.nextThink then return end
+				if t < self.nextThink then
+					return
+				end
 				self.nextThink = t + 0.1
 
 				if blocked then
@@ -1974,25 +2206,25 @@ function PANEL:UpdatePlayers(players)
 		cpuManager:DockMargin(15, 0, 0, 0)
 		cpuManager:SetSize(160, 32)
 		cpuManager:Dock(LEFT)
-		cpuManager:SetBackgroundColor(Color(0,0,0,20))
+		cpuManager:SetBackgroundColor(Color(0, 0, 0, 20))
 
 		local cpuServer = vgui.Create("StarfallPanel", cpuManager)
 		cpuServer:SetSize(150, 16)
 		cpuServer:Dock(TOP)
-		cpuServer:SetBackgroundColor(Color(0,0,0,20))
+		cpuServer:SetBackgroundColor(Color(0, 0, 0, 20))
 
 		local cpuServerText = vgui.Create("DLabel", cpuServer)
 		cpuServerText:SetFont("DermaDefault")
 		cpuServerText:SetColor(Color(255, 255, 255))
 		cpuServerText:Dock(LEFT)
 		cpuServerText:SetText("SV CPU: 0.0 us")
-		cpuServerText:SetSize(100,16)
+		cpuServerText:SetSize(100, 16)
 
 		if LocalPlayer():IsAdmin() then
 			local killserver = vgui.Create("StarfallButton", cpuServer)
 			killserver:SetText("Admin Kill")
 			killserver.DoClick = function()
-				RunConsoleCommand( "sf_kill", steamid )
+				RunConsoleCommand("sf_kill", steamid)
 			end
 			killserver:Dock(LEFT)
 		end
@@ -2000,26 +2232,28 @@ function PANEL:UpdatePlayers(players)
 		local cpuClient = vgui.Create("StarfallPanel", cpuManager)
 		cpuClient:SetSize(150, 16)
 		cpuClient:Dock(TOP)
-		cpuClient:SetBackgroundColor(Color(0,0,0,20))
+		cpuClient:SetBackgroundColor(Color(0, 0, 0, 20))
 
 		local cpuClientText = vgui.Create("DLabel", cpuClient)
 		cpuClientText:SetFont("DermaDefault")
 		cpuClientText:SetColor(Color(255, 255, 255))
 		cpuClientText:Dock(LEFT)
 		cpuClientText:SetText("CL CPU: 0.0 us")
-		cpuClientText:SetSize(100,16)
+		cpuClientText:SetSize(100, 16)
 
 		local killclient = vgui.Create("StarfallButton", cpuClient)
 		killclient:SetText("Kill all")
 		killclient.DoClick = function()
-			RunConsoleCommand( "sf_kill_cl", steamid )
+			RunConsoleCommand("sf_kill_cl", steamid)
 		end
 		killclient:Dock(LEFT)
 
 		header.nextThink = 0
 		function header:Think()
 			local t = CurTime()
-			if t < self.nextThink then return end
+			if t < self.nextThink then
+				return
+			end
 			self.nextThink = t + 0.1
 
 			local svtotal = 0
@@ -2029,7 +2263,7 @@ function PANEL:UpdatePlayers(players)
 				cltotal = cltotal + instance.cpu_average
 			end
 			cpuServerText:SetText(string.format("SV CPU: %3.1f us", svtotal))
-			cpuClientText:SetText(string.format("CL CPU: %3.1f us", cltotal*1e6))
+			cpuClientText:SetText(string.format("CL CPU: %3.1f us", cltotal * 1e6))
 		end
 
 		self.scrollPanel:AddItem(header)
@@ -2070,31 +2304,32 @@ function PANEL:Init()
 	self.scrollPanel:SetPaintBackgroundEnabled(false)
 end
 
-vgui.Register( "StarfallUsers", PANEL, "StarfallFrame" )
+vgui.Register("StarfallUsers", PANEL, "StarfallFrame")
 
 local userPanel
-list.Set( "DesktopWindows", "StarfallUsers", {
+list.Set("DesktopWindows", "StarfallUsers", {
 
-	title		= "Neostarfall List",
-	icon		= "radon/starfall2",
-	width		= 520,
-	height		= 700,
-	onewindow	= true,
-	init		= function( icon, window )
+	title = "Neostarfall List",
+	icon = "radon/starfall2",
+	width = 520,
+	height = 700,
+	onewindow = true,
+	init = function(icon, window)
 		window:Remove()
 		RunConsoleCommand("sf_userlist")
-	end
-} )
+	end,
+})
 
 concommand.Add("sf_userlist", function()
-	if userPanel and userPanel:IsValid() then return end
+	if userPanel and userPanel:IsValid() then
+		return
+	end
 
 	userPanel = vgui.Create("StarfallUsers")
-	userPanel:SetTitle( "Neostarfall List" )
-	userPanel:SetSize( 520, ScrH()*0.5 )
+	userPanel:SetTitle("Neostarfall List")
+	userPanel:SetSize(520, ScrH() * 0.5)
 	userPanel:SetSizable(true)
 	userPanel:Center()
 	userPanel:SetDeleteOnClose(true)
 	userPanel:Open()
 end)
-

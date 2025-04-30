@@ -4,7 +4,8 @@ local haspermission = SF.Permissions.hasAccess
 local checkluatype = SF.CheckLuaType
 local inputLockCooldown
 if CLIENT then
-	inputLockCooldown = CreateConVar("sf_input_lock_cooldown", 10, FCVAR_ARCHIVE, "Cooldown for input.lockControls() in seconds", 0)
+	inputLockCooldown =
+		CreateConVar("sf_input_lock_cooldown", 10, FCVAR_ARCHIVE, "Cooldown for input.lockControls() in seconds", 0)
 end
 
 -- This should manage the player button hooks for singleplayer games.
@@ -66,7 +67,9 @@ local function lockControls(instance)
 	LocalPlayer():ChatPrint("Neostarfall locked your controls. Press 'Alt' to regain control.")
 
 	hook.Add("PlayerBindPress", "sf_keyboard_blockinput", function(ply, bind, pressed)
-		if bind ~= "+attack" and bind ~= "+attack2" then return true end
+		if bind ~= "+attack" and bind ~= "+attack2" then
+			return true
+		end
 	end)
 	hook.Add(PlayerButtonDown, "sf_keyboard_unblockinput", function(ply, but)
 		if but == KEY_LALT or but == KEY_RALT then
@@ -90,17 +93,26 @@ net.Receive("starfall_lock_control", function()
 end)
 
 local isChatOpen = false
-hook.Add("StartChat","SF_StartChat",function() isChatOpen=true end)
-hook.Add("FinishChat","SF_StartChat",function() isChatOpen=false end)
-
+hook.Add("StartChat", "SF_StartChat", function()
+	isChatOpen = true
+end)
+hook.Add("FinishChat", "SF_StartChat", function()
+	isChatOpen = false
+end)
 
 local function CheckButtonPerms(instance, ply, button)
-	if not IsFirstTimePredicted() and not game.SinglePlayer() then return false end
-	if not haspermission(instance, nil, "input") then return false end
+	if not IsFirstTimePredicted() and not game.SinglePlayer() then
+		return false
+	end
+	if not haspermission(instance, nil, "input") then
+		return false
+	end
 	if isChatOpen and not haspermission(instance, nil, "input.chat") then
 		local notMouseButton = button < MOUSE_FIRST and button > MOUSE_LAST
 		local notJoystick = button < JOYSTICK_FIRST and button > JOYSTICK_LAST
-		if notMouseButton and notJoystick then return false end -- Mouse and joystick are allowed, they don't put text into the chat
+		if notMouseButton and notJoystick then
+			return false
+		end -- Mouse and joystick are allowed, they don't put text into the chat
 	end
 
 	return true, { button }
@@ -128,12 +140,13 @@ SF.hookAdd(PlayerButtonUp, "inputreleased", CheckButtonPerms)
 -- @return boolean Returning true will block the binding from being pressed for the chip owner
 SF.hookAdd("PlayerBindPress", "inputbindpressed", function(instance, ply, bind)
 	if haspermission(instance, nil, "input") then
-		return true, {bind}
+		return true, { bind }
 	end
 	return false
-end,
-function(instance, args, ply)
-	if args[1] and args[2] and instance.player == LocalPlayer() then return true end
+end, function(instance, args, ply)
+	if args[1] and args[2] and instance.player == LocalPlayer() then
+		return true
+	end
 end)
 
 --- Called when the mouse is moved
@@ -144,7 +157,7 @@ end)
 -- @param number y Y coordinate moved
 SF.hookAdd("InputMouseApply", "mousemoved", function(instance, _, x, y)
 	if haspermission(instance, nil, "input") then
-		if x~=0 or y~=0 then
+		if x ~= 0 or y ~= 0 then
 			return true, { x, y }
 		end
 		return false
@@ -161,7 +174,7 @@ SF.hookAdd("StartCommand", "mousewheeled", function(instance, ply, cmd)
 	if haspermission(instance, nil, "input") then
 		local delta = cmd:GetMouseWheel()
 		if delta ~= 0 then
-			return true, {delta}
+			return true, { delta }
 		end
 		return false
 	end
@@ -185,225 +198,226 @@ end
 -- @libtbl input_library
 SF.RegisterLibrary("input")
 
-
 return function(instance)
-local checkpermission = instance.player ~= SF.Superuser and SF.Permissions.check or function() end
+	local checkpermission = instance.player ~= SF.Superuser and SF.Permissions.check or function() end
 
-local getent
-local lockedControlCooldown = 0
-instance.data.input = {controlsLocked = false}
+	local getent
+	local lockedControlCooldown = 0
+	instance.data.input = { controlsLocked = false }
 
-instance:AddHook("initialize", function()
-	getent = instance.Types.Entity.GetEntity
-end)
+	instance:AddHook("initialize", function()
+		getent = instance.Types.Entity.GetEntity
+	end)
 
-instance:AddHook("deinitialize", function()
-	if instance.data.cursorEnabled then
-		gui.EnableScreenClicker(false)
-	end
-	if instance.data.input.controlsLocked then
-		unlockControls(instance)
-	end
-end)
-
-instance:AddHook("starfall_hud_disconnected", function()
-	if instance.data.cursorEnabled then
-		gui.EnableScreenClicker(false)
-	end
-end)
-
-
-local input_library = instance.Libraries.input
-local vwrap = instance.Types.Vector.Wrap
-
---- Gets the first key that is bound to the command passed
--- @client
--- @param string binding The name of the bind
--- @return number The id of the first key bound
--- @return string The name of the first key bound
-function input_library.lookupBinding(binding)
-	checkluatype(binding, TYPE_STRING)
-
-	checkpermission(instance, nil, "input")
-
-	local bind = input.LookupBinding(binding)
-	if bind then
-		bind = bind:upper()
-
-		return instance.env.KEY[bind] or instance.env.MOUSE[bind], bind
-	end
-end
-
---- Gets the command bound to a key
--- @client
--- @param number key The key id, see input
--- @return string The command bound to the key
-function input_library.lookupKeyBinding(key)
-	checkluatype(key, TYPE_NUMBER)
-	checkpermission(instance, nil, "input.bindings")
-	return input.LookupKeyBinding(key)
-end
-
---- Gets whether a key is down
--- @client
--- @param number key The key id, see input
--- @return boolean True if the key is down
-function input_library.isKeyDown(key)
-	checkluatype(key, TYPE_NUMBER)
-
-	checkpermission(instance, nil, "input")
-	if isChatOpen and not haspermission(instance, nil, "input.chat") then return false end
-
-	return input.IsKeyDown(key)
-end
-
---- Gets whether a mouse button is down
--- @client
--- @param number key The mouse button id, see input
--- @return boolean True if the key is down
-function input_library.isMouseDown(key)
-	checkluatype(key, TYPE_NUMBER)
-
-	checkpermission(instance, nil, "input")
-
-	return input.IsMouseDown(key)
-end
-
---- Gets the name of a key from the id
--- @client
--- @param number key The key id, see input
--- @return string The name of the key
-function input_library.getKeyName(key)
-	checkluatype(key, TYPE_NUMBER)
-
-	checkpermission(instance, nil, "input")
-
-	return input.GetKeyName(key)
-end
-
---- Gets whether the shift key is down
--- @client
--- @return boolean True if the shift key is down
-function input_library.isShiftDown()
-	checkpermission(instance, nil, "input")
-
-	return input.IsShiftDown()
-end
-
---- Gets whether the control key is down
--- @client
--- @return boolean True if the control key is down
-function input_library.isControlDown()
-	checkpermission(instance, nil, "input")
-
-	return input.IsControlDown()
-end
-
---- Gets the position of the mouse
--- @client
--- @return number The x position of the mouse
--- @return number The y position of the mouse
-function input_library.getCursorPos()
-	checkpermission(instance, nil, "input")
-
-	return input.GetCursorPos()
-end
-
---- Gets whether the cursor is visible on the screen
--- @client
--- @return boolean The cursor's visibility
-function input_library.getCursorVisible()
-	checkpermission(instance, nil, "input")
-
-	return vgui.CursorVisible()
-end
-
---- Translates position on player's screen to aim vector
--- @client
--- @param number x X coordinate on the screen
--- @param number y Y coordinate on the screen
--- @return Vector Aim vector
-function input_library.screenToVector(x, y)
-	checkpermission(instance, nil, "input")
-	checkluatype(x, TYPE_NUMBER)
-	checkluatype(y, TYPE_NUMBER)
-	return vwrap(gui.ScreenToVector(x, y))
-end
-
---- Sets the state of the mouse cursor
--- @client
--- @param boolean enabled Whether or not the cursor should be enabled
-function input_library.enableCursor(enabled)
-	checkluatype(enabled, TYPE_BOOL)
-	checkpermission(instance, nil, "input")
-
-	if not SF.IsHUDActive(instance.entity) then
-		SF.Throw("No HUD component connected", 2)
-	end
-
-	instance.data.cursorEnabled = enabled
-	gui.EnableScreenClicker(enabled)
-end
-
---- Makes the local player select a weapon
--- @client
--- @param Weapon weapon The weapon entity to select
-function input_library.selectWeapon(weapon)
-	local ent = getent(weapon)
-	if not (ent:IsWeapon() and ent:IsCarriedByLocalPlayer()) then SF.Throw("This weapon is not your own!", 2) end
-	checkpermission(instance, nil, "input.emulate")
-	input.SelectWeapon( ent )
-end
-
---- Locks game controls for typing purposes. Alt will unlock the controls. Has a 10 second cooldown.
--- @client
--- @param boolean enabled Whether to lock or unlock the controls
-function input_library.lockControls(enabled)
-	checkluatype(enabled, TYPE_BOOL)
-	checkpermission(instance, nil, "input")
-
-	if not SF.IsHUDActive(instance.entity) and (enabled or not instance.data.input.controlsLocked) then
-		SF.Throw("No HUD component connected", 2)
-	end
-
-	if enabled then
-		if lockedControlCooldown + inputLockCooldown:GetFloat() > CurTime() then
-			SF.Throw("Cannot lock the player's controls yet", 2)
+	instance:AddHook("deinitialize", function()
+		if instance.data.cursorEnabled then
+			gui.EnableScreenClicker(false)
 		end
-		lockedControlCooldown = CurTime()
-		lockControls(instance)
-	else
-		unlockControls(instance)
+		if instance.data.input.controlsLocked then
+			unlockControls(instance)
+		end
+	end)
+
+	instance:AddHook("starfall_hud_disconnected", function()
+		if instance.data.cursorEnabled then
+			gui.EnableScreenClicker(false)
+		end
+	end)
+
+	local input_library = instance.Libraries.input
+	local vwrap = instance.Types.Vector.Wrap
+
+	--- Gets the first key that is bound to the command passed
+	-- @client
+	-- @param string binding The name of the bind
+	-- @return number The id of the first key bound
+	-- @return string The name of the first key bound
+	function input_library.lookupBinding(binding)
+		checkluatype(binding, TYPE_STRING)
+
+		checkpermission(instance, nil, "input")
+
+		local bind = input.LookupBinding(binding)
+		if bind then
+			bind = bind:upper()
+
+			return instance.env.KEY[bind] or instance.env.MOUSE[bind], bind
+		end
 	end
-end
 
---- Gets whether the player's control is currently locked
--- @client
--- @return boolean Whether the player's control is locked
-function input_library.isControlLocked()
-	return controlsLocked
-end
+	--- Gets the command bound to a key
+	-- @client
+	-- @param number key The key id, see input
+	-- @return string The command bound to the key
+	function input_library.lookupKeyBinding(key)
+		checkluatype(key, TYPE_NUMBER)
+		checkpermission(instance, nil, "input.bindings")
+		return input.LookupKeyBinding(key)
+	end
 
---- Gets whether the player's control can be locked
--- @client
--- @return boolean Whether the player's control can be locked
-function input_library.canLockControls()
-	return SF.IsHUDActive(instance.entity) and lockedControlCooldown + inputLockCooldown:GetFloat() <= CurTime()
-end
+	--- Gets whether a key is down
+	-- @client
+	-- @param number key The key id, see input
+	-- @return boolean True if the key is down
+	function input_library.isKeyDown(key)
+		checkluatype(key, TYPE_NUMBER)
 
---- Returns whether the game menu overlay ( main menu ) is open or not.
--- @client
--- @return boolean Whether the game menu overlay ( main menu ) is open or not
-function input_library.isGameUIVisible()
-	return gui.IsGameUIVisible()
-end
+		checkpermission(instance, nil, "input")
+		if isChatOpen and not haspermission(instance, nil, "input.chat") then
+			return false
+		end
 
---- Returns the digital value of an analog stick on the current (set up via convars) controller.
--- @name input_library.getAnalogValue
--- @class function
--- @client
--- @param number axis The analog axis to poll. See https://wiki.facepunch.com/gmod/Enums/ANALOG
--- @return number The digital value.
-input_library.getAnalogValue = input.GetAnalogValue
+		return input.IsKeyDown(key)
+	end
 
+	--- Gets whether a mouse button is down
+	-- @client
+	-- @param number key The mouse button id, see input
+	-- @return boolean True if the key is down
+	function input_library.isMouseDown(key)
+		checkluatype(key, TYPE_NUMBER)
+
+		checkpermission(instance, nil, "input")
+
+		return input.IsMouseDown(key)
+	end
+
+	--- Gets the name of a key from the id
+	-- @client
+	-- @param number key The key id, see input
+	-- @return string The name of the key
+	function input_library.getKeyName(key)
+		checkluatype(key, TYPE_NUMBER)
+
+		checkpermission(instance, nil, "input")
+
+		return input.GetKeyName(key)
+	end
+
+	--- Gets whether the shift key is down
+	-- @client
+	-- @return boolean True if the shift key is down
+	function input_library.isShiftDown()
+		checkpermission(instance, nil, "input")
+
+		return input.IsShiftDown()
+	end
+
+	--- Gets whether the control key is down
+	-- @client
+	-- @return boolean True if the control key is down
+	function input_library.isControlDown()
+		checkpermission(instance, nil, "input")
+
+		return input.IsControlDown()
+	end
+
+	--- Gets the position of the mouse
+	-- @client
+	-- @return number The x position of the mouse
+	-- @return number The y position of the mouse
+	function input_library.getCursorPos()
+		checkpermission(instance, nil, "input")
+
+		return input.GetCursorPos()
+	end
+
+	--- Gets whether the cursor is visible on the screen
+	-- @client
+	-- @return boolean The cursor's visibility
+	function input_library.getCursorVisible()
+		checkpermission(instance, nil, "input")
+
+		return vgui.CursorVisible()
+	end
+
+	--- Translates position on player's screen to aim vector
+	-- @client
+	-- @param number x X coordinate on the screen
+	-- @param number y Y coordinate on the screen
+	-- @return Vector Aim vector
+	function input_library.screenToVector(x, y)
+		checkpermission(instance, nil, "input")
+		checkluatype(x, TYPE_NUMBER)
+		checkluatype(y, TYPE_NUMBER)
+		return vwrap(gui.ScreenToVector(x, y))
+	end
+
+	--- Sets the state of the mouse cursor
+	-- @client
+	-- @param boolean enabled Whether or not the cursor should be enabled
+	function input_library.enableCursor(enabled)
+		checkluatype(enabled, TYPE_BOOL)
+		checkpermission(instance, nil, "input")
+
+		if not SF.IsHUDActive(instance.entity) then
+			SF.Throw("No HUD component connected", 2)
+		end
+
+		instance.data.cursorEnabled = enabled
+		gui.EnableScreenClicker(enabled)
+	end
+
+	--- Makes the local player select a weapon
+	-- @client
+	-- @param Weapon weapon The weapon entity to select
+	function input_library.selectWeapon(weapon)
+		local ent = getent(weapon)
+		if not (ent:IsWeapon() and ent:IsCarriedByLocalPlayer()) then
+			SF.Throw("This weapon is not your own!", 2)
+		end
+		checkpermission(instance, nil, "input.emulate")
+		input.SelectWeapon(ent)
+	end
+
+	--- Locks game controls for typing purposes. Alt will unlock the controls. Has a 10 second cooldown.
+	-- @client
+	-- @param boolean enabled Whether to lock or unlock the controls
+	function input_library.lockControls(enabled)
+		checkluatype(enabled, TYPE_BOOL)
+		checkpermission(instance, nil, "input")
+
+		if not SF.IsHUDActive(instance.entity) and (enabled or not instance.data.input.controlsLocked) then
+			SF.Throw("No HUD component connected", 2)
+		end
+
+		if enabled then
+			if lockedControlCooldown + inputLockCooldown:GetFloat() > CurTime() then
+				SF.Throw("Cannot lock the player's controls yet", 2)
+			end
+			lockedControlCooldown = CurTime()
+			lockControls(instance)
+		else
+			unlockControls(instance)
+		end
+	end
+
+	--- Gets whether the player's control is currently locked
+	-- @client
+	-- @return boolean Whether the player's control is locked
+	function input_library.isControlLocked()
+		return controlsLocked
+	end
+
+	--- Gets whether the player's control can be locked
+	-- @client
+	-- @return boolean Whether the player's control can be locked
+	function input_library.canLockControls()
+		return SF.IsHUDActive(instance.entity) and lockedControlCooldown + inputLockCooldown:GetFloat() <= CurTime()
+	end
+
+	--- Returns whether the game menu overlay ( main menu ) is open or not.
+	-- @client
+	-- @return boolean Whether the game menu overlay ( main menu ) is open or not
+	function input_library.isGameUIVisible()
+		return gui.IsGameUIVisible()
+	end
+
+	--- Returns the digital value of an analog stick on the current (set up via convars) controller.
+	-- @name input_library.getAnalogValue
+	-- @class function
+	-- @client
+	-- @param number axis The analog axis to poll. See https://wiki.facepunch.com/gmod/Enums/ANALOG
+	-- @return number The digital value.
+	input_library.getAnalogValue = input.GetAnalogValue
 end

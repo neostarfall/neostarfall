@@ -1,15 +1,15 @@
-ENT.Type            = "anim"
-ENT.Base            = "base_gmodentity"
+ENT.Type = "anim"
+ENT.Base = "base_gmodentity"
 
-ENT.PrintName       = "Neostarfall"
-ENT.Author          = "Neostarfall Team"
-ENT.Purpose         = ""
-ENT.Instructions    = ""
+ENT.PrintName = "Neostarfall"
+ENT.Author = "Neostarfall Team"
+ENT.Purpose = ""
+ENT.Instructions = ""
 
-ENT.Spawnable       = false
+ENT.Spawnable = false
 
-ENT.Starfall        = true
-ENT.States          = {
+ENT.Starfall = true
+ENT.States = {
 	Normal = 1,
 	Error = 2,
 	None = 3,
@@ -19,7 +19,7 @@ local IsValid = FindMetaTable("Entity").IsValid
 
 function ENT:Compile(sfdata)
 	self:Destroy()
-	local newdata = sfdata~=nil
+	local newdata = sfdata ~= nil
 	if newdata then
 		self.sfdata = sfdata
 		self.owner = sfdata.owner
@@ -28,11 +28,16 @@ function ENT:Compile(sfdata)
 		sfdata = self.sfdata
 	end
 
-	if not (sfdata and sfdata.files and sfdata.files[sfdata.mainfile]) then return end
+	if not (sfdata and sfdata.files and sfdata.files[sfdata.mainfile]) then
+		return
+	end
 	self.error = nil
 
 	local ok, instance = SF.Instance.Compile(sfdata.files, sfdata.mainfile, self.owner, self)
-	if not ok then self:Error(instance) return end
+	if not ok then
+		self:Error(instance)
+		return
+	end
 
 	if newdata then
 		local mainpp = instance.ppdata.files[instance.mainfile]
@@ -40,7 +45,9 @@ function ENT:Compile(sfdata)
 		self.author = mainpp.scriptauthor or "No-Author"
 		if SERVER then
 			if mainpp.model then
-				pcall(function() self:SetCustomModel(SF.CheckModel(mainpp.model, self.owner, true)) end)
+				pcall(function()
+					self:SetCustomModel(SF.CheckModel(mainpp.model, self.owner, true))
+				end)
 			end
 
 			self.sfsenddata, self.sfownerdata, self.sforiginalsenddata = instance.ppdata:GetSendData(sfdata)
@@ -58,7 +65,9 @@ function ENT:Compile(sfdata)
 	end
 
 	local ok, msg, traceback = instance:initialize()
-	if not ok then return end
+	if not ok then
+		return
+	end
 
 	if SERVER then
 		self.ErroredPlayers = {}
@@ -77,10 +86,14 @@ function ENT:Compile(sfdata)
 	end
 
 	for k, v in ipairs(ents.FindByClass("starfall_screen")) do
-		if v.link == self then instance:runScriptHook("componentlinked", instance.WrapObject(v)) end
+		if v.link == self then
+			instance:runScriptHook("componentlinked", instance.WrapObject(v))
+		end
 	end
 	for k, v in ipairs(ents.FindByClass("starfall_hud")) do
-		if v.link == self then instance:runScriptHook("componentlinked", instance.WrapObject(v)) end
+		if v.link == self then
+			instance:runScriptHook("componentlinked", instance.WrapObject(v))
+		end
 	end
 end
 
@@ -119,64 +132,94 @@ function ENT:Error(err)
 		self:SetColor4Part(255, 0, 0, 255)
 	end
 
-	hook.Run("StarfallError", self, self.owner, CLIENT and LocalPlayer() or Entity(0), self.sfdata and self.sfdata.mainfile or "", msg, traceback)
+	hook.Run(
+		"StarfallError",
+		self,
+		self.owner,
+		CLIENT and LocalPlayer() or Entity(0),
+		self.sfdata and self.sfdata.mainfile or "",
+		msg,
+		traceback
+	)
 	SF.SendError(self, msg, traceback)
 end
 
-local function MenuOpen( ContextMenu, Option, Entity, Trace )
+local function MenuOpen(ContextMenu, Option, Entity, Trace)
 	local ent = Entity
-	if Entity:GetClass() == 'starfall_screen' or Entity:GetClass() == "starfall_hud" then
-		if not ent.link then return end
+	if Entity:GetClass() == "starfall_screen" or Entity:GetClass() == "starfall_hud" then
+		if not ent.link then
+			return
+		end
 		ent = ent.link
 	end
 	local SubMenu = Option:AddSubMenu()
-	SubMenu:AddOption("Restart Clientside", function ()
+	SubMenu:AddOption("Restart Clientside", function()
 		ent:Compile()
 	end)
-	SubMenu:AddOption("Terminate Clientside", function ()
-		ent:Error({message = "Terminated", traceback = ""})
+	SubMenu:AddOption("Terminate Clientside", function()
+		ent:Error({ message = "Terminated", traceback = "" })
 	end)
-	SubMenu:AddOption("Open Global Permissions", function ()
+	SubMenu:AddOption("Open Global Permissions", function()
 		SF.Editor.openPermissionsPopup()
 	end)
 
 	if ent:GetReuploadOnReload() then
-		SubMenu:AddOption("Disable reupload on reload", function ()
+		SubMenu:AddOption("Disable reupload on reload", function()
 			ent:SetReuploadOnReload(false)
 		end)
 	else
-		SubMenu:AddOption("Enable reupload on reload", function ()
+		SubMenu:AddOption("Enable reupload on reload", function()
 			ent:SetReuploadOnReload(true)
 		end)
 	end
 
 	local instance = ent.instance
-	if instance and instance.player ~= SF.Superuser and (instance.permissionRequest and instance.permissionRequest.overrides and table.Count(instance.permissionRequest.overrides) > 0
-				or instance.permissionOverrides and table.Count(instance.permissionOverrides) > 0) then
-		SubMenu:AddOption("Overriding Permissions", function ()
+	if
+		instance
+		and instance.player ~= SF.Superuser
+		and (
+			instance.permissionRequest
+				and instance.permissionRequest.overrides
+				and table.Count(instance.permissionRequest.overrides) > 0
+			or instance.permissionOverrides and table.Count(instance.permissionOverrides) > 0
+		)
+	then
+		SubMenu:AddOption("Overriding Permissions", function()
 			local pnl = vgui.Create("SFChipPermissions")
-			if pnl then pnl:OpenForChip(ent) end
+			if pnl then
+				pnl:OpenForChip(ent)
+			end
 		end)
 	end
 end
 
-properties.Add( "starfall", {
+properties.Add("starfall", {
 	MenuLabel = "Neostarfall",
 	Order = 999,
 	MenuIcon = "icon16/wrench.png", -- We should create an icon
-	Filter = function( self, ent, ply )
-		if not IsValid(ent) then return false end
-		if not gamemode.Call( "CanProperty", ply, "starfall", ent ) then return false end
+	Filter = function(self, ent, ply)
+		if not IsValid(ent) then
+			return false
+		end
+		if not gamemode.Call("CanProperty", ply, "starfall", ent) then
+			return false
+		end
 		return ent.Starfall or ent.link and ent.link.Starfall
 	end,
 	MenuOpen = MenuOpen,
-	Action = function ( self, ent ) end
-} )
+	Action = function(self, ent) end,
+})
 
-local hudsToSync = setmetatable({},{__index=function(t,k) local r={} t[k]=r return r end})
+local hudsToSync = setmetatable({}, {
+	__index = function(t, k)
+		local r = {}
+		t[k] = r
+		return r
+	end,
+})
 local function syncHud(ply, chip, activator, enabled)
-	if next(hudsToSync)==nil then
-		hook.Add("Think","SF_SyncHud",function()
+	if next(hudsToSync) == nil then
+		hook.Add("Think", "SF_SyncHud", function()
 			for ply, v in pairs(hudsToSync) do
 				for chip, tbl in pairs(v) do
 					net.Start("starfall_hud_set_enabled")
@@ -184,17 +227,21 @@ local function syncHud(ply, chip, activator, enabled)
 					net.WriteEntity(chip)
 					net.WriteEntity(tbl[1])
 					net.WriteBool(tbl[2])
-					if SERVER then net.Send(ply) else net.SendToServer() end
+					if SERVER then
+						net.Send(ply)
+					else
+						net.SendToServer()
+					end
 				end
 				hudsToSync[ply] = nil
 			end
-			hook.Remove("Think","SF_SyncHud")
+			hook.Remove("Think", "SF_SyncHud")
 		end)
 	end
-	hudsToSync[ply][chip] = {activator or game.GetWorld(), enabled}
+	hudsToSync[ply][chip] = { activator or game.GetWorld(), enabled }
 end
 
-net.Receive("starfall_hud_set_enabled" , function()
+net.Receive("starfall_hud_set_enabled", function()
 	local ply = net.ReadEntity()
 	local chip = net.ReadEntity()
 	local activator = net.ReadEntity()
@@ -207,7 +254,11 @@ end)
 local function runHudHooks(ply, chip, activator, enabled)
 	local instance = chip.instance
 	if instance then
-		instance:runScriptHook(enabled and "hudconnected" or "huddisconnected", instance.WrapObject(activator), instance.WrapObject(ply))
+		instance:runScriptHook(
+			enabled and "hudconnected" or "huddisconnected",
+			instance.WrapObject(activator),
+			instance.WrapObject(ply)
+		)
 		instance:RunHook(enabled and "starfall_hud_connected" or "starfall_hud_disconnected", activator)
 	end
 end
@@ -230,7 +281,7 @@ if SERVER then
 	function SF.EnableHud(ply, chip, activator, enabled, dontsync)
 		local huds = chip.ActiveHuds
 		if IsValid(activator) then
-			local n = "SF_HUD"..ply:EntIndex()..":"..activator:EntIndex()
+			local n = "SF_HUD" .. ply:EntIndex() .. ":" .. activator:EntIndex()
 			local lockController = isVehicleOrHudControlsLocked(activator)
 			local function disconnect(sync)
 				huds[ply] = nil
@@ -241,8 +292,8 @@ if SERVER then
 				end
 				if IsValid(lockController) and IsValid(lockController.link) then
 					net.Start("starfall_lock_control")
-						net.WriteEntity(lockController.link)
-						net.WriteBool(false)
+					net.WriteEntity(lockController.link)
+					net.WriteBool(false)
 					net.Send(ply)
 				end
 				if sync then
@@ -252,11 +303,15 @@ if SERVER then
 			end
 			if enabled then
 				huds[ply] = true
-				hook.Add("EntityRemoved",n,function(e) if e==ply or e==activator then disconnect(true) end end)
+				hook.Add("EntityRemoved", n, function(e)
+					if e == ply or e == activator then
+						disconnect(true)
+					end
+				end)
 				if IsValid(lockController) and IsValid(lockController.link) then
 					net.Start("starfall_lock_control")
-						net.WriteEntity(lockController.link)
-						net.WriteBool(true)
+					net.WriteEntity(lockController.link)
+					net.WriteBool(true)
 					net.Send(ply)
 				end
 			else
@@ -270,7 +325,9 @@ if SERVER then
 			huds[ply] = enabled or nil
 		end
 		runHudHooks(ply, chip, activator, enabled)
-		if not dontsync then syncHud(ply, chip, activator, enabled) end
+		if not dontsync then
+			syncHud(ply, chip, activator, enabled)
+		end
 	end
 else
 	local Hint_FirstPrint = true
@@ -280,19 +337,25 @@ else
 		chip.ActiveHuds[ply] = enabled
 
 		if changed then
-			local enabledBy = IsValid(chip.owner) and (" by "..chip.owner:Nick()) or ""
+			local enabledBy = IsValid(chip.owner) and (" by " .. chip.owner:Nick()) or ""
 			if enabled then
-				if (Hint_FirstPrint) then
-					LocalPlayer():ChatPrint("Neostarfall HUD enabled"..enabledBy..". NOTE: Type 'sf_hud_unlink' in the console to disconnect yourself from all HUDs.")
+				if Hint_FirstPrint then
+					LocalPlayer():ChatPrint(
+						"Neostarfall HUD enabled"
+							.. enabledBy
+							.. ". NOTE: Type 'sf_hud_unlink' in the console to disconnect yourself from all HUDs."
+					)
 					Hint_FirstPrint = nil
 				else
-					LocalPlayer():ChatPrint("Neostarfall HUD enabled"..enabledBy..".")
+					LocalPlayer():ChatPrint("Neostarfall HUD enabled" .. enabledBy .. ".")
 				end
 			else
-				LocalPlayer():ChatPrint("Neostarfall HUD disconnected"..enabledBy..".")
+				LocalPlayer():ChatPrint("Neostarfall HUD disconnected" .. enabledBy .. ".")
 			end
 			runHudHooks(ply, chip, activator, enabled)
-			if not dontsync then syncHud(ply, chip, activator, enabled) end
+			if not dontsync then
+				syncHud(ply, chip, activator, enabled)
+			end
 		end
 	end
 
@@ -339,7 +402,10 @@ function SF.LinkEnt(self, ent, transmit)
 		else
 			net.WriteReliableEntity(Entity(0))
 		end
-		if transmit then net.Send(transmit) else net.Broadcast() end
+		if transmit then
+			net.Send(transmit)
+		else
+			net.Broadcast()
+		end
 	end
 end
-

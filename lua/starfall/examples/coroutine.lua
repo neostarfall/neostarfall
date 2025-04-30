@@ -4,7 +4,7 @@
 
 -- Some functions for checking our quota usage.
 local function checkQ(n)
-	return quotaAverage() < quotaMax()*n
+	return quotaAverage() < quotaMax() * n
 end
 
 -- Check if we should yield
@@ -16,9 +16,11 @@ end
 
 -- Create the coroutine
 -- The Function here is "Sieve of Eratosthenes" and is used to find Primes up to a given integer.
-local erato = coroutine.create(function (n)
+local erato = coroutine.create(function(n)
 	local time = timer.systime()
-	if n < 2 then return {} end
+	if n < 2 then
+		return {}
+	end
 	local t = {}
 	local sqrtlmt = math.sqrt(n)
 
@@ -47,7 +49,7 @@ local erato = coroutine.create(function (n)
 	return primes
 end)
 
-hook.add("think", "primeNumbers", function ()
+hook.add("think", "primeNumbers", function()
 	-- If the coroutine hasn't died, then we need to start it or resume it.
 	if coroutine.status(erato) ~= "dead" then
 		-- Make sure we're sufficiently below quota to resume

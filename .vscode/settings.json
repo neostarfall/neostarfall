@@ -8,11 +8,9 @@
         "include": "dofile",
         "IncludeCS": "dofile"
     },
-    "Lua.runtime.nonstandardSymbol": [
-        "continue"
-    ],
     "Lua.diagnostics.disable": [
         "duplicate-set-field"
     ],
-    "Lua.workspace.checkThirdParty": false
+    "Lua.workspace.checkThirdParty": false,
+    "stylua.targetReleaseVersion": "latest"
 }

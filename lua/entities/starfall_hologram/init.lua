@@ -10,7 +10,7 @@ function ENT:Initialize()
 	self:SetMoveType(MOVETYPE_NOCLIP)
 	self:DrawShadow(false)
 
-	self:AddEFlags( EFL_FORCE_CHECK_TRANSMIT )
+	self:AddEFlags(EFL_FORCE_CHECK_TRANSMIT)
 
 	self.clips = {}
 	self.clipdata = ""
@@ -64,7 +64,7 @@ end
 function ENT:SetClip(index, enabled, normal, origin, entity)
 	self.updateClip = true
 	if enabled then
-		self.clips[index] = {normal = normal, origin = origin, entity = entity}
+		self.clips[index] = { normal = normal, origin = origin, entity = entity }
 	else
 		self.clips[index] = nil
 	end
@@ -76,15 +76,18 @@ function ENT:TransmitClips(recip)
 	net.WriteUInt(self:GetCreationID(), 32)
 	net.WriteUInt(#self.clipdata, 32)
 	net.WriteData(self.clipdata, #self.clipdata)
-	if recip then net.Send(recip) else net.Broadcast() end
+	if recip then
+		net.Send(recip)
+	else
+		net.Broadcast()
+	end
 end
 
 SF.WaitForPlayerInit(function(ply)
 	for k, v in ipairs(ents.FindByClass("starfall_hologram")) do
 		local clipdata = v.clipdata
-		if clipdata and #clipdata>0 then
+		if clipdata and #clipdata > 0 then
 			v:TransmitClips(ply)
 		end
 	end
 end)
-

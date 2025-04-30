@@ -1,4 +1,3 @@
-
 local IsValid = FindMetaTable("Entity").IsValid
 local IsWorld = FindMetaTable("Entity").IsWorld
 
@@ -19,23 +18,43 @@ function net.ReadStarfall(ply, callback)
 
 	local function setup()
 		callbacks = callbacks - 1
-		if callbacks>0 then return end
-		if error then callback(false, sfdata, error) return end
+		if callbacks > 0 then
+			return
+		end
+		if error then
+			callback(false, sfdata, error)
+			return
+		end
 		callback(true, sfdata)
 	end
 	local function setupProc(e)
-		if e==nil then error="Invalid neostarfall processor entity" end
-		sfdata.proc=e setup()
+		if e == nil then
+			error = "Invalid neostarfall processor entity"
+		end
+		sfdata.proc = e
+		setup()
 	end
 	local function setupOwner(e)
-		if e==nil then error="Invalid neostarfall owner entity" end
-		sfdata.owner=e setup()
+		if e == nil then
+			error = "Invalid neostarfall owner entity"
+		end
+		sfdata.owner = e
+		setup()
 	end
 	local function setupFiles(data)
-		if data==nil then error="Net timeout" setup() return end
+		if data == nil then
+			error = "Net timeout"
+			setup()
+			return
+		end
 		local ok, decompress = pcall(SF.DecompressFiles, data)
-		if not ok then error=decompress setup() return end
-		sfdata.files=decompress setup()
+		if not ok then
+			error = decompress
+			setup()
+			return
+		end
+		sfdata.files = decompress
+		setup()
 	end
 
 	if CLIENT then
@@ -55,7 +74,9 @@ function net.ReadStarfall(ply, callback)
 end
 
 function net.WriteStarfall(sfdata, callback)
-	if #sfdata.mainfile > 255 then error("Main file name too large: " .. #sfdata.mainfile .. " (max is 255)") end
+	if #sfdata.mainfile > 255 then
+		error("Main file name too large: " .. #sfdata.mainfile .. " (max is 255)")
+	end
 
 	if SERVER then
 		if IsValid(sfdata.proc) then
@@ -86,9 +107,11 @@ function SF.CompressFiles(files)
 	local header = SF.StringStream()
 	header:writeInt32(0) --Legacy
 	header:writeInt32(table.Count(files))
-	local filecodes = {""}
+	local filecodes = { "" }
 	for filename, code in pairs(files) do
-		if #filename > 255 then error("File name too large: " .. #filename .. " (max is 255)") end
+		if #filename > 255 then
+			error("File name too large: " .. #filename .. " (max is 255)")
+		end
 		header:writeInt32(#filename)
 		header:write(filename)
 		header:writeInt32(#code)
@@ -96,18 +119,22 @@ function SF.CompressFiles(files)
 	end
 	filecodes[1] = header:getString()
 	filecodes = table.concat(filecodes)
-	if #filecodes > 64000000 then error("Too much file data!") end
+	if #filecodes > 64000000 then
+		error("Too much file data!")
+	end
 	return util.Compress(filecodes)
 end
 
 -- Legacy decoder
 function SF.DecompressFiles(data)
 	data = util.Decompress(data)
-	if not data or #data < 8 then error("Error decompressing neostarfall data!") end
+	if not data or #data < 8 then
+		error("Error decompressing neostarfall data!")
+	end
 	local buff = SF.StringStream(data, 5)
 	local headers = {}
-	for i=1, buff:readUInt32() do
-		headers[#headers + 1] = {name = buff:read(buff:readUInt32()), size = buff:readUInt32()}
+	for i = 1, buff:readUInt32() do
+		headers[#headers + 1] = { name = buff:read(buff:readUInt32()), size = buff:readUInt32() }
 	end
 	local files = {}
 	for k, v in ipairs(headers) do
@@ -133,7 +160,9 @@ if SERVER then
 
 	local uploaddata = SF.EntityTable("PlayerUploads")
 	function SF.RequestCode(ply, callback, mainfile)
-		if uploaddata[ply] and uploaddata[ply].timeout > CurTime() then return false end
+		if uploaddata[ply] and uploaddata[ply].timeout > CurTime() then
+			return false
+		end
 
 		net.Start("starfall_upload")
 		net.WriteString(mainfile or "")
@@ -147,17 +176,19 @@ if SERVER then
 	end
 
 	function SF.SendError(chip, message, traceback, client, should_notify)
-		if not IsValid(chip.owner) then return end
+		if not IsValid(chip.owner) then
+			return
+		end
 
 		-- The chip owner gets more data
-		if client~=chip.owner then
+		if client ~= chip.owner then
 			net.Start("starfall_error")
-				net.WriteReliableEntity(chip)
-				net.WriteReliableEntity(chip.owner)
-				net.WriteString(string.sub(chip.sfdata.mainfile, 1, 1024))
-				net.WriteString(string.sub(message, 1, 1024))
-				net.WriteString(string.sub(traceback, 1, 1024))
-			if client~=nil and should_notify~=nil then
+			net.WriteReliableEntity(chip)
+			net.WriteReliableEntity(chip.owner)
+			net.WriteString(string.sub(chip.sfdata.mainfile, 1, 1024))
+			net.WriteString(string.sub(message, 1, 1024))
+			net.WriteString(string.sub(traceback, 1, 1024))
+			if client ~= nil and should_notify ~= nil then
 				net.WriteReliableEntity(client)
 				net.WriteBool(should_notify)
 			else
@@ -168,15 +199,15 @@ if SERVER then
 		end
 
 		net.Start("starfall_error")
-			net.WriteReliableEntity(chip)
-			net.WriteReliableEntity(chip.owner)
-			net.WriteString(string.sub(chip.sfdata.mainfile, 1, 128))
-			net.WriteString(string.sub(message, 1, 128))
-			net.WriteString("")
-		if client~=nil and should_notify~=nil then
+		net.WriteReliableEntity(chip)
+		net.WriteReliableEntity(chip.owner)
+		net.WriteString(string.sub(chip.sfdata.mainfile, 1, 128))
+		net.WriteString(string.sub(message, 1, 128))
+		net.WriteString("")
+		if client ~= nil and should_notify ~= nil then
 			net.WriteReliableEntity(client)
 			net.WriteBool(should_notify)
-			net.SendOmit({client, chip.owner})
+			net.SendOmit({ client, chip.owner })
 		else
 			net.WriteReliableEntity(Entity(0))
 			net.WriteBool(false)
@@ -186,8 +217,12 @@ if SERVER then
 
 	net.Receive("starfall_error", function(_, ply)
 		local chip = Entity(net.ReadUInt(16))
-		if not IsValid(chip) then return end
-		if not chip.ErroredPlayers or chip.ErroredPlayers[ply] then return end
+		if not IsValid(chip) then
+			return
+		end
+		if not chip.ErroredPlayers or chip.ErroredPlayers[ply] then
+			return
+		end
 		chip.ErroredPlayers[ply] = true
 
 		local message, traceback, should_notify = net.ReadString(), net.ReadString(), net.ReadBool()
@@ -198,7 +233,7 @@ if SERVER then
 	net.Receive("starfall_upload", function(len, ply)
 		local updata = uploaddata[ply]
 		if not updata or updata.reading then
-			ErrorNoHalt("NSF: Player "..ply:GetName().." tried to upload code without being requested.\n")
+			ErrorNoHalt("NSF: Player " .. ply:GetName() .. " tried to upload code without being requested.\n")
 			return
 		end
 
@@ -212,7 +247,13 @@ if SERVER then
 				end
 			else
 				if uploaddata[ply] == updata then
-					SF.AddNotify(ply, "There was a problem uploading your code (" .. err .. "). Try again in a second.", "ERROR", 7, "ERROR1")
+					SF.AddNotify(
+						ply,
+						"There was a problem uploading your code (" .. err .. "). Try again in a second.",
+						"ERROR",
+						7,
+						"ERROR1"
+					)
 				end
 			end
 			uploaddata[ply] = nil
@@ -222,17 +263,22 @@ if SERVER then
 	net.Receive("starfall_upload_push", function(len, ply)
 		local sf = net.ReadEntity()
 		net.ReadStarfall(ply, function(ok, sfdata)
-			if not ok then return end
+			if not ok then
+				return
+			end
 
-			if not (IsValid(sf) and sf:GetClass() == "starfall_processor" and sf.sfdata) then return end
-			if sf.sfdata.mainfile ~= sfdata.mainfile or sf.sfdata.owner ~= ply then return end
+			if not (IsValid(sf) and sf:GetClass() == "starfall_processor" and sf.sfdata) then
+				return
+			end
+			if sf.sfdata.mainfile ~= sfdata.mainfile or sf.sfdata.owner ~= ply then
+				return
+			end
 
 			sfdata.owner = ply
 			SF.TryCompile(ply, sf, sfdata)
 		end)
 	end)
 else
-
 	-- Sends starfall files to server
 	function SF.SendStarfall(msg, sfdata, callback)
 		net.Start(msg)
@@ -245,8 +291,8 @@ else
 	---@param sfdata any
 	function SF.PushStarfall(sf, sfdata)
 		net.Start("starfall_upload_push")
-			net.WriteEntity(sf)
-			net.WriteStarfall(sfdata)
+		net.WriteEntity(sf)
+		net.WriteStarfall(sfdata)
 		net.SendToServer()
 	end
 
@@ -256,10 +302,10 @@ else
 			is_blocked = SF.BlockedUsers:isBlocked(owner:SteamID())
 		end
 		net.Start("starfall_error")
-			net.WriteUInt(chip:EntIndex(), 16)
-			net.WriteString(string.sub(message, 1, 1024))
-			net.WriteString(string.sub(traceback, 1, 1024))
-			net.WriteBool(GetConVarNumber("sf_timebuffer_cl") > 0 and not is_blocked)
+		net.WriteUInt(chip:EntIndex(), 16)
+		net.WriteString(string.sub(message, 1, 1024))
+		net.WriteString(string.sub(traceback, 1, 1024))
+		net.WriteBool(GetConVarNumber("sf_timebuffer_cl") > 0 and not is_blocked)
 		net.SendToServer()
 	end
 
@@ -269,33 +315,43 @@ else
 
 		local function doError()
 			callback = callback - 1
-			if callback>0 then return end
+			if callback > 0 then
+				return
+			end
 			if chip and owner and client then
 				hook.Run("StarfallError", chip, owner, client, mainfile, message, traceback, should_notify)
 			end
 		end
 
-		net.ReadReliableEntity(function(e) chip=e doError() end)
-		net.ReadReliableEntity(function(e) owner=e doError() end)
+		net.ReadReliableEntity(function(e)
+			chip = e
+			doError()
+		end)
+		net.ReadReliableEntity(function(e)
+			owner = e
+			doError()
+		end)
 		mainfile = net.ReadString()
 		message = net.ReadString()
 		traceback = net.ReadString()
-		net.ReadReliableEntity(function(e) client=e doError() end)
+		net.ReadReliableEntity(function(e)
+			client = e
+			doError()
+		end)
 		should_notify = net.ReadBool()
 		doError()
 	end)
 
 	net.Receive("starfall_upload", function()
 		local mainfile = net.ReadString()
-		if #mainfile==0 then mainfile = nil end
-		SF.Editor.BuildIncludesTable(mainfile,
-			function(files, mainfile)
-				SF.SendStarfall("starfall_upload", {files = files, mainfile = mainfile})
-			end,
-			function(err)
-				SF.SendStarfall("starfall_upload", {files = {}, mainfile = ""})
-				SF.AddNotify(LocalPlayer(), err, "ERROR", 7, "ERROR1")
-			end
-		)
+		if #mainfile == 0 then
+			mainfile = nil
+		end
+		SF.Editor.BuildIncludesTable(mainfile, function(files, mainfile)
+			SF.SendStarfall("starfall_upload", { files = files, mainfile = mainfile })
+		end, function(err)
+			SF.SendStarfall("starfall_upload", { files = {}, mainfile = "" })
+			SF.AddNotify(LocalPlayer(), err, "ERROR", 7, "ERROR1")
+		end)
 	end)
 end

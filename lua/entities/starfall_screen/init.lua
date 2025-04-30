@@ -1,6 +1,6 @@
-AddCSLuaFile('cl_init.lua')
-AddCSLuaFile('shared.lua')
-include('shared.lua')
+AddCSLuaFile("cl_init.lua")
+AddCSLuaFile("shared.lua")
+include("shared.lua")
 
 local IsValid = FindMetaTable("Entity").IsValid
 
@@ -11,7 +11,7 @@ function ENT:Initialize()
 	self:SetSolid(SOLID_VPHYSICS)
 	self:SetUseType(SIMPLE_USE)
 
-	self:AddEFlags( EFL_FORCE_CHECK_TRANSMIT )
+	self:AddEFlags(EFL_FORCE_CHECK_TRANSMIT)
 end
 
 function ENT:UpdateTransmitState()
@@ -20,23 +20,25 @@ end
 
 -- Sends a net message to all clients about the use.
 function ENT:Use(activator)
-	if not self.link then return end
-	
+	if not self.link then
+		return
+	end
+
 	if activator:IsPlayer() then
 		net.Start("starfall_processor_used")
-			net.WriteEntity(self.link)
-			net.WriteEntity(self)
-			net.WriteEntity(activator)
+		net.WriteEntity(self.link)
+		net.WriteEntity(self)
+		net.WriteEntity(activator)
 		net.Broadcast()
-		
+
 		if self.locksControls then
 			net.Start("starfall_lock_control")
-				net.WriteEntity(self.link)
-				net.WriteBool(true)
+			net.WriteEntity(self.link)
+			net.WriteBool(true)
 			net.Send(activator)
 		end
 	end
-	
+
 	local instance = self.link.instance
 	if instance then
 		instance:runScriptHook("starfallused", instance.WrapObject(activator), instance.WrapObject(self))
@@ -44,7 +46,9 @@ function ENT:Use(activator)
 end
 
 function ENT:PreEntityCopy()
-	if self.EntityMods then self.EntityMods.SFLink = nil end
+	if self.EntityMods then
+		self.EntityMods.SFLink = nil
+	end
 	if IsValid(self.link) then
 		duplicator.StoreEntityModifier(self, "SFLink", { link = self.link:EntIndex() })
 	end

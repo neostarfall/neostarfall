@@ -1,7 +1,7 @@
 local TabHandler = {
 	ControlName = "sf_helper", -- Its name of vgui panel used by handler, there has to be one
 	IsEditor = false, -- If it should be treated as editor of file, like ACE or Wire
- }
+}
 local PANEL = {} -- It's our VGUI
 
 -------------------------------
@@ -25,27 +25,29 @@ function TabHandler:RefreshHelper()
 end
 
 function TabHandler:RegisterSettings() -- Setting panels should be registered there
-
 end
 
 local function htmlSetup(old, new)
 	if old then
-		if (new.html and new.html:IsValid()) then
+		if new.html and new.html:IsValid() then
 			new.html:Remove()
 		end
 		new.html = old.html
 	end
 	local html = new.html
 
-
 	html:SetParent(new)
-	html.OnChangeTitle = function(_,title)
-		if not (new and new:IsValid()) then return end
+	html.OnChangeTitle = function(_, title)
+		if not (new and new:IsValid()) then
+			return
+		end
 		new:UpdateTitle(title or "SF Helper")
 	end
 
-	html.OnDocumentReady = function(_, url )
-		if not (new and new:IsValid()) then return end
+	html.OnDocumentReady = function(_, url)
+		if not (new and new:IsValid()) then
+			return
+		end
 		_.loaded = true
 		new.url = url
 		if SF.Docs then
@@ -55,9 +57,7 @@ local function htmlSetup(old, new)
 end
 
 function TabHandler:RegisterTabMenu(menu, content)
-	menu:AddOption("Undock",function()
-
-
+	menu:AddOption("Undock", function()
 		content:Undock()
 	end)
 end
@@ -113,13 +113,13 @@ function PANEL:Undock()
 	helper:Center()
 	helper:SetTitle("SF Helper")
 	helper.UpdateTitle = helper.SetTitle
-	htmlSetup(self,helper)
+	htmlSetup(self, helper)
 
 	local _mpressed = helper.OnMousePressed
 	helper.OnMousePressed = function(pnl, keycode, ...)
 		if keycode == MOUSE_RIGHT then
 			local menu = DermaMenu()
-			menu:AddOption("Dock",function()
+			menu:AddOption("Dock", function()
 				local editor = SF.Editor.editor
 				local sheet = editor:CreateTab("helper")
 				local content = sheet.Tab.content
@@ -127,7 +127,9 @@ function PANEL:Undock()
 				htmlSetup(helper, content)
 				helper:Remove()
 			end)
-			menu:AddOption("Close",function() helper:Remove() end)
+			menu:AddOption("Close", function()
+				helper:Remove()
+			end)
 			menu:Open()
 		end
 		_mpressed(pnl, keycode, ...)
@@ -137,19 +139,15 @@ function PANEL:Undock()
 end
 
 function PANEL:GetCode() -- Return name of hanlder or code if it's editor
-	return "--@name "..(self.title or "Neostarfall Reference")
+	return "--@name " .. (self.title or "Neostarfall Reference")
 end
 
-function PANEL:SetCode()
-
-end
+function PANEL:SetCode() end
 
 function PANEL:OnFocusChanged(gained) -- When this tab is opened
-
 end
 
 function PANEL:Validate(movecarret) -- Validate request, has to return success,message
-
 end
 --------------
 -- We're done

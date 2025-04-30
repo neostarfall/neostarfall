@@ -1,7 +1,7 @@
-TOOL.Category		= "Neostarfall"
-TOOL.Name			= "Processor"
-TOOL.Command		= nil
-TOOL.ConfigName		= ""
+TOOL.Category = "Neostarfall"
+TOOL.Name = "Processor"
+TOOL.Command = nil
+TOOL.ConfigName = ""
 
 -- ------------------------------- Sending / Receiving ------------------------------- --
 
@@ -13,16 +13,22 @@ TOOL.ClientConVar["parent"] = "0"
 cleanup.Register("starfall_processor")
 
 if SERVER then
-	CreateConVar('sbox_maxstarfall_processor', 20, { FCVAR_REPLICATED, FCVAR_NOTIFY, FCVAR_ARCHIVE })
+	CreateConVar("sbox_maxstarfall_processor", 20, { FCVAR_REPLICATED, FCVAR_NOTIFY, FCVAR_ARCHIVE })
 
 	util.AddNetworkString("starfall_openeditor")
 
 	function MakeSF(pl, Pos, Ang, model, inputs, outputs)
-		if pl and not pl:CheckLimit("starfall_processor") then return false end
+		if pl and not pl:CheckLimit("starfall_processor") then
+			return false
+		end
 
 		local sf = ents.Create("starfall_processor")
-		if not (sf and sf:IsValid()) then return false end
-		if not (util.IsValidModel(model) and util.IsValidProp(model)) then model = "models/spacecode/sfchip.mdl" end
+		if not (sf and sf:IsValid()) then
+			return false
+		end
+		if not (util.IsValidModel(model) and util.IsValidProp(model)) then
+			model = "models/spacecode/sfchip.mdl"
+		end
 
 		sf:SetAngles(Ang)
 		sf:SetPos(Pos)
@@ -36,9 +42,9 @@ if SERVER then
 			-- Initialize wirelink and entity outputs if present
 			for _, iname in pairs(outputs[1]) do
 				if iname == "entity" then
-					WireLib.CreateEntityOutput( nil, sf, {true} )
+					WireLib.CreateEntityOutput(nil, sf, { true })
 				elseif iname == "wirelink" then
-					WireLib.CreateWirelinkOutput( nil, sf, {true} )
+					WireLib.CreateWirelinkOutput(nil, sf, { true })
 				end
 			end
 
@@ -55,11 +61,14 @@ if SERVER then
 	duplicator.RegisterEntityClass("starfall_processor", MakeSF, "Pos", "Ang", "Model", "_inputs", "_outputs")
 else
 	language.Add("Tool.starfall_processor.name", "Neostarfall - Processor")
-	language.Add("Tool.starfall_processor.desc", "Spawns a Neostarfall processor. (Press Shift+F to switch to the component tool)")
+	language.Add(
+		"Tool.starfall_processor.desc",
+		"Spawns a Neostarfall processor. (Press Shift+F to switch to the component tool)"
+	)
 	language.Add("Tool.starfall_processor.left", "Spawn a processor / upload code")
 	language.Add("Tool.starfall_processor.right", "Open editor")
 	language.Add("Tool.starfall_processor.reload", "Update code without changing main file")
-	language.Add("Tool.starfall_processor.parent", "Parent instead of Weld" )
+	language.Add("Tool.starfall_processor.parent", "Parent instead of Weld")
 	language.Add("sboxlimit_starfall_processor", "You've hit the Neostarfall processor limit!")
 	language.Add("undone_Starfall Processor", "Undone Neostarfall Processor")
 	language.Add("Cleanup_starfall_processor", "Neostarfall Processors")
@@ -87,9 +96,15 @@ else
 end
 
 function TOOL:LeftClick(trace)
-	if not trace.HitPos then return false end
-	if trace.Entity:IsPlayer() then return false end
-	if CLIENT then return true end
+	if not trace.HitPos then
+		return false
+	end
+	if trace.Entity:IsPlayer() then
+		return false
+	end
+	if CLIENT then
+		return true
+	end
 
 	local ply = self:GetOwner()
 
@@ -97,36 +112,47 @@ function TOOL:LeftClick(trace)
 	local sf
 
 	local function doWeld()
-		if sf==ent then return end
+		if sf == ent then
+			return
+		end
 		local ret
 		if ent:IsValid() then
-			if self:GetClientNumber( "parent", 0 ) ~= 0 then
+			if self:GetClientNumber("parent", 0) ~= 0 then
 				sf:SetParent(ent)
 			else
 				local const = constraint.Weld(sf, ent, 0, trace.PhysicsBone, 0, true, true)
 				ret = const
 			end
 			local phys = sf:GetPhysicsObject()
-			if phys:IsValid() then phys:EnableCollisions(false) sf.nocollide = true end
+			if phys:IsValid() then
+				phys:EnableCollisions(false)
+				sf.nocollide = true
+			end
 		else
 			local phys = sf:GetPhysicsObject()
-			if phys:IsValid() then phys:EnableMotion(false) end
+			if phys:IsValid() then
+				phys:EnableMotion(false)
+			end
 		end
 		return ret
 	end
 
-    local failedToCompile = false
-	if not SF.RequestCode(ply, function(sfdata)
-		if not (sf and sf:IsValid()) then return end -- Probably removed during transfer
-		failedToCompile = SF.TryCompile(ply, sf, sfdata)
-	end) then
+	local failedToCompile = false
+	if
+		not SF.RequestCode(ply, function(sfdata)
+			if not (sf and sf:IsValid()) then
+				return
+			end -- Probably removed during transfer
+			failedToCompile = SF.TryCompile(ply, sf, sfdata)
+		end)
+	then
 		SF.AddNotify(ply, "Cannot upload NSF code, please wait for the current upload to finish.", "ERROR", 7, "ERROR1")
 		return false
 	end
 
 	if failedToCompile then
-        return false
-    end
+		return false
+	end
 
 	if ent:IsValid() and ent:GetClass() == "starfall_processor" then
 		sf = ent
@@ -139,22 +165,26 @@ function TOOL:LeftClick(trace)
 			SF.AddNotify(ply, "Invalid chip model specified: " .. model, "ERROR", 7, "ERROR1")
 			return false
 		end
-		if not self:GetSWEP():CheckLimit("starfall_processor") then return false end
+		if not self:GetSWEP():CheckLimit("starfall_processor") then
+			return false
+		end
 
 		local Ang = trace.HitNormal:Angle()
 		Ang.pitch = Ang.pitch + 90
 
 		sf = MakeSF(ply, trace.HitPos, Ang, model)
-		if not sf then return false end
+		if not sf then
+			return false
+		end
 
 		local min = sf:OBBMins()
 		sf:SetPos(trace.HitPos - trace.HitNormal * min.z)
 		local const = doWeld()
 
 		undo.Create("Neostarfall Processor")
-			undo.AddEntity(sf)
-			undo.AddEntity(const)
-			undo.SetPlayer(ply)
+		undo.AddEntity(sf)
+		undo.AddEntity(const)
+		undo.SetPlayer(ply)
 		undo.Finish()
 	end
 
@@ -166,24 +196,38 @@ function TOOL:RightClick(trace)
 end
 
 function TOOL:Reload(trace)
-	if not trace.HitPos then return false end
+	if not trace.HitPos then
+		return false
+	end
 	local ply = self:GetOwner()
 	local sf = trace.Entity
 
 	if sf:IsValid() and sf:GetClass() == "starfall_processor" and sf.sfdata then
-		if CLIENT then return true end
-
-        local failedToCompile = false
-		if not SF.RequestCode(ply, function(sfdata)
-			if not sf:IsValid() then return end -- Probably removed during transfer
-			failedToCompile = not SF.TryCompile(ply, sf, sfdata) -- returning false would indicate transfer failure and not compile failure
-		end, sf.sfdata.mainfile) then
-			SF.AddNotify(ply, "Cannot upload NSF code, please wait for the current upload to finish.", "ERROR", 7, "ERROR1")
+		if CLIENT then
+			return true
 		end
 
-        if failedToCompile then
-            return false
-        end
+		local failedToCompile = false
+		if
+			not SF.RequestCode(ply, function(sfdata)
+				if not sf:IsValid() then
+					return
+				end -- Probably removed during transfer
+				failedToCompile = not SF.TryCompile(ply, sf, sfdata) -- returning false would indicate transfer failure and not compile failure
+			end, sf.sfdata.mainfile)
+		then
+			SF.AddNotify(
+				ply,
+				"Cannot upload NSF code, please wait for the current upload to finish.",
+				"ERROR",
+				7,
+				"ERROR1"
+			)
+		end
+
+		if failedToCompile then
+			return false
+		end
 
 		return true
 	else
@@ -191,8 +235,7 @@ function TOOL:Reload(trace)
 	end
 end
 
-function TOOL:DrawHUD()
-end
+function TOOL:DrawHUD() end
 
 function TOOL:OpenEditor(ply, ent)
 	if ent then
@@ -228,7 +271,7 @@ function TOOL:Think()
 		end
 
 		if ghost and ghost:IsValid() then
-			if (ent:IsValid() and ent:GetClass() == "starfall_processor" or ent:IsPlayer()) then
+			if ent:IsValid() and ent:GetClass() == "starfall_processor" or ent:IsPlayer() then
 				ghost:SetNoDraw(true)
 			elseif trace.Hit then
 				local Ang = trace.HitNormal:Angle()
@@ -246,7 +289,7 @@ function TOOL:Think()
 		if ply:KeyPressed(IN_ATTACK2) then
 			if not self.OpenedEditor then
 				if ent:IsValid() and ent:GetClass() == "starfall_processor" then
-					if gamemode.Call("CanTool", ply, trace, self.Mode, self, 2)~=false then
+					if gamemode.Call("CanTool", ply, trace, self.Mode, self, 2) ~= false then
 						self:OpenEditor(ply, ent)
 					end
 				else
@@ -261,7 +304,6 @@ function TOOL:Think()
 end
 
 if CLIENT then
-
 	function TOOL:DrawStarfallToolScreen(w, h)
 		local ent = LocalPlayer():GetEyeTrace().Entity
 		local script_name
@@ -289,8 +331,14 @@ if CLIENT then
 	end
 
 	function TOOL.BuildCPanel(panel)
-		panel:AddControl("Header", { Text = "#Tool.starfall_processor.name", Description = "#Tool.starfall_processor.desc" })
-		panel:AddControl("CheckBox", { Label = "#Tool.starfall_processor.parent", Command = "starfall_processor_parent" } )
+		panel:AddControl(
+			"Header",
+			{ Text = "#Tool.starfall_processor.name", Description = "#Tool.starfall_processor.desc" }
+		)
+		panel:AddControl(
+			"CheckBox",
+			{ Label = "#Tool.starfall_processor.parent", Command = "starfall_processor_parent" }
+		)
 
 		local gateModels = list.Get("Starfall_gate_Models")
 		table.Merge(gateModels, list.Get("Wire_gate_Models"))
@@ -310,7 +358,7 @@ if CLIENT then
 		panel:AddPanel(modelPanel)
 		panel:AddControl("Label", { Text = "" })
 
-		local docbutton = vgui.Create("DButton" , panel)
+		local docbutton = vgui.Create("DButton", panel)
 		panel:AddPanel(docbutton)
 		docbutton:SetText("Neostarfall Documentation")
 		docbutton.DoClick = GotoDocs
@@ -335,7 +383,9 @@ if CLIENT then
 	end
 
 	local function hookfunc(ply, bind, pressed)
-		if not pressed then return end
+		if not pressed then
+			return
+		end
 
 		if bind == "impulse 100" and ply:KeyDown(IN_SPEED) then
 			local activeWep = ply:GetActiveWeapon()
@@ -352,7 +402,9 @@ if CLIENT then
 	end
 
 	if game.SinglePlayer() then -- wtfgarry (have to have a delay in single player or the hook won't get added)
-		timer.Simple(5, function() hook.Add("PlayerBindPress", "sf_toolswitch", hookfunc) end)
+		timer.Simple(5, function()
+			hook.Add("PlayerBindPress", "sf_toolswitch", hookfunc)
+		end)
 	else
 		hook.Add("PlayerBindPress", "sf_toolswitch", hookfunc)
 	end

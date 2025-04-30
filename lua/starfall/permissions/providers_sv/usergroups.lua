@@ -11,7 +11,7 @@ P.checks = {
 		return instance.player:IsAdmin(), "This function is admin only"
 	end,
 	"allow",
-	"block"
+	"block",
 }
 
 SF.Permissions.registerProvider(P)

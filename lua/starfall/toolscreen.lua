@@ -1,4 +1,3 @@
-
 local draw, surface = draw, surface
 local math_rand, math_random = math.Rand, math.random
 local math_cos, math_sin = math.cos, math.sin
@@ -8,27 +7,35 @@ local math_normalize_angle = math.NormalizeAngle
 surface.CreateFont("StarfallToolBig", { font = "Roboto-Bold.ttf", size = 36 })
 surface.CreateFont("StarfallToolSmall", { font = "Roboto-Italic.ttf", size = 32, shadow = true })
 
-local simulation_fps = CreateClientConVar("starfall_toolscreen_fps", "120", true, false, "Maximum FPS of the stars animation", 30, 300):GetInt()
+local simulation_fps = CreateClientConVar(
+	"starfall_toolscreen_fps",
+	"120",
+	true,
+	false,
+	"Maximum FPS of the stars animation",
+	30,
+	300
+):GetInt()
 cvars.AddChangeCallback("starfall_toolscreen_fps", function(_, _, value)
 	simulation_fps = tonumber(value) or 120
 end)
 
 -- Tuning vars
-local color_background       = Color(54, 37, 0)                  -- Background color
-local color_text             = Color(240, 240, 253, 255)          -- Text color for subtitle and scrolling text
-local color_text_outline     = ColorAlpha(color_background, 80)   -- Outline text color for subtitle and scrolling text
-local star_count             = 8                                  -- Amount of stars to render
-local star_deceleration      = 0.35                               -- How much velocity to retain
-local star_velocity_bump     = 300                                -- Random velocity towards the center when resetting star
-local star_velocity_max      = 800                                -- Maximum velocity of a star
-local star_ang_velocity_min  = 100                                -- Minimum angle velocity of a star
-local star_ang_velocity_max  = 350                                -- Maximum angle velocity of a star
-local star_ply_movement_mul  = 2000                               -- Player movement influence multiplier
-local star_ply_angle_mul     = 25                                 -- Player eye angle influence multiplier
-local star_reset_radius      = 200                                -- Distance to which teleport the star when flipping
-local star_reset_radius_sqr  = star_reset_radius ^ 2 + 10         -- Distance squared and offset at which to teleport the star
-local star_random_offset     = math.pi / 8                        -- Random angle offset to set when flipping the star
-local star_error_color_time  = 6                                  -- How long for stars to be error color
+local color_background = Color(54, 37, 0) -- Background color
+local color_text = Color(240, 240, 253, 255) -- Text color for subtitle and scrolling text
+local color_text_outline = ColorAlpha(color_background, 80) -- Outline text color for subtitle and scrolling text
+local star_count = 8 -- Amount of stars to render
+local star_deceleration = 0.35 -- How much velocity to retain
+local star_velocity_bump = 300 -- Random velocity towards the center when resetting star
+local star_velocity_max = 800 -- Maximum velocity of a star
+local star_ang_velocity_min = 100 -- Minimum angle velocity of a star
+local star_ang_velocity_max = 350 -- Maximum angle velocity of a star
+local star_ply_movement_mul = 2000 -- Player movement influence multiplier
+local star_ply_angle_mul = 25 -- Player eye angle influence multiplier
+local star_reset_radius = 200 -- Distance to which teleport the star when flipping
+local star_reset_radius_sqr = star_reset_radius ^ 2 + 10 -- Distance squared and offset at which to teleport the star
+local star_random_offset = math.pi / 8 -- Random angle offset to set when flipping the star
+local star_error_color_time = 6 -- How long for stars to be error color
 
 -- Globals
 local last_error_time = 0
@@ -80,10 +87,13 @@ local function star_update_and_draw(star)
 		star_reset(star)
 	end
 
-	star.x_vel = star.x_vel + ((ply_local_vel.y) * star_ply_movement_mul * dt) + ply_eye_yaw
+	star.x_vel = star.x_vel + (ply_local_vel.y * star_ply_movement_mul * dt) + ply_eye_yaw
 	star.x_vel = math_clamp(star.x_vel * deceleration, -star_velocity_max, star_velocity_max)
 
-	star.y_vel = star.y_vel + ((ply_local_vel.x + ply_local_vel.z) * star_ply_movement_mul * dt) - ply_eye_pitch + star.gravity * dt
+	star.y_vel = star.y_vel
+		+ ((ply_local_vel.x + ply_local_vel.z) * star_ply_movement_mul * dt)
+		- ply_eye_pitch
+		+ star.gravity * dt
 	star.y_vel = math_clamp(star.y_vel * deceleration, -star_velocity_max, star_velocity_max)
 
 	star.ang_vel = star.ang_vel + (math_abs(star.x_vel) * 2 + math_abs(star.y_vel) / 2) * dt
@@ -96,7 +106,6 @@ local function star_update_and_draw(star)
 	surface.SetDrawColor(star.color.r, star.color.g, star.color.b, 230)
 	surface.DrawTexturedRectRotated(128 + star.x, 128 + star.y, star.size, star.size, star.ang)
 end
-
 
 -------------------------------------------
 
@@ -115,7 +124,8 @@ star_material:SetInt("$flags", 0x8000 + 0x0080 + 0x0020 + 0x0010)
 local star_canvas, star_canvas_material
 hook.Add("PreRender", "StarfallToolscreenPrepare", function()
 	star_canvas = GetRenderTarget("starfall_tool_canvas", 256, 256)
-	star_canvas_material = CreateMaterial("starfall_tool_material", "UnlitGeneric", { ["$basetexture"] = star_canvas:GetName() })
+	star_canvas_material =
+		CreateMaterial("starfall_tool_material", "UnlitGeneric", { ["$basetexture"] = star_canvas:GetName() })
 	star_canvas_material:SetInt("$flags", 0x8000 + 0x0010)
 	render.ClearRenderTarget(star_canvas, color_background)
 	hook.Remove("PreRender", "StarfallToolscreenPrepare")
@@ -123,8 +133,12 @@ end)
 
 hook.Add("StarfallError", "StarfallToolscreenError", function(_, owner, client)
 	local local_player = LocalPlayer()
-	if owner ~= local_player then return end
-	if client and client ~= local_player then return end
+	if owner ~= local_player then
+		return
+	end
+	if client and client ~= local_player then
+		return
+	end
 	last_error_time = RealTime() + star_error_color_time
 end)
 
@@ -146,13 +160,19 @@ function SF.DrawToolgunScreen(w, h, title, scroll_text)
 		ply_eye_ang_prev = ply_eye_ang
 		deceleration = star_deceleration ^ dt
 
-		ply_local_vel = WorldToLocal(ply:GetVelocity():GetNormalized(), angle_zero, vector_origin, Angle(0, ply_eye_ang.y, 0))
+		ply_local_vel =
+			WorldToLocal(ply:GetVelocity():GetNormalized(), angle_zero, vector_origin, Angle(0, ply_eye_ang.y, 0))
 
 		render.PushRenderTarget(star_canvas)
 		local blur = math_clamp(8 + 600 * dt, 12, 30)
 		render.BlurRenderTarget(star_canvas, blur, blur, 1)
 
-		surface.SetDrawColor(color_background.r, color_background.g, color_background.b, math_clamp(2500 * dt + 20, 30, 100))
+		surface.SetDrawColor(
+			color_background.r,
+			color_background.g,
+			color_background.b,
+			math_clamp(2500 * dt + 20, 30, 100)
+		)
 		surface.DrawRect(0, 0, w, h)
 
 		surface.SetMaterial(star_material)
@@ -170,15 +190,34 @@ function SF.DrawToolgunScreen(w, h, title, scroll_text)
 	surface.SetDrawColor(255, 255, 255, 255)
 	surface.SetMaterial(overlay_material)
 	surface.DrawTexturedRect(0, 0, w, h)
-	draw.SimpleTextOutlined(title, "StarfallToolBig", 128, 90, color_text, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, color_text_outline)
-
+	draw.SimpleTextOutlined(
+		title,
+		"StarfallToolBig",
+		128,
+		90,
+		color_text,
+		TEXT_ALIGN_CENTER,
+		TEXT_ALIGN_CENTER,
+		2,
+		color_text_outline
+	)
 
 	if scroll_text then
 		surface.SetFont("StarfallToolSmall")
 		local text_width = surface.GetTextSize(scroll_text) + 60
 		local x = RealTime() * 100 % text_width * -1
 		while x < 256 do
-			draw.SimpleTextOutlined(scroll_text, "StarfallToolSmall", x, 226, color_text, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER, 2, color_text_outline)
+			draw.SimpleTextOutlined(
+				scroll_text,
+				"StarfallToolSmall",
+				x,
+				226,
+				color_text,
+				TEXT_ALIGN_LEFT,
+				TEXT_ALIGN_CENTER,
+				2,
+				color_text_outline
+			)
 			x = x + text_width
 		end
 	end

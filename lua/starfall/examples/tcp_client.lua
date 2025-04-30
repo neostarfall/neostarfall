@@ -23,17 +23,15 @@ do -- tcptask
 		self.fail = fail
 	end
 
-	function tcptask.success()
-	end
+	function tcptask.success() end
 
-	function tcptask.fail()
-	end
+	function tcptask.fail() end
 
 	function tcptask:isTimedout()
 		if self.timeout then
-			return timer.curtime()>=self.timeout
+			return timer.curtime() >= self.timeout
 		else
-			self.timeout = timer.curtime()+operationTimeout
+			self.timeout = timer.curtime() + operationTimeout
 			return false
 		end
 	end
@@ -46,11 +44,11 @@ do -- tcpconnecttask
 	end
 
 	function tcpconnecttask:process()
-		local r, w, e = socket.select(nil, {self.socket}, 0)
-		if e==nil then
+		local r, w, e = socket.select(nil, { self.socket }, 0)
+		if e == nil then
 			self.client.connected = true
 			self.success()
-		elseif e=="timeout" then
+		elseif e == "timeout" then
 			if self:isTimedout() then
 				self.fail("Connect operation timed out!")
 			else
@@ -71,21 +69,22 @@ do -- tcpsendtask
 	end
 
 	function tcpsendtask:process()
-		local r, w, e = socket.select(nil, {self.socket}, 0)
-		if e==nil then
-			local sent, err, sent2 = self.socket:send(self.data, self.bytesSent+1, math.min(#self.data, self.bytesSent+2048))
+		local r, w, e = socket.select(nil, { self.socket }, 0)
+		if e == nil then
+			local sent, err, sent2 =
+				self.socket:send(self.data, self.bytesSent + 1, math.min(#self.data, self.bytesSent + 2048))
 			--print(sent, err, sent2)
-			if err==nil then
+			if err == nil then
 				self.bytesSent = self.bytesSent + sent
 				if self.bytesSent == #self.data then
 					self.success()
 				else
 					return false
 				end
-			elseif err=="closed" then
+			elseif err == "closed" then
 				self.fail(err, sent2)
 				self.client:close()
-			elseif err=="timeout" then
+			elseif err == "timeout" then
 				if self:isTimedout() then
 					self.fail("Send operation timed out!")
 				else
@@ -94,7 +93,7 @@ do -- tcpsendtask
 			else
 				self.fail(err)
 			end
-		elseif e=="timeout" then
+		elseif e == "timeout" then
 			if self:isTimedout() then
 				self.fail("Send operation timed out!")
 			else
@@ -113,16 +112,16 @@ do -- tcprecvtask
 	end
 
 	function tcprecvtask:process()
-		local r, w, e = socket.select({self.socket}, nil, 0)
-		if e==nil then
+		local r, w, e = socket.select({ self.socket }, nil, 0)
+		if e == nil then
 			local recv, err, recv2 = self.socket:receive(2048)
 			--print(recv, err, recv2)
-			if err==nil then
+			if err == nil then
 				self.success(recv)
-			elseif err=="closed" then
+			elseif err == "closed" then
 				self.success(recv2, err)
 				self.client:close()
-			elseif err=="timeout" then
+			elseif err == "timeout" then
 				if self:isTimedout() then
 					self.fail("Receive operation timed out!")
 				else
@@ -132,7 +131,7 @@ do -- tcprecvtask
 			else
 				self.fail(err)
 			end
-		elseif e=="timeout" then
+		elseif e == "timeout" then
 			if self:isTimedout() then
 				self.fail("Receive operation timed out!")
 			else
@@ -154,7 +153,7 @@ do -- tcpclient
 		self.socket = socket.tcp()
 		self.socket:settimeout(0)
 
-		hook.add("think",tostring(self),function()
+		hook.add("think", tostring(self), function()
 			self:process()
 		end)
 	end
@@ -187,11 +186,11 @@ do -- tcpclient
 
 	function tcpclient:process()
 		if self.connected then
-			while (#self.recvqueue>0 or #self.sendqueue>0) and quotaAverage()<quotaMax()*0.1 do
-				if #self.recvqueue>0 and self.recvqueue[1]:process() then
+			while (#self.recvqueue > 0 or #self.sendqueue > 0) and quotaAverage() < quotaMax() * 0.1 do
+				if #self.recvqueue > 0 and self.recvqueue[1]:process() then
 					table.remove(self.recvqueue, 1)
 				end
-				if #self.sendqueue>0 and self.sendqueue[1]:process() then
+				if #self.sendqueue > 0 and self.sendqueue[1]:process() then
 					table.remove(self.sendqueue, 1)
 				end
 			end
@@ -201,7 +200,7 @@ do -- tcpclient
 	end
 
 	function tcpclient:close()
-		hook.remove("think",tostring(self))
+		hook.remove("think", tostring(self))
 		self.socket:close()
 		self.socket = nil
 		self.connected = false
@@ -215,8 +214,8 @@ sock:connect("sparkysandbox.org", 80, function()
 	local chunks = {}
 	local function receiveData()
 		sock:receive(function(data, err)
-			chunks[#chunks+1] = data
-			if err=="closed" then
+			chunks[#chunks + 1] = data
+			if err == "closed" then
 				file.write("httpdata.txt", table.concat(chunks))
 			else
 				receiveData()
@@ -226,4 +225,3 @@ sock:connect("sparkysandbox.org", 80, function()
 
 	sock:send("GET / HTTP/1.0\r\nHost: sparkysandbox.org\r\n\r\n", receiveData, error)
 end, error)
-
