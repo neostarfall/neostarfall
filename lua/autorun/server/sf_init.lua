@@ -6,59 +6,7 @@ AddCSLuaFile("starfall/permissions/core.lua")
 AddCSLuaFile("starfall/transfer.lua")
 AddCSLuaFile("starfall/editor/editor.lua")
 
--- resource.AddWorkshop("3412004213")
--- temporary workaround for us having no workshop addon currently
-local resourceFiles = {
-	["materials/radon/"] = {
-		"arrow_left.png",
-		"arrow_right.png",
-		"starfall_tool_overlay.png",
-		"starfall_tool_star.png",
-		"starfall2.png",
-		"starfall2.vmt",
-	},
-	["materials/bull/"] = {
-		"dynamic_button_sf.vmt",
-	},
-	["materials/models/"] = {
-		"spacecode/glass.vmt",
-		"spacecode/sfchip.vmt",
-		"spacecode/sfpcb.vmt",
-
-		"starfall/holograms/holomaterial.vmt",
-	},
-
-	["models/bull/"] = {
-		"dynamicbuttonsf.mdl",
-	},
-	["models/spacecode/"] = {
-		"sfchip.mdl",
-		"sfchip_medium.mdl",
-		"sfchip_small.mdl",
-	},
-	["models/starfall/holograms/"] = {
-		"box.mdl",
-		"cylinder.mdl",
-		"dome.mdl",
-		"hollowcylinder.mdl",
-		"hollowdome.mdl",
-		"sphere.mdl",
-		"torus.mdl",
-		"wedge.mdl",
-	},
-
-	["resource/fonts/"] = {
-		"DejaVuSansMono.ttf",
-		"FontAwesome.ttf",
-		"RobotoMono.ttf",
-	},
-}
-
-for root, files in pairs(resourceFiles) do
-	for _, file in ipairs(files) do
-		resource.AddFile(root .. file)
-	end
-end
+resource.AddWorkshop("3454707364")
 
 SF = {}
 SF.Version = "Neostarfall"
