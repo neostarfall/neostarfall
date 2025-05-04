@@ -42,15 +42,6 @@ SF.Editor.HelperURL = CreateConVar(
 	"URL for website used by SF Helper, change to allow custom documentation."
 )
 
-local currentValue = SF.Editor.HelperURL:GetString()
-
--- Switch from old URLs
-if currentValue:match("\x74\x68\x65\x67\x72\x62\x39\x33\x2E\x67\x69\x74\x68\x75\x62\x2E\x69\x6F\x2F\x53\x74\x61\x72\x66\x61\x6C\x6C\x45\x78") then
-	SF.Editor.HelperURL:SetString(DEFAULT_DOC_URL)
-elseif currentValue:match("neostarfall%.github%.io") then
-	SF.Editor.HelperURL:SetString(DEFAULT_DOC_URL)
-end
-
 ------------------
 -- Editor
 --
