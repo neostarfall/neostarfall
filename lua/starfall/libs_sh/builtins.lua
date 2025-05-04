@@ -8,13 +8,13 @@ SF.Permissions.registerPrivilege("console.command", "Console command", "Allows t
 local userdataLimit, restartCooldown, printBurst, concmdBurst
 if SERVER then
 	userdataLimit = CreateConVar(
-		"sf_userdata_max",
+		"nsf_userdata_max",
 		"1048576",
 		{ FCVAR_ARCHIVE },
 		"The maximum size of userdata (in bytes) that can be stored on a neostarfall chip (saved in duplications)."
 	)
 	restartCooldown = CreateConVar(
-		"sf_restart_cooldown",
+		"nsf_restart_cooldown",
 		5,
 		FCVAR_ARCHIVE,
 		"The cooldown for using restart() on the same chip.",
@@ -45,7 +45,7 @@ else
 		{ client = { default = 1 } }
 	)
 	restartCooldown = CreateConVar(
-		"sf_restart_cooldown_cl",
+		"nsf_restart_cooldown_cl",
 		5,
 		FCVAR_ARCHIVE,
 		"The cooldown for using restart() on the same chip.",

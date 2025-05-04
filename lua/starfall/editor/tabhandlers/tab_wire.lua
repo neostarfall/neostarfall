@@ -68,18 +68,18 @@ TabHandler.Fonts["Roboto Mono"] = "Custom Font shipped with neostarfall"
 TabHandler.Tabs = {}
 local defaultFont = "DejaVu Sans Mono" -- We ship that with starfall, linux has it by default
 
-TabHandler.FontConVar = CreateClientConVar("sf_editor_wire_fontname", defaultFont, true, false)
-TabHandler.FontSizeConVar = CreateClientConVar("sf_editor_wire_fontsize", 16, true, false)
-TabHandler.BlockCommentStyleConVar = CreateClientConVar("sf_editor_wire_block_comment_style", 1, true, false)
-TabHandler.PigmentsConVar = CreateClientConVar("sf_editor_wire_pigments", 1, true, false)
-TabHandler.EnlightenColorsConVar = CreateClientConVar("sf_editor_wire_enlightencolors", 0, true, false) --off by default
+TabHandler.FontConVar = CreateClientConVar("nsf_editor_wire_fontname", defaultFont, true, false)
+TabHandler.FontSizeConVar = CreateClientConVar("nsf_editor_wire_fontsize", 16, true, false)
+TabHandler.BlockCommentStyleConVar = CreateClientConVar("nsf_editor_wire_block_comment_style", 1, true, false)
+TabHandler.PigmentsConVar = CreateClientConVar("nsf_editor_wire_pigments", 1, true, false)
+TabHandler.EnlightenColorsConVar = CreateClientConVar("nsf_editor_wire_enlightencolors", 0, true, false) --off by default
 TabHandler.HighlightOnDoubleClickConVar =
-	CreateClientConVar("sf_editor_wire_highlight_on_double_click", "1", true, false)
-TabHandler.DisplayCaretPosConVar = CreateClientConVar("sf_editor_wire_display_caret_pos", "0", true, false)
-TabHandler.AutoIndentConVar = CreateClientConVar("sf_editor_wire_auto_indent", "1", true, false)
-TabHandler.EnableAntialiasing = CreateClientConVar("sf_editor_wire_enable_antialiasing", "1", true, false)
+	CreateClientConVar("nsf_editor_wire_highlight_on_double_click", "1", true, false)
+TabHandler.DisplayCaretPosConVar = CreateClientConVar("nsf_editor_wire_display_caret_pos", "0", true, false)
+TabHandler.AutoIndentConVar = CreateClientConVar("nsf_editor_wire_auto_indent", "1", true, false)
+TabHandler.EnableAntialiasing = CreateClientConVar("nsf_editor_wire_enable_antialiasing", "1", true, false)
 
-TabHandler.ScrollSpeedConVar = CreateClientConVar("sf_editor_wire_scrollmultiplier", "2.5", true, false)
+TabHandler.ScrollSpeedConVar = CreateClientConVar("nsf_editor_wire_scrollmultiplier", "2.5", true, false)
 if TabHandler.ScrollSpeedConVar:GetFloat() == 1 then
 	-- Change the old default from 1 to 2.5.
 	-- I suppose people that want a value of '1' will have to set it to 1.001 or something.
@@ -87,13 +87,13 @@ if TabHandler.ScrollSpeedConVar:GetFloat() == 1 then
 end
 
 TabHandler.LinesHiddenFormatConVar =
-	CreateClientConVar("sf_editor_wire_lines_hidden_format", "< %d lines hidden >", true, false)
-TabHandler.AutoValidateConVar = CreateClientConVar("sf_editor_wire_validateontextchange", "0", true, false)
-TabHandler.CacheDebug = CreateClientConVar("sf_editor_wire_cachedebug", "0", true, false)
-TabHandler.HtmlBackgroundConvar = CreateClientConVar("sf_editor_wire_htmlbackground", "", true, false)
-TabHandler.HtmlBackgroundOpacityConvar = CreateClientConVar("sf_editor_wire_htmlbackgroundopacity", "5", true, false)
+	CreateClientConVar("nsf_editor_wire_lines_hidden_format", "< %d lines hidden >", true, false)
+TabHandler.AutoValidateConVar = CreateClientConVar("nsf_editor_wire_validateontextchange", "0", true, false)
+TabHandler.CacheDebug = CreateClientConVar("nsf_editor_wire_cachedebug", "0", true, false)
+TabHandler.HtmlBackgroundConvar = CreateClientConVar("nsf_editor_wire_htmlbackground", "", true, false)
+TabHandler.HtmlBackgroundOpacityConvar = CreateClientConVar("nsf_editor_wire_htmlbackgroundopacity", "5", true, false)
 
-cvars.AddChangeCallback("sf_editor_wire_htmlbackground", function(_, _, url)
+cvars.AddChangeCallback("nsf_editor_wire_htmlbackground", function(_, _, url)
 	TabHandler:UpdateHtmlBackground()
 end)
 
@@ -272,13 +272,13 @@ function TabHandler:RegisterSettings()
 	FontSelect.OnSelect = function(panel, index, value)
 		if value == "Custom..." then
 			Derma_StringRequestNoBlur("Enter custom font:", "", "", function(value)
-				RunConsoleCommand("sf_editor_wire_fontname", value)
+				RunConsoleCommand("nsf_editor_wire_fontname", value)
 				FontSelect:SetFontInternal(SF.Editor.editor:GetFont(value, 16, TabHandler.EnableAntialiasing:GetBool()))
 				timer.Simple(0, FakeThemeChange)
 			end)
 		else
 			value = value:gsub(" %b()", "") -- Remove description
-			RunConsoleCommand("sf_editor_wire_fontname", value)
+			RunConsoleCommand("nsf_editor_wire_fontname", value)
 			FontSelect:SetFontInternal(SF.Editor.editor:GetFont(value, 16, TabHandler.EnableAntialiasing:GetBool()))
 			timer.Simple(0, FakeThemeChange)
 		end
@@ -295,7 +295,7 @@ function TabHandler:RegisterSettings()
 	local FontSizeSelect = form:ComboBox("Font Size")
 	FontSizeSelect.OnSelect = function(panel, index, value)
 		value = value:gsub(" %b()", "")
-		RunConsoleCommand("sf_editor_wire_fontsize", value)
+		RunConsoleCommand("nsf_editor_wire_fontsize", value)
 		timer.Simple(0, FakeThemeChange)
 	end
 	for i = 11, 26 do
@@ -311,7 +311,7 @@ function TabHandler:RegisterSettings()
 	usePigments:ChooseOptionID(TabHandler.PigmentsConVar:GetInt() + 1)
 	usePigments:SetTooltip("Enable/disable custom coloring of Color(r,g,b)")
 	usePigments.OnSelect = function(_, val)
-		RunConsoleCommand("sf_editor_wire_pigments", val - 1)
+		RunConsoleCommand("nsf_editor_wire_pigments", val - 1)
 		timer.Simple(0, FakeThemeChange)
 	end
 	local linesHiddenFormat = form:TextEntry("Format of hidden lines text", "sf_editor_wire_lines_hidden_format")

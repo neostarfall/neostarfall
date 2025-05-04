@@ -11,7 +11,7 @@ local plyEmitterCount = SF.LimitObject(
 	"The number of created particle emitters via Neostarfall per client at once"
 )
 local cv_particle_count = CreateConVar(
-	"sf_particles_max",
+	"nsf_particles_max",
 	"100",
 	{ FCVAR_ARCHIVE },
 	"The max number of created particles per emitter at once"

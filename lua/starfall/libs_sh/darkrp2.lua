@@ -127,7 +127,7 @@ end
 
 if SERVER then
 	debugCvar = CreateConVar(
-		"sf_moneyrequest_verbose_sv",
+		"nsf_moneyrequest_verbose_sv",
 		1,
 		FCVAR_ARCHIVE,
 		"Prints information about money requests to console.",
@@ -135,7 +135,7 @@ if SERVER then
 		1
 	)
 	local timeoutCvar = CreateConVar(
-		"sf_moneyrequest_timeout",
+		"nsf_moneyrequest_timeout",
 		30,
 		FCVAR_ARCHIVE,
 		"Amount of time in seconds until a Neostarfall money request expires.",
@@ -322,7 +322,7 @@ if SERVER then
 		end
 	end
 	concommand.Add(
-		"sf_moneyrequest",
+		"nsf_moneyrequest",
 		function(executor, command, args)
 			local sender, action, receiver = tonumber(args[1]), args[2], tonumber(args[3])
 			if not sender or not action or not receiver then
@@ -363,7 +363,7 @@ if SERVER then
 	)
 else
 	debugCvar = CreateConVar(
-		"sf_moneyrequest_verbose_cl",
+		"nsf_moneyrequest_verbose_cl",
 		1,
 		FCVAR_ARCHIVE,
 		"Prints information about money requests to console.",
@@ -433,7 +433,7 @@ else
 		local receiverIndex = receiver:EntIndex()
 
 		function btnDecline.DoClick()
-			RunConsoleCommand("sf_moneyrequest", 0, "decline", receiverIndex)
+			RunConsoleCommand("nsf_moneyrequest", 0, "decline", receiverIndex)
 			self:Close()
 		end
 		local btnAccept = vgui.Create("StarfallButton", buttons)
@@ -442,7 +442,7 @@ else
 		btnAccept:SetAutoSize(false)
 		btnAccept:SetWidth(w * 0.5)
 		function btnAccept.DoClick()
-			RunConsoleCommand("sf_moneyrequest", 0, "accept", receiverIndex)
+			RunConsoleCommand("nsf_moneyrequest", 0, "accept", receiverIndex)
 			self:Close()
 		end
 		function self:OnClose()
@@ -498,10 +498,10 @@ else
 		end
 		printDebug("NSF: Received money request.", request)
 		if SF.BlockedUsers:isBlocked(receiver:SteamID()) then
-			RunConsoleCommand("sf_moneyrequest", 0, "decline", receiver:EntIndex())
+			RunConsoleCommand("nsf_moneyrequest", 0, "decline", receiver:EntIndex())
 			return printDebug('NSF: Ignoring money request because the receiver is in "SF.BlockedUsers".', request)
 		elseif SF.BlockedMoneyRequests:isBlocked(receiver:SteamID()) then
-			RunConsoleCommand("sf_moneyrequest", 0, "decline", receiver:EntIndex())
+			RunConsoleCommand("nsf_moneyrequest", 0, "decline", receiver:EntIndex())
 			return printDebug(
 				'NSF: Ignoring money request because the receiver is in "SF.BlockedMoneyRequests".',
 				request

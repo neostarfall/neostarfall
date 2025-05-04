@@ -52,8 +52,8 @@ registerprivilege(
 )
 registerprivilege("render.fog", "Render Fog", "Allows the user to control fog", { client = {} })
 
-local cv_max_fonts = CreateConVar("sf_render_maxfonts", "30", { FCVAR_ARCHIVE })
-local cv_max_maxrenderviewsperframe = CreateConVar("sf_render_maxrenderviewsperframe", "2", { FCVAR_ARCHIVE })
+local cv_max_fonts = CreateConVar("nsf_render_maxfonts", "30", { FCVAR_ARCHIVE })
+local cv_max_maxrenderviewsperframe = CreateConVar("nsf_render_maxrenderviewsperframe", "2", { FCVAR_ARCHIVE })
 
 local RT_Material = CreateMaterial("SF_RT_Material", "UnlitGeneric", {
 	["$nolod"] = 1,

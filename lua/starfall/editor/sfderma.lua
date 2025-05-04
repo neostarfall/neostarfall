@@ -1475,8 +1475,8 @@ function PANEL:Init()
 	textbox:SetWide(220)
 	textbox:SetMultiline(true)
 
-	local fName = GetConVar("sf_editor_wire_fontname"):GetString()
-	local fAA = GetConVar("sf_editor_wire_enable_antialiasing"):GetBool()
+	local fName = GetConVar("nsf_editor_wire_fontname"):GetString()
+	local fAA = GetConVar("nsf_editor_wire_enable_antialiasing"):GetBool()
 	textbox:SetFont(SF.Editor.editor:GetFont(fName, 20, fAA))
 
 	textbox:SetValue(self:BuildFontString(self.fontSettings, true))

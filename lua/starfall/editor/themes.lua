@@ -10,7 +10,7 @@ SF.Editor.Themes.Themes = {}
 SF.Editor.Themes.CurrentTheme = nil -- Theme table
 
 local DEFAULT_THEME = "vsdark"
-SF.Editor.Themes.ThemeConVar = CreateClientConVar("sf_editor_theme", DEFAULT_THEME, true, false)
+SF.Editor.Themes.ThemeConVar = CreateClientConVar("nsf_editor_theme", DEFAULT_THEME, true, false)
 
 SF.Editor.Themes.DebugOutput = false
 

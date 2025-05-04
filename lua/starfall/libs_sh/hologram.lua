@@ -25,7 +25,7 @@ local entList = SF.EntManager(
 	"The number of holograms allowed to spawn via Neostarfall scripts for a single player"
 )
 local maxclips = CreateConVar(
-	"sf_holograms_maxclips",
+	"nsf_holograms_maxclips",
 	"8",
 	{ FCVAR_ARCHIVE, FCVAR_REPLICATED },
 	"The max number of clips per hologram entity"

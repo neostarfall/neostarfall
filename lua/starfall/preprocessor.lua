@@ -3,7 +3,7 @@
 -- Processes code for compile time directives.
 -------------------------------------------------------------------------------
 local minifyAllScripts = CreateConVar(
-	"sf_minify_all_scripts",
+	"nsf_minify_all_scripts",
 	"1",
 	FCVAR_ARCHIVE,
 	"Minify all scripts on server-to-client transmission",

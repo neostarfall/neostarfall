@@ -1,7 +1,7 @@
 local util = util
 
 local max_json =
-	CreateConVar("sf_json_maxsize", 16, FCVAR_ARCHIVE, "The max megabytes of json data able to be encoded/decoded.")
+	CreateConVar("nsf_json_maxsize", 16, FCVAR_ARCHIVE, "The max megabytes of json data able to be encoded/decoded.")
 
 --- JSON library
 -- @name json

@@ -25,7 +25,7 @@ if SERVER then
 	)
 
 	playerMaxScale = CreateConVar(
-		"sf_player_model_scale_max",
+		"nsf_player_model_scale_max",
 		"10",
 		{ FCVAR_ARCHIVE },
 		"Maximum player model scale the user is allowed to set using Player.setModelScale",

@@ -29,7 +29,7 @@ registerprivilege(
 	{ client = {} }
 )
 
-local cv_max_data_material_size = CreateConVar("sf_render_maxdatamaterialsize", "1000000", { FCVAR_ARCHIVE })
+local cv_max_data_material_size = CreateConVar("nsf_render_maxdatamaterialsize", "1000000", { FCVAR_ARCHIVE })
 
 -- Make sure to update the material.create doc if you add stuff to this list.
 local allowed_shaders = {

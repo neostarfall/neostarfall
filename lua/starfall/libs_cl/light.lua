@@ -5,7 +5,7 @@ local registerprivilege = SF.Permissions.registerPrivilege
 -- Register privileges
 registerprivilege("light.create", "Create dynamic lights.", "Allows creation of dynamic lights.", { client = {} })
 
-local maxSize = CreateClientConVar("sf_light_maxsize", "1024", true, false, "Max size lights can be")
+local maxSize = CreateClientConVar("nsf_light_maxsize", "1024", true, false, "Max size lights can be")
 
 SF.ResourceCounters.Lights = {
 	icon = "icon16/lightbulb.png",

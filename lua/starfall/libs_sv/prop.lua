@@ -20,9 +20,9 @@ local plyPropBurst = SF.BurstObject(
 )
 
 local maxCustomSize =
-	CreateConVar("sf_props_custom_maxsize", "2048", FCVAR_ARCHIVE, "The max hull size of a custom prop")
+	CreateConVar("nsf_props_custom_maxsize", "2048", FCVAR_ARCHIVE, "The max hull size of a custom prop")
 local minVertexDistance = CreateConVar(
-	"sf_props_custom_minvertexdistance",
+	"nsf_props_custom_minvertexdistance",
 	"0.2",
 	FCVAR_ARCHIVE,
 	"The min distance between two vertices in a custom prop"
@@ -35,9 +35,9 @@ local plyVertexCount = SF.LimitObject(
 	"The max vertices allowed to spawn custom props per player"
 )
 local maxVerticesPerConvex =
-	CreateConVar("sf_props_custom_maxverticesperconvex", "300", FCVAR_ARCHIVE, "The max vertices allowed per convex")
+	CreateConVar("nsf_props_custom_maxverticesperconvex", "300", FCVAR_ARCHIVE, "The max vertices allowed per convex")
 local maxConvexesPerProp =
-	CreateConVar("sf_props_custom_maxconvexesperprop", "10", FCVAR_ARCHIVE, "The max convexes per prop")
+	CreateConVar("nsf_props_custom_maxconvexesperprop", "10", FCVAR_ARCHIVE, "The max convexes per prop")
 
 --- Library for creating and manipulating physics-less models AKA "Props".
 -- @name prop

@@ -359,7 +359,7 @@ else
 		end
 	end
 
-	concommand.Add("sf_hud_unlink", function()
+	concommand.Add("nsf_hud_unlink", function()
 		local ply = LocalPlayer()
 		for k, v in ipairs(ents.FindByClass("starfall_processor")) do
 			if v.ActiveHuds[ply] then
