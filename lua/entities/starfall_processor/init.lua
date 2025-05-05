@@ -92,7 +92,7 @@ function ENT:SendCode(recipient)
 	end
 	local others = {}
 	for _, ply in ipairs(recipient and (istable(recipient) and recipient or { recipient }) or player.GetHumans()) do
-		if ply:GetInfoNum("sf_enabled_cl", 0) == 0 then
+		if ply:GetInfoNum("nsf_enabled_cl", 0) == 0 then
 			goto cont
 		end
 		if ply == self.owner then
