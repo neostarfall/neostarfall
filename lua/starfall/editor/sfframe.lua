@@ -1235,7 +1235,7 @@ function Editor:GetSettings()
 
 	local SaveTabsOnClose = vgui.Create("DCheckBoxLabel")
 	dlist:AddItem(SaveTabsOnClose)
-	SaveTabsOnClose:SetConVar("sf_editor_savetabs")
+	SaveTabsOnClose:SetConVar("nsf_editor_savetabs")
 	SaveTabsOnClose:SetText("Save tabs on close")
 	SaveTabsOnClose:SizeToContents()
 	SaveTabsOnClose:SetTooltip(
@@ -1244,7 +1244,7 @@ function Editor:GetSettings()
 
 	local OpenOldTabs = vgui.Create("DCheckBoxLabel")
 	dlist:AddItem(OpenOldTabs)
-	OpenOldTabs:SetConVar("sf_editor_openoldtabs")
+	OpenOldTabs:SetConVar("nsf_editor_openoldtabs")
 	OpenOldTabs:SetText("Open old tabs on load")
 	OpenOldTabs:SizeToContents()
 	OpenOldTabs:SetTooltip(
@@ -1253,7 +1253,7 @@ function Editor:GetSettings()
 
 	local WorldClicker = vgui.Create("DCheckBoxLabel")
 	dlist:AddItem(WorldClicker)
-	WorldClicker:SetConVar("sf_editor_worldclicker")
+	WorldClicker:SetConVar("nsf_editor_worldclicker")
 	WorldClicker:SetText("Enable Clicking Outside Editor")
 	WorldClicker:SizeToContents()
 	function WorldClicker.OnChange(pnl, bVal)
@@ -1262,7 +1262,7 @@ function Editor:GetSettings()
 
 	local UndockHelper = vgui.Create("DCheckBoxLabel")
 	dlist:AddItem(UndockHelper)
-	UndockHelper:SetConVar("sf_helper_startundocked")
+	UndockHelper:SetConVar("nsf_helper_startundocked")
 	UndockHelper:SetText("Undock helper on open")
 	UndockHelper:SizeToContents()
 
