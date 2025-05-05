@@ -27,7 +27,7 @@ export function Item(props: { item: Item; expand?: boolean }) {
 				</button>
 
 				<ol
-					className={`${isHidden ? "hidden" : "block"} outline-none list-inside pl-2`}
+					className={`${isHidden ? "hidden" : "block"} outline-none list-inside pl-1`}
 				>
 					{props.item.children.map((item) => (
 						<Item
@@ -69,9 +69,12 @@ export function Item(props: { item: Item; expand?: boolean }) {
 export default function Tree(props: {
 	items: Item[];
 	expand?: boolean;
+	className?: string;
 }) {
 	return (
-		<ol className="font-mono text-sm lg:text-base w-full max-h-[400px] md:max-h-[600px] overflow-y-auto overflow-x-clip">
+		<ol
+			className={`font-mono text-sm lg:text-base w-full overflow-y-auto overflow-x-clip ${props.className ?? ""}`}
+		>
 			{props.items.map((item) => (
 				<Item item={item} key={item.key} expand={props.expand} />
 			))}
