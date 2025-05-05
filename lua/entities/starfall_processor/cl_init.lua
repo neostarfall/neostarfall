@@ -274,14 +274,14 @@ end, function(steamid)
 	end
 end)
 
-SF.SteamIDConcommand("sf_kill_cl", function(executor, ply)
+SF.SteamIDConcommand("kill_cl", function(executor, ply)
 	for instance, _ in pairs(SF.playerInstances[ply]) do
 		instance:Error({ message = "Killed by user", traceback = "" })
 	end
 end, "Terminates a user's neostarfall chips clientside.", true)
 
 ---Terminates a user's starfall chips. Admin only
-SF.SteamIDConcommand("sf_kill", function(executor, ply)
+SF.SteamIDConcommand("kill", function(executor, ply)
 	if not executor:IsAdmin() then
 		return
 	end

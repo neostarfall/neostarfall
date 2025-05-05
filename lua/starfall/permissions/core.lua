@@ -294,14 +294,14 @@ end
 
 -- Console commands for changing permissions.
 if SERVER then
-	concommand.Add("nsf_permission", function(ply, com, arg)
+	SF.AddConCommand("permission", function(ply, com, arg)
 		if ply:IsValid() and not ply:IsSuperAdmin() then
 			return
 		end
 		changePermission(ply, arg)
 	end)
 else
-	concommand.Add("nsf_permission_cl", function(ply, com, arg)
+	SF.AddConCommand("permission_cl", function(ply, com, arg)
 		changePermission(ply, arg)
 	end)
 end

@@ -2,8 +2,8 @@
 
 local owneraccess
 if SERVER then
-	owneraccess = CreateConVar(
-		"nsf_permissions_entity_owneraccess",
+	owneraccess = SF.CreateConVar(
+		"permissions_entity_owneraccess",
 		"0",
 		{ FCVAR_ARCHIVE },
 		"Allows any neostarfall chip's owner to access their player entity"

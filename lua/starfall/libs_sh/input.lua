@@ -5,7 +5,7 @@ local checkluatype = SF.CheckLuaType
 local inputLockCooldown
 if CLIENT then
 	inputLockCooldown =
-		CreateConVar("nsf_input_lock_cooldown", 10, FCVAR_ARCHIVE, "Cooldown for input.lockControls() in seconds", 0)
+		SF.CreateConVar("input_lock_cooldown", 10, FCVAR_ARCHIVE, "Cooldown for input.lockControls() in seconds", 0)
 end
 
 -- This should manage the player button hooks for singleplayer games.

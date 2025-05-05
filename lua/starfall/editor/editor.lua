@@ -21,7 +21,7 @@ AddCSLuaFile("xml.lua")
 
 if CLIENT then
 	SF.Editor.TabHandlers = {}
-	SF.Editor.CurrentTabHandler = CreateClientConVar("nsf_editor_tab_editor", "wire", true, false)
+	SF.Editor.CurrentTabHandler = SF.CreateClientConVar("editor_tab_editor", "wire", true, false)
 end
 
 local l = file.Find("starfall/editor/tabhandlers/tab_*.lua", "LUA")
@@ -35,8 +35,8 @@ end
 
 local DEFAULT_DOC_URL = "https://neostarfall.pages.dev?nofetch=true"
 
-SF.Editor.HelperURL = CreateConVar(
-	"nsf_editor_helperurl",
+SF.Editor.HelperURL = SF.CreateConVar(
+	"editor_helperurl",
 	DEFAULT_DOC_URL,
 	{ FCVAR_ARCHIVE, FCVAR_REPLICATED },
 	"URL for website used by SF Helper, change to allow custom documentation."
@@ -773,7 +773,7 @@ if CLIENT then
 		timer.Remove("sf_editor_file_auto_reload")
 	end
 
-	concommand.Add("nsf_editor_reload", function()
+	SF.AddConCommand("editor_reload", function()
 		pcall(forceCloseEditor)
 		include("starfall/editor/editor.lua")
 		print("Editor reloaded")

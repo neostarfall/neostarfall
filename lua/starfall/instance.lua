@@ -9,67 +9,67 @@ local dgetmeta = debug.getmetatable
 local SysTime = SysTime
 
 if SERVER then
-	SF.cpuQuota = CreateConVar("nsf_timebuffer", 0.005, FCVAR_ARCHIVE, "The max average the CPU time can reach.")
+	SF.cpuQuota = SF.CreateConVar("timebuffer", 0.005, FCVAR_ARCHIVE, "The max average the CPU time can reach.")
 	SF.cpuBufferN =
-		CreateConVar("nsf_timebuffersize", 100, FCVAR_ARCHIVE, "The window width of the CPU time quota moving average.")
-	SF.softLockProtection = CreateConVar(
-		"nsf_timebuffersoftlock",
+		SF.CreateConVar("timebuffersize", 100, FCVAR_ARCHIVE, "The window width of the CPU time quota moving average.")
+	SF.softLockProtection = SF.CreateConVar(
+		"timebuffersoftlock",
 		1,
 		FCVAR_ARCHIVE,
 		"Consumes more cpu, but protects from freezing the game. Only turn this off if you want to use a profiler on your scripts."
 	)
-	SF.RamCap = CreateConVar(
-		"nsf_ram_max",
+	SF.RamCap = SF.CreateConVar(
+		"ram_max",
 		1500000,
 		FCVAR_ARCHIVE,
 		"If ram exceeds this limit (in kB), neostarfalls will be terminated"
 	)
-	SF.AllowSuperUser = CreateConVar(
-		"nsf_superuserallowed",
+	SF.AllowSuperUser = SF.CreateConVar(
+		"superuserallowed",
 		0,
 		{ FCVAR_ARCHIVE, FCVAR_REPLICATED },
 		"Whether the neostarfall superuser feature is allowed"
 	)
 else
-	SF.cpuQuota = CreateConVar("nsf_timebuffer_cl", 0.006, FCVAR_ARCHIVE, "The max average the CPU time can reach.")
-	SF.cpuOwnerQuota = CreateConVar(
-		"nsf_timebuffer_cl_owner",
+	SF.cpuQuota = SF.CreateConVar("timebuffer_cl", 0.006, FCVAR_ARCHIVE, "The max average the CPU time can reach.")
+	SF.cpuOwnerQuota = SF.CreateConVar(
+		"timebuffer_cl_owner",
 		0.015,
 		FCVAR_ARCHIVE,
 		"The max average the CPU time can reach for your own chips."
 	)
-	SF.cpuBufferN = CreateConVar(
-		"nsf_timebuffersize_cl",
+	SF.cpuBufferN = SF.CreateConVar(
+		"timebuffersize_cl",
 		100,
 		FCVAR_ARCHIVE,
 		"The window width of the CPU time quota moving average."
 	)
-	SF.softLockProtection = CreateConVar(
-		"nsf_timebuffersoftlock_cl",
+	SF.softLockProtection = SF.CreateConVar(
+		"timebuffersoftlock_cl",
 		1,
 		FCVAR_ARCHIVE,
 		"Consumes more cpu, but protects from freezing the game. Only turn this off if you want to use a profiler on your scripts."
 	)
-	SF.softLockProtectionOwner = CreateConVar(
-		"nsf_timebuffersoftlock_cl_owner",
+	SF.softLockProtectionOwner = SF.CreateConVar(
+		"timebuffersoftlock_cl_owner",
 		1,
 		FCVAR_ARCHIVE,
 		"If sf_timebuffersoftlock_cl is 0, this enabled will make it only your own chips will be affected."
 	)
-	SF.RamCap = CreateConVar(
-		"nsf_ram_max_cl",
+	SF.RamCap = SF.CreateConVar(
+		"ram_max_cl",
 		1500000,
 		FCVAR_ARCHIVE,
 		"If ram exceeds this limit (in kB), neostarfalls will be terminated"
 	)
-	SF.AllowSuperUser = CreateConVar(
-		"nsf_superuserallowed",
+	SF.AllowSuperUser = SF.CreateConVar(
+		"superuserallowed",
 		0,
 		{ FCVAR_ARCHIVE, FCVAR_REPLICATED },
 		"Whether the neostarfall superuser feature is allowed"
 	)
-	SF.CvarEnabled = CreateConVar(
-		"nsf_enabled_cl",
+	SF.CvarEnabled = SF.CreateConVar(
+		"enabled_cl",
 		"1",
 		{ FCVAR_ARCHIVE, FCVAR_USERINFO, FCVAR_DONTRECORD },
 		"Enable clientside neostarfall"

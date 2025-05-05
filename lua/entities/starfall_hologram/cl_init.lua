@@ -234,7 +234,7 @@ local function ShowHologramOwners()
 end
 
 local display_owners = false
-concommand.Add("nsf_holograms_display_owners", function()
+SF.AddConCommand("holograms_display_owners", function()
 	display_owners = not display_owners
 
 	if display_owners then

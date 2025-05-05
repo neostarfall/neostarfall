@@ -2,8 +2,8 @@
 -- SF Preprocessor.
 -- Processes code for compile time directives.
 -------------------------------------------------------------------------------
-local minifyAllScripts = CreateConVar(
-	"nsf_minify_all_scripts",
+local minifyAllScripts = SF.CreateConVar(
+	"minify_all_scripts",
 	"1",
 	FCVAR_ARCHIVE,
 	"Minify all scripts on server-to-client transmission",

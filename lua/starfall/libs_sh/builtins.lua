@@ -7,14 +7,14 @@ SF.Permissions.registerPrivilege("console.command", "Console command", "Allows t
 
 local userdataLimit, restartCooldown, printBurst, concmdBurst
 if SERVER then
-	userdataLimit = CreateConVar(
-		"nsf_userdata_max",
+	userdataLimit = SF.CreateConVar(
+		"userdata_max",
 		"1048576",
 		{ FCVAR_ARCHIVE },
 		"The maximum size of userdata (in bytes) that can be stored on a neostarfall chip (saved in duplications)."
 	)
-	restartCooldown = CreateConVar(
-		"nsf_restart_cooldown",
+	restartCooldown = SF.CreateConVar(
+		"restart_cooldown",
 		5,
 		FCVAR_ARCHIVE,
 		"The cooldown for using restart() on the same chip.",
@@ -44,8 +44,8 @@ else
 		"Allows the neostarfall to enable hud rendering",
 		{ client = { default = 1 } }
 	)
-	restartCooldown = CreateConVar(
-		"nsf_restart_cooldown_cl",
+	restartCooldown = SF.CreateConVar(
+		"restart_cooldown_cl",
 		5,
 		FCVAR_ARCHIVE,
 		"The cooldown for using restart() on the same chip.",

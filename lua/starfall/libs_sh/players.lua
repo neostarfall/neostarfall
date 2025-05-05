@@ -24,8 +24,8 @@ if SERVER then
 		{ usergroups = { default = 1 }, entities = {} }
 	)
 
-	playerMaxScale = CreateConVar(
-		"nsf_player_model_scale_max",
+	playerMaxScale = SF.CreateConVar(
+		"player_model_scale_max",
 		"10",
 		{ FCVAR_ARCHIVE },
 		"Maximum player model scale the user is allowed to set using Player.setModelScale",

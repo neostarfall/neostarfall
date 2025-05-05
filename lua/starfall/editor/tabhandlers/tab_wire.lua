@@ -68,18 +68,18 @@ TabHandler.Fonts["Roboto Mono"] = "Custom Font shipped with neostarfall"
 TabHandler.Tabs = {}
 local defaultFont = "DejaVu Sans Mono" -- We ship that with starfall, linux has it by default
 
-TabHandler.FontConVar = CreateClientConVar("nsf_editor_wire_fontname", defaultFont, true, false)
-TabHandler.FontSizeConVar = CreateClientConVar("nsf_editor_wire_fontsize", 16, true, false)
-TabHandler.BlockCommentStyleConVar = CreateClientConVar("nsf_editor_wire_block_comment_style", 1, true, false)
-TabHandler.PigmentsConVar = CreateClientConVar("nsf_editor_wire_pigments", 1, true, false)
-TabHandler.EnlightenColorsConVar = CreateClientConVar("nsf_editor_wire_enlightencolors", 0, true, false) --off by default
+TabHandler.FontConVar = SF.CreateClientConVar("editor_wire_fontname", defaultFont, true, false)
+TabHandler.FontSizeConVar = SF.CreateClientConVar("editor_wire_fontsize", 16, true, false)
+TabHandler.BlockCommentStyleConVar = SF.CreateClientConVar("editor_wire_block_comment_style", 1, true, false)
+TabHandler.PigmentsConVar = SF.CreateClientConVar("editor_wire_pigments", 1, true, false)
+TabHandler.EnlightenColorsConVar = SF.CreateClientConVar("editor_wire_enlightencolors", 0, true, false) --off by default
 TabHandler.HighlightOnDoubleClickConVar =
-	CreateClientConVar("nsf_editor_wire_highlight_on_double_click", "1", true, false)
-TabHandler.DisplayCaretPosConVar = CreateClientConVar("nsf_editor_wire_display_caret_pos", "0", true, false)
-TabHandler.AutoIndentConVar = CreateClientConVar("nsf_editor_wire_auto_indent", "1", true, false)
-TabHandler.EnableAntialiasing = CreateClientConVar("nsf_editor_wire_enable_antialiasing", "1", true, false)
+	SF.CreateClientConVar("editor_wire_highlight_on_double_click", "1", true, false)
+TabHandler.DisplayCaretPosConVar = SF.CreateClientConVar("editor_wire_display_caret_pos", "0", true, false)
+TabHandler.AutoIndentConVar = SF.CreateClientConVar("editor_wire_auto_indent", "1", true, false)
+TabHandler.EnableAntialiasing = SF.CreateClientConVar("editor_wire_enable_antialiasing", "1", true, false)
 
-TabHandler.ScrollSpeedConVar = CreateClientConVar("nsf_editor_wire_scrollmultiplier", "2.5", true, false)
+TabHandler.ScrollSpeedConVar = SF.CreateClientConVar("editor_wire_scrollmultiplier", "2.5", true, false)
 if TabHandler.ScrollSpeedConVar:GetFloat() == 1 then
 	-- Change the old default from 1 to 2.5.
 	-- I suppose people that want a value of '1' will have to set it to 1.001 or something.
@@ -87,11 +87,11 @@ if TabHandler.ScrollSpeedConVar:GetFloat() == 1 then
 end
 
 TabHandler.LinesHiddenFormatConVar =
-	CreateClientConVar("nsf_editor_wire_lines_hidden_format", "< %d lines hidden >", true, false)
-TabHandler.AutoValidateConVar = CreateClientConVar("nsf_editor_wire_validateontextchange", "0", true, false)
-TabHandler.CacheDebug = CreateClientConVar("nsf_editor_wire_cachedebug", "0", true, false)
-TabHandler.HtmlBackgroundConvar = CreateClientConVar("nsf_editor_wire_htmlbackground", "", true, false)
-TabHandler.HtmlBackgroundOpacityConvar = CreateClientConVar("nsf_editor_wire_htmlbackgroundopacity", "5", true, false)
+	SF.CreateClientConVar("editor_wire_lines_hidden_format", "< %d lines hidden >", true, false)
+TabHandler.AutoValidateConVar = SF.CreateClientConVar("editor_wire_validateontextchange", "0", true, false)
+TabHandler.CacheDebug = SF.CreateClientConVar("editor_wire_cachedebug", "0", true, false)
+TabHandler.HtmlBackgroundConvar = SF.CreateClientConVar("editor_wire_htmlbackground", "", true, false)
+TabHandler.HtmlBackgroundOpacityConvar = SF.CreateClientConVar("editor_wire_htmlbackgroundopacity", "5", true, false)
 
 cvars.AddChangeCallback("nsf_editor_wire_htmlbackground", function(_, _, url)
 	TabHandler:UpdateHtmlBackground()

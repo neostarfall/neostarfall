@@ -356,15 +356,15 @@ SF.BurstObject = {
 			objects = SF.EntityTable("burst" .. cvarname),
 		}
 
-		local ratename = "nsf_" .. cvarname .. "_burstrate" .. (CLIENT and "_cl" or "")
-		local ratecvar = CreateConVar(ratename, tostring(rate), FCVAR_ARCHIVE, ratehelp)
+		local ratename = cvarname .. "_burstrate" .. (CLIENT and "_cl" or "")
+		local ratecvar = SF.CreateConVar(ratename, tostring(rate), FCVAR_ARCHIVE, ratehelp)
 		t.rate = ratecvar:GetFloat() * scale
 		cvars.AddChangeCallback(ratename, function()
 			t.rate = ratecvar:GetFloat() * scale
 		end)
 
-		local maxname = "nsf_" .. cvarname .. "_burstmax" .. (CLIENT and "_cl" or "")
-		local maxcvar = CreateConVar(maxname, tostring(max), FCVAR_ARCHIVE, maxhelp)
+		local maxname = cvarname .. "_burstmax" .. (CLIENT and "_cl" or "")
+		local maxcvar = SF.CreateConVar(maxname, tostring(max), FCVAR_ARCHIVE, maxhelp)
 		t.max = maxcvar:GetFloat() * scale
 		cvars.AddChangeCallback(maxname, function()
 			t.max = maxcvar:GetFloat() * scale
@@ -383,14 +383,14 @@ SF.PlayerCompileBurst = SF.BurstObject(
 	"The rate at which the burst regenerates per second.",
 	"The number of processors allowed to be compiled in a short interval of time via the toolgun and upload pushes ( burst )"
 )
-SF.MaxCompileLength = CreateConVar(
-	"nsf_max_compile_length",
+SF.MaxCompileLength = SF.CreateConVar(
+	"max_compile_length",
 	"65536",
 	FCVAR_ARCHIVE,
 	"The maximum length of an unobfuscated Neostarfall file."
 )
-SF.MaxObfuscatedCompileLength = CreateConVar(
-	"nsf_max_obfuscated_compile_length",
+SF.MaxObfuscatedCompileLength = SF.CreateConVar(
+	"max_obfuscated_compile_length",
 	"16384",
 	FCVAR_ARCHIVE,
 	"The maximum length of an obfuscated Neostarfall file."
@@ -813,12 +813,12 @@ SF.BlockedList = {
 			blocked:readFile()
 		end
 
-		SF.SteamIDConcommand("nsf_" .. prefix .. "_block", function(executor, id)
+		SF.SteamIDConcommand(prefix .. "_block", function(executor, id)
 			blocked:block(id)
 		end, "Block a user from " .. desc, false)
 
 		SF.SteamIDConcommand(
-			"nsf_" .. prefix .. "_unblock",
+			prefix .. "_unblock",
 			function(executor, id)
 				blocked:unblock(id)
 			end,
@@ -833,7 +833,7 @@ SF.BlockedList = {
 			end
 		)
 
-		concommand.Add("nsf_" .. prefix .. "_blocklist", function(executor, cmd, args)
+		SF.AddConCommand(prefix .. "_blocklist", function(executor, cmd, args)
 			local n = 0
 			for steamid, name in pairs(blocked.list) do
 				print('"' .. steamid .. '" // "' .. name .. '"')
@@ -1603,7 +1603,7 @@ end
 -------------------------------------------------------------------------------
 
 function SF.SteamIDConcommand(name, callback, helptext, findplayer, completionlist)
-	concommand.Add(name, function(executor, cmd, arg)
+	SF.AddConCommand(name, function(executor, cmd, arg)
 		local retval = arg[1]
 		if not retval then
 			Ply_PrintMessage(executor, HUD_PRINTCONSOLE, "Missing steam id\n")
@@ -2238,8 +2238,8 @@ SF.UniqueSounds = setmetatable({}, {
 		return r
 	end,
 })
-local maxUniqueSounds = CreateConVar(
-	"nsf_sounds_unique_max" .. (CLIENT and "_cl" or ""),
+local maxUniqueSounds = SF.CreateConVar(
+	"sounds_unique_max" .. (CLIENT and "_cl" or ""),
 	"200",
 	FCVAR_ARCHIVE,
 	"The maximum number of unique sounds paths allowed"
@@ -3018,7 +3018,7 @@ do
 		util.AddNetworkString("sf_receivelibrary")
 
 		-- Command to reload the libraries
-		concommand.Add("nsf_reloadlibrary", function(ply, com, arg)
+		SF.AddConCommand("reloadlibrary", function(ply, com, arg)
 			if Ent_IsValid(ply) and not Ply_IsSuperAdmin(ply) then
 				return
 			end

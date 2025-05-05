@@ -32,9 +32,9 @@ local fireBulletsDPSBurst = SERVER
 	)
 
 local maxBulletForce = SERVER
-	and CreateConVar("nsf_bullets_maxforce", 100, FCVAR_ARCHIVE, "Maximum amount of force a bullet can have", 0)
+	and SF.CreateConVar("bullets_maxforce", 100, FCVAR_ARCHIVE, "Maximum amount of force a bullet can have", 0)
 local maxBulletHull = SERVER
-	and CreateConVar("nsf_bullets_maxhull", 10, FCVAR_ARCHIVE, "Maximum hull size a bullet can have", 0)
+	and SF.CreateConVar("bullets_maxhull", 10, FCVAR_ARCHIVE, "Maximum hull size a bullet can have", 0)
 
 --- Game functions
 -- @name game

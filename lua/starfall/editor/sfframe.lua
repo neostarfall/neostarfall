@@ -84,20 +84,20 @@ end
 -- they are shared for all tabhandlers
 -- ----------------------------------------------------------------------
 --ConVars
-Editor.SaveTabsVar = CreateClientConVar("nsf_editor_savetabs", "1", true, false)
-Editor.OpenOldTabsVar = CreateClientConVar("nsf_editor_openoldtabs", "1", true, false)
-Editor.WorldClickerVar = CreateClientConVar("nsf_editor_worldclicker", "0", true, false)
-Editor.LayoutVar = CreateClientConVar("nsf_editor_layout", "0", true, false)
-Editor.StartHelperUndocked = CreateClientConVar("nsf_helper_startundocked", "0", true, false)
-Editor.EditorFileAutoReload = CreateClientConVar(
-	"nsf_editor_file_auto_reload",
+Editor.SaveTabsVar = SF.CreateClientConVar("editor_savetabs", "1", true, false)
+Editor.OpenOldTabsVar = SF.CreateClientConVar("editor_openoldtabs", "1", true, false)
+Editor.WorldClickerVar = SF.CreateClientConVar("editor_worldclicker", "0", true, false)
+Editor.LayoutVar = SF.CreateClientConVar("editor_layout", "0", true, false)
+Editor.StartHelperUndocked = SF.CreateClientConVar("helper_startundocked", "0", true, false)
+Editor.EditorFileAutoReload = SF.CreateClientConVar(
+	"editor_file_auto_reload",
 	"0",
 	true,
 	false,
 	"Controls the auto reload functionality of Neostarfall's Editor"
 )
-Editor.EditorFileAutoReloadInterval = CreateClientConVar(
-	"nsf_editor_file_auto_reload_interval",
+Editor.EditorFileAutoReloadInterval = SF.CreateClientConVar(
+	"editor_file_auto_reload_interval",
 	"1",
 	true,
 	false,
@@ -250,8 +250,8 @@ function Editor:Init()
 	end
 end
 
-local size = CreateClientConVar("nsf_editor_size", "800_600", true, false)
-local pos = CreateClientConVar("nsf_editor_pos", "-1_-1", true, false)
+local size = SF.CreateClientConVar("editor_size", "800_600", true, false)
+local pos = SF.CreateClientConVar("editor_pos", "-1_-1", true, false)
 
 function Editor:LoadEditorSettings()
 	-- Position & Size
@@ -2320,7 +2320,7 @@ list.Set("DesktopWindows", "StarfallUsers", {
 	end,
 })
 
-concommand.Add("nsf_userlist", function()
+SF.AddConCommand("userlist", function()
 	if userPanel and userPanel:IsValid() then
 		return
 	end

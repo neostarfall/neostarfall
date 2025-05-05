@@ -126,16 +126,16 @@ function requestClass:__tostring()
 end
 
 if SERVER then
-	debugCvar = CreateConVar(
-		"nsf_moneyrequest_verbose_sv",
+	debugCvar = SF.CreateConVar(
+		"moneyrequest_verbose_sv",
 		1,
 		FCVAR_ARCHIVE,
 		"Prints information about money requests to console.",
 		0,
 		1
 	)
-	local timeoutCvar = CreateConVar(
-		"nsf_moneyrequest_timeout",
+	local timeoutCvar = SF.CreateConVar(
+		"moneyrequest_timeout",
 		30,
 		FCVAR_ARCHIVE,
 		"Amount of time in seconds until a Neostarfall money request expires.",
@@ -362,8 +362,8 @@ if SERVER then
 		FCVAR_CLIENTCMD_CAN_EXECUTE
 	)
 else
-	debugCvar = CreateConVar(
-		"nsf_moneyrequest_verbose_cl",
+	debugCvar = SF.CreateConVar(
+		"moneyrequest_verbose_cl",
 		1,
 		FCVAR_ARCHIVE,
 		"Prints information about money requests to console.",

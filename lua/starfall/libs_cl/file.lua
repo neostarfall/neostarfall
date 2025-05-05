@@ -67,17 +67,17 @@ file.CreateDir("sf_filedata/")
 file.CreateDir("sf_filedatatemp/")
 
 local cv_temp_maxfiles =
-	CreateConVar("nsf_file_tempmax", "256", { FCVAR_ARCHIVE }, "The max number of files a player can store in temp")
-local cv_temp_maxusersize = CreateConVar(
-	"nsf_file_tempmaxusersize",
+	SF.CreateConVar("file_tempmax", "256", { FCVAR_ARCHIVE }, "The max number of files a player can store in temp")
+local cv_temp_maxusersize = SF.CreateConVar(
+	"file_tempmaxusersize",
 	"64",
 	{ FCVAR_ARCHIVE },
 	"The max total of megabytes a player can store in temp"
 )
 local cv_temp_maxsize =
-	CreateConVar("nsf_file_tempmaxsize", "128", { FCVAR_ARCHIVE }, "The max total of megabytes allowed in temp")
+	SF.CreateConVar("file_tempmaxsize", "128", { FCVAR_ARCHIVE }, "The max total of megabytes allowed in temp")
 local cv_max_concurrent_reads =
-	CreateConVar("nsf_file_asyncmax", "10", { FCVAR_ARCHIVE }, "The max concurrent async reads allowed")
+	SF.CreateConVar("file_asyncmax", "10", { FCVAR_ARCHIVE }, "The max concurrent async reads allowed")
 
 --- File functions. Allows modification of files.
 -- @name file
