@@ -95,6 +95,22 @@ function SF.MinifyCode(code)
 	return table.concat(directives, "\n") .. "\n" .. pipeline:apply(code)
 end
 
+function SF.CreateConVar(name, default, flags, helptext, min, max)
+	local cvar = CreateConVar("nsf_" .. name, default, flags, helptext, min, max)
+	--[[ sf_ cvar fallback code here ]]
+	return cvar
+end
+
+function SF.CreateClientConVar(name, default, shouldsave, userinfo, helptext, min, max)
+	local cvar = CreateClientConVar("nsf_" .. name, default, shouldsave, userinfo, helptext, min, max)
+	--[[ sf_ cvar fallback code here ]]
+	return cvar
+end
+
+function SF.AddConCommand(name, callback, autocomplete, helptext, flags)
+	concommand.Add("nsf_" .. name, callback, autocomplete, helptext, flags)
+end
+
 -- Make sure this is done after metatables have been set
 hook.Add("InitPostEntity", "SF_SanitizeTypeMetatables", function()
 	local function sanitizeTypeMeta(theType, myMeta)
