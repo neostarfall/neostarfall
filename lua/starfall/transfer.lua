@@ -305,7 +305,7 @@ else
 		net.WriteUInt(chip:EntIndex(), 16)
 		net.WriteString(string.sub(message, 1, 1024))
 		net.WriteString(string.sub(traceback, 1, 1024))
-		net.WriteBool(GetConVarNumber("sf_timebuffer_cl") > 0 and not is_blocked)
+		net.WriteBool(SF.cpuQuota:GetFloat() > 0 and not is_blocked)
 		net.SendToServer()
 	end
 
