@@ -99,30 +99,42 @@ local function parseConfigFile(contents)
 	local tbl = {}
 	for line in string.gmatch(contents, "[^\r\n]+") do
 		line = string.match(line, "^%s*(.-)%s*$")
-		if line == "" or string.match(line, "^//") then continue end
+		if line == "" or string.match(line, "^//") then
+			goto cont
+		end
+
 		for cmd in string.gmatch(line, "[^;]+") do
 			local s1, s2 = string.match(cmd, "^%s*(%S+)%s+(.*)%s*$")
-			if not s1 then continue end
-			s1 = string.match(s1, "^\"(.-)\"$") or s1
-			s2 = string.match(s2, "^\"(.-)\"$") or s2
+			if not s1 then
+				goto cont
+			end
+			s1 = string.match(s1, '^"(.-)"$') or s1
+			s2 = string.match(s2, '^"(.-)"$') or s2
 			tbl[string.lower(s1)] = s2
+			::cont::
 		end
+		::cont::
 	end
 	return tbl
 end
 
 -- we can't use util.KeyValuesToTable because it tries to convert values to numbers with bad precision
 local function parseDataFile(contents)
-	contents = string.match(contents, "^%s*\"[^\"]+\"%s*{(.-)}%s*$")
-	if not contents then return {} end
+	contents = string.match(contents, '^%s*"[^"]+"%s*{(.-)}%s*$')
+	if not contents then
+		return {}
+	end
 	local tbl = {}
 	for line in string.gmatch(contents, "[^\r\n]+") do
 		line = string.match(line, "^%s*(.-)%s*$")
 		local s1, s2 = string.match(line, "^%s*(%S+)%s+(.*)%s*$")
-		if not s1 then continue end
-		s1 = string.match(s1, "^\"(.-)\"$") or s1
-		s2 = string.match(s2, "^\"(.-)\"$") or s2
+		if not s1 then
+			goto cont
+		end
+		s1 = string.match(s1, '^"(.-)"$') or s1
+		s2 = string.match(s2, '^"(.-)"$') or s2
 		tbl[string.lower(s1)] = s2
+		::cont::
 	end
 	return tbl
 end
@@ -156,9 +168,13 @@ local function restoreOldConVar(cvar, old)
 	local current, default = cvar:GetString(), cvar:GetDefault()
 	local num1, num2 = tonumber(current), tonumber(default)
 	if num1 and num2 then
-		if num1 ~= num2 then return end -- avoids values with trailing zeros not being considered equal
+		if num1 ~= num2 then
+			return
+		end -- avoids values with trailing zeros not being considered equal
 	else
-		if current ~= default then return end
+		if current ~= default then
+			return
+		end
 	end
 	cvar:SetString(old)
 end
@@ -167,15 +183,21 @@ function SF.CreateConVar(name, value, flags, helptext, min, max)
 	local cvar = CreateConVar("nsf_" .. name, value, flags, helptext, min, max)
 	if SERVER or not cvar:IsFlagSet(FCVAR_REPLICATED) then
 		local old = oldSavedConVars["sf_" .. string.lower(name)]
-		if old then restoreOldConVar(cvar, old) end
+		if old then
+			restoreOldConVar(cvar, old)
+		end
 	end
 	return cvar
 end
 
 function SF.CreateClientConVar(name, value, shouldsave, userinfo, helptext, min, max)
 	local flags = 0
-	if shouldsave or shouldsave == nil then flags = flags + FCVAR_ARCHIVE end
-	if userinfo then flags = flags + FCVAR_USERINFO end
+	if shouldsave or shouldsave == nil then
+		flags = flags + FCVAR_ARCHIVE
+	end
+	if userinfo then
+		flags = flags + FCVAR_USERINFO
+	end
 	return SF.CreateConVar(name, value, flags, helptext, min, max)
 end
 
