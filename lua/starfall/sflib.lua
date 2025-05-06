@@ -133,10 +133,12 @@ local oldSavedConVars = getSavedConVars("^sf_")
 function SF.CreateConVar(name, value, flags, helptext, min, max)
 	local cvar = CreateConVar("nsf_" .. name, value, flags, helptext, min, max)
 	-- transfer old convar settings
-	local default = cvar:GetDefault()
-	if cvar:GetString() == default then
-		local old = oldSavedConVars["sf_" .. string.lower(name)]
-		if old and old ~= default then cvar:SetString(old) end
+	if SERVER or not cvar:IsFlagSet(FCVAR_REPLICATED) then
+		local default = cvar:GetDefault()
+		if cvar:GetString() == default then
+			local old = oldSavedConVars["sf_" .. string.lower(name)]
+			if old and old ~= default then cvar:SetString(old) end
+		end
 	end
 	return cvar
 end
