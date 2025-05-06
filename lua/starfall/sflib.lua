@@ -105,7 +105,7 @@ local function parseConfigFile(contents)
 			if not s1 then continue end
 			s1 = string.match(s1, "^\"(.-)\"$") or s1
 			s2 = string.match(s2, "^\"(.-)\"$") or s2
-			tbl[s1] = s2
+			tbl[string.lower(s1)] = s2
 		end
 	end
 	return tbl
@@ -135,8 +135,8 @@ function SF.CreateConVar(name, value, flags, helptext, min, max)
 	-- transfer old convar settings
 	local default = cvar:GetDefault()
 	if cvar:GetString() == default then
-		local old = oldSavedConVars["sf_" .. name]
-		if old ~= default then cvar:SetString(old) end
+		local old = oldSavedConVars["sf_" .. string.lower(name)]
+		if old and old ~= default then cvar:SetString(old) end
 	end
 	return cvar
 end
