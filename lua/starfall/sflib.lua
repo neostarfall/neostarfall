@@ -95,16 +95,57 @@ function SF.MinifyCode(code)
 	return table.concat(directives, "\n") .. "\n" .. pipeline:apply(code)
 end
 
-function SF.CreateConVar(name, default, flags, helptext, min, max)
-	local cvar = CreateConVar("nsf_" .. name, default, flags, helptext, min, max)
-	--[[ sf_ cvar fallback code here ]]
+local function parseConfigFile(contents)
+	local tbl = {}
+	for line in string.gmatch(contents, "[^\r\n]+") do
+		line = string.match(line, "^%s*(.-)%s*$")
+		if line == "" or string.match(line, "^//") then continue end
+		for cmd in string.gmatch(line, "[^;]+") do
+			local s1, s2 = string.match(cmd, "^%s*(%S+)%s+(.*)%s*$")
+			if not s1 then continue end
+			s1 = string.match(s1, "^\"(.-)\"$") or s1
+			s2 = string.match(s2, "^\"(.-)\"$") or s2
+			tbl[s1] = s2
+		end
+	end
+	return tbl
+end
+
+local function getSavedConVars(pattern)
+	local tbl
+	if SERVER then
+		local contents = file.Read("cfg/server.cfg", "GAME") -- might also contain concmds but thats fine
+		tbl = contents and parseConfigFile(contents) or {}
+	else
+		local contents = file.Read("cfg/client.vdf", "GAME")
+		tbl = contents and util.KeyValuesToTable(contents) or {}
+	end
+	for k, v in pairs(tbl) do
+		if not string.match(k, pattern) then
+			tbl[k] = nil
+		end
+	end
+	return tbl
+end
+
+local oldSavedConVars = getSavedConVars("^sf_")
+
+function SF.CreateConVar(name, value, flags, helptext, min, max)
+	local cvar = CreateConVar("nsf_" .. name, value, flags, helptext, min, max)
+	-- transfer old convar settings
+	local default = cvar:GetDefault()
+	if cvar:GetString() == default then
+		local old = oldSavedConVars["sf_" .. name]
+		if old ~= default then cvar:SetString(old) end
+	end
 	return cvar
 end
 
-function SF.CreateClientConVar(name, default, shouldsave, userinfo, helptext, min, max)
-	local cvar = CreateClientConVar("nsf_" .. name, default, shouldsave, userinfo, helptext, min, max)
-	--[[ sf_ cvar fallback code here ]]
-	return cvar
+function SF.CreateClientConVar(name, value, shouldsave, userinfo, helptext, min, max)
+	local flags = 0
+	if shouldsave or shouldsave == nil then flags = flags + FCVAR_ARCHIVE end
+	if userinfo then flags = flags + FCVAR_USERINFO end
+	return SF.CreateConVar(name, value, flags, helptext, min, max)
 end
 
 function SF.AddConCommand(name, callback, autocomplete, helptext, flags)
