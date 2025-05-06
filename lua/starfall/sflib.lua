@@ -111,15 +111,37 @@ local function parseConfigFile(contents)
 	return tbl
 end
 
+-- we can't use util.KeyValuesToTable because it tries to convert values to numbers with bad precision
+local function parseDataFile(contents)
+	contents = string.match(contents, "^%s*\"[^\"]+\"%s*{(.-)}%s*$")
+	if not contents then return {} end
+	local tbl = {}
+	for line in string.gmatch(contents, "[^\r\n]+") do
+		line = string.match(line, "^%s*(.-)%s*$")
+		local s1, s2 = string.match(line, "^%s*(%S+)%s+(.*)%s*$")
+		if not s1 then continue end
+		s1 = string.match(s1, "^\"(.-)\"$") or s1
+		s2 = string.match(s2, "^\"(.-)\"$") or s2
+		tbl[string.lower(s1)] = s2
+	end
+	return tbl
+end
+
 local function getSavedConVars(pattern)
 	local tbl
 	if SERVER then
-		local contents = file.Read("cfg/server.cfg", "GAME") -- might also contain concmds but thats fine
-		tbl = contents and parseConfigFile(contents) or {}
+		if game.IsDedicated() then
+			local contents = file.Read("cfg/server.cfg", "GAME") -- might also contain concmds but that's fine
+			tbl = contents and parseConfigFile(contents) or {}
+		else
+			local contents = file.Read("cfg/server.vdf", "GAME")
+			tbl = contents and parseDataFile(contents) or {}
+		end
 	else
 		local contents = file.Read("cfg/client.vdf", "GAME")
-		tbl = contents and util.KeyValuesToTable(contents) or {}
+		tbl = contents and parseDataFile(contents) or {}
 	end
+	-- remove all that don't match what we're looking for
 	for k, v in pairs(tbl) do
 		if not string.match(k, pattern) then
 			tbl[k] = nil
@@ -130,15 +152,22 @@ end
 
 local oldSavedConVars = getSavedConVars("^sf_")
 
+local function restoreOldConVar(cvar, old)
+	local current, default = cvar:GetString(), cvar:GetDefault()
+	local num1, num2 = tonumber(current), tonumber(default)
+	if num1 and num2 then
+		if num1 ~= num2 then return end -- avoids values with trailing zeros not being considered equal
+	else
+		if current ~= default then return end
+	end
+	cvar:SetString(old)
+end
+
 function SF.CreateConVar(name, value, flags, helptext, min, max)
 	local cvar = CreateConVar("nsf_" .. name, value, flags, helptext, min, max)
-	-- transfer old convar settings
 	if SERVER or not cvar:IsFlagSet(FCVAR_REPLICATED) then
-		local default = cvar:GetDefault()
-		if cvar:GetString() == default then
-			local old = oldSavedConVars["sf_" .. string.lower(name)]
-			if old and old ~= default then cvar:SetString(old) end
-		end
+		local old = oldSavedConVars["sf_" .. string.lower(name)]
+		if old then restoreOldConVar(cvar, old) end
 	end
 	return cvar
 end
