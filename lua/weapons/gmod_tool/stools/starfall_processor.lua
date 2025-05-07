@@ -327,7 +327,7 @@ if CLIENT then
 	end
 
 	local function GotoDocs(button)
-		gui.OpenURL(SF.Editor.HelperURL:GetString())
+		gui.OpenURL(SF.HelperURL)
 	end
 
 	function TOOL.BuildCPanel(panel)

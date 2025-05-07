@@ -99,12 +99,12 @@ function PANEL:Init() --That's init of VGUI like other PANEL:Methods(), separate
 	html:DockPadding(0, 0, 0, 0)
 	html:SetKeyboardInputEnabled(true)
 	html:SetMouseInputEnabled(true)
-	html:OpenURL(SF.Editor.HelperURL:GetString())
+	html:OpenURL(SF.HelperURL)
 	htmlSetup(nil, self)
 end
 
 function PANEL:RefreshHelper()
-	self.html:OpenURL(SF.Editor.HelperURL:GetString())
+	self.html:OpenURL(SF.HelperURL)
 end
 
 function PANEL:Undock()

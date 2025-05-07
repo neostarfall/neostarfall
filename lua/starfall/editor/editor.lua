@@ -33,14 +33,7 @@ for _, name in pairs(l) do
 	end
 end
 
-local DEFAULT_DOC_URL = "https://neostarfall.pages.dev?nofetch=true"
-
-SF.Editor.HelperURL = SF.CreateConVar(
-	"editor_helperurl",
-	DEFAULT_DOC_URL,
-	{ FCVAR_ARCHIVE, FCVAR_REPLICATED },
-	"URL for website used by SF Helper, change to allow custom documentation."
-)
+SF.HelperURL = "https://neostarfall.pages.dev?nofetch=true"
 
 ------------------
 -- Editor
