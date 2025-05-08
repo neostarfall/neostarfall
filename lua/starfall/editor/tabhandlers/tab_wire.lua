@@ -3212,7 +3212,20 @@ function PANEL:getWordEnd(caret, getword)
 	return { caret[1], #line + 1 }
 end
 
--- Autocomplete by Vurv
+--[[
+	Autocomplete by Vurv
+		Functions are stored on the Panel prefixed by PANEL:AC_
+
+		Other than that the code isn't too fantastic because
+			1. the wire editor is garbage
+			2. sfex's code is garbage
+			3. not worth refactoring the whole thing, this is isolated enough to work
+
+	Other attribution:
+		- March for the original ui code reused from E2's new autocomplete with permission
+		- Vurv for my original work on E2's new completion
+		- Divran for the original very barebones autocomplete code
+]]
 
 local nsf_autocomplete_maxresults = CreateClientConVar("nsf_autocomplete_maxresults", 10, true, false)
 
