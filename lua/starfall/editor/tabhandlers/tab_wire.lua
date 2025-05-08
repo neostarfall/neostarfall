@@ -3378,12 +3378,14 @@ function PANEL:AC_populateDirectiveResults(typing)
 		---@cast dirName string
 
 		if dirName:StartsWith(typing) then
+			local fullReplacement = "--@" .. dirName .. " "
+
 			self.AC_suggestionsList[#self.AC_suggestionsList + 1] = {
 				name = dirName,
 				desc = dirData.description or ("The directive " .. dirName),
 
 				replacement = function(self, editor)
-					return dirName, #dirName
+					return fullReplacement, #fullReplacement
 				end,
 
 				color = AC_COLOR_DIRECTIVE,
@@ -3549,8 +3551,6 @@ function PANEL:AC_populateHookResults(typing)
 	end
 
 	typing = typing:sub(10) -- remove "hook.add("
-
-	print("populating hook results", typing)
 
 	for hookName, hookData in pairs(SF.Docs.Hooks) do
 		---@cast hookName string
