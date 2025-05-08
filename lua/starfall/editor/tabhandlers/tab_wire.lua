@@ -3230,7 +3230,7 @@ function PANEL:AC_getCurrentWord()
 	local lineBeforeCaret = lineContent:sub(1, col - 1)
 
 	-- Can consider these as cols directly since they're 1-indexed as well
-	local startCol, endCol, matchedWord = string.find(lineBeforeCaret, "(%S+)")
+	local startCol, endCol, matchedWord = string.find(lineBeforeCaret, "(%S+)$")
 
 	if not startCol then
 		return
