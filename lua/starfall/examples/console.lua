@@ -36,10 +36,10 @@ local function cout(str, color)
 		if str[I] == "\n" then
 			if ConsoleRow >= 17 then
 				scrollScreen(1)
-				ConsolePos = ConsolePos - ConsolePos%60
+				ConsolePos = ConsolePos - ConsolePos % 60
 			else
 				local lastpos = ConsolePos - 2
-				ConsolePos = lastpos + 60 - lastpos%60
+				ConsolePos = lastpos + 60 - lastpos % 60
 				ConsoleRow = ConsoleRow + 1
 			end
 		else
@@ -47,7 +47,7 @@ local function cout(str, color)
 			Console[ConsolePos + 1] = color or 999
 			ConsolePos = ConsolePos + 2
 
-			local newline = ConsolePos%60 == 0
+			local newline = ConsolePos % 60 == 0
 
 			if newline then
 				if ConsoleRow >= 17 then
@@ -68,7 +68,7 @@ local function cin(cb)
 end
 local function getcin()
 	local chars = {}
-	for I = cinstart, ConsolePos-2, 2 do
+	for I = cinstart, ConsolePos - 2, 2 do
 		chars[#chars + 1] = string.char(Console[I])
 	end
 	return table.concat(chars)
@@ -78,7 +78,7 @@ key_funcs = {
 	[127] = function()
 		ConsolePos = math.max(ConsolePos - 2, cinstart)
 
-		if ConsolePos%60 == 0 then
+		if ConsolePos % 60 == 0 then
 			ConsoleRow = ConsoleRow - 1
 		end
 
@@ -93,7 +93,7 @@ key_funcs = {
 			cincb(str)
 			cincb = nil
 		end
-	end
+	end,
 }
 key_funcs[10] = key_funcs[13]
 key_funcs[142] = key_funcs[13]

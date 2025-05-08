@@ -4,7 +4,7 @@
 
 if SERVER then
 	hook.add("PlayerSay", "Hey", function(ply, txt)
-		if ply==owner() and txt:sub(1, 6)=="!song " then
+		if ply == owner() and txt:sub(1, 6) == "!song " then
 			net.start("playSong")
 			net.writeString(txt:sub(7))
 			net.send()
@@ -14,7 +14,9 @@ if SERVER then
 	end)
 else
 	local function loadSong(songURL)
-		if song then song:stop() end
+		if song then
+			song:stop()
+		end
 
 		bass.loadURL(songURL, "3d noblock", function(snd, err, errtxt)
 			if snd then
@@ -47,7 +49,7 @@ else
 		loadSong(url)
 	end)
 
-	setupPermissionRequest({"bass.loadURL"}, "URL sounds from external sites", true)
+	setupPermissionRequest({ "bass.loadURL" }, "URL sounds from external sites", true)
 
 	hook.add("permissionrequest", "permission", function()
 		if url and hasPermission("bass.loadURL", url) then

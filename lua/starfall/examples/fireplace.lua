@@ -1,7 +1,9 @@
 --@name Fireplace
 --@author INP - Radon
 
-if SERVER then return end
+if SERVER then
+	return
+end
 
 -- Credits to Natty for original fireplace idea as an example
 -- Credits to funkake for working out the kinks
@@ -60,25 +62,25 @@ local t2 = timer.systime()
 
 render.createRenderTarget("fireplace")
 
-hook.add("render", "", function ()
- render.setRenderTargetTexture("fireplace")
- render.drawTexturedRect(0,0,512,512)
+hook.add("render", "", function()
+	render.setRenderTargetTexture("fireplace")
+	render.drawTexturedRect(0, 0, 512, 512)
 
- render.selectRenderTarget("fireplace")
+	render.selectRenderTarget("fireplace")
 	if timer.systime() > t then
 		for i = 1, math.random(4, 10) do
-
 			-- Make a new particle using our constructor.
-			local nP = Particle:new(math.random(-512, 512),
+			local nP = Particle:new(
+				math.random(-512, 512),
 				math.random(-64, 32),
 				math.random(40, 80),
 				math.random() * 5 - 2,
 				-math.random() * 3,
-				Color(math.random(200, 230), math.random(100, 130), 0, math.random(120, 255)))
+				Color(math.random(200, 230), math.random(100, 130), 0, math.random(120, 255))
+			)
 
 			-- Add our newly made particle to a table of game particles
 			table.insert(game.particles, nP)
-
 		end
 
 		-- Increase our timer for our next spawn time.
@@ -86,7 +88,6 @@ hook.add("render", "", function ()
 	end
 
 	if timer.systime() > t2 then
-
 		game.relVel = chip():worldToLocal(chip():getPos() + chip():getVelocity())
 
 		-- Clear the board before rendering anything new
@@ -94,7 +95,10 @@ hook.add("render", "", function ()
 
 		for k, v in pairs(game.particles) do
 			-- Now iterate over all our particles and check if they should be removed.
-			if v.color.a <= 0 then table.remove(game.particles, k) continue end
+			if v.color.a <= 0 then
+				table.remove(game.particles, k)
+				goto cont
+			end
 
 			-- This is responsible for moving our flames if we shake our screen.
 			-- Moves sprites based upon their scale.
@@ -104,10 +108,11 @@ hook.add("render", "", function ()
 			-- We only need to think.
 			-- Our function draws before thinking, so we're fine.
 			v:think()
+			::cont::
 		end
 
 		-- Increase our timer for our next draw time.
 		t2 = timer.systime() + (1 / 120)
 	end
- render.selectRenderTarget()
+	render.selectRenderTarget()
 end)

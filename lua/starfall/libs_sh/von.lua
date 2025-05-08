@@ -61,14 +61,13 @@
 		-	Fixed addition of extra entity types. I messed up really badly.
 --]]
 
-
 local _deserialize, _serialize, _d_meta, _s_meta, d_findVariable, s_anyVariable
-local sub, gsub, find, insert, concat, error, tonumber, tostring, type, next = string.sub, string.gsub, string.find, table.insert, table.concat, error, tonumber, tostring, type, next
+local sub, gsub, find, insert, concat, error, tonumber, tostring, type, next =
+	string.sub, string.gsub, string.find, table.insert, table.concat, error, tonumber, tostring, type, next
 local g_instance
 
 --[[    This section contains localized functions which (de)serialize
 		variables according to the types found.                          ]]
-
 
 --	This is kept away from the table for speed.
 function d_findVariable(s, i, len, lastType, jobstate)
@@ -116,7 +115,7 @@ function d_findVariable(s, i, len, lastType, jobstate)
 			typeRead = true
 
 		--	" means the start of a string prior to version 1.2.0.
-		elseif c == "\"" then
+		elseif c == '"' then
 			lastType = "oldstring"
 			typeRead = true
 
@@ -125,14 +124,13 @@ function d_findVariable(s, i, len, lastType, jobstate)
 			lastType = "table"
 			typeRead = true
 
-
---[[    Garry's Mod types go here    ]]
+		--[[    Garry's Mod types go here    ]]
 
 		--	e means an entity ID will follow.
 		elseif c == "e" then
 			lastType = "Entity"
 			typeRead = true
---[[
+		--[[
 		--	c means a vehicle ID will follow.
 		elseif c == "c" then
 			lastType = "Vehicle"
@@ -164,8 +162,7 @@ function d_findVariable(s, i, len, lastType, jobstate)
 			lastType = "Angle"
 			typeRead = true
 
---[[    Garry's Mod types end here    ]]
-
+		--[[    Garry's Mod types end here    ]]
 
 		--	If no type has been found, attempt to deserialize the last type read.
 		elseif lastType then
@@ -185,9 +182,10 @@ end
 --	This is kept away from the table for speed.
 --	Yeah, ton of parameters.
 function s_anyVariable(data, lastType, isNumeric, isKey, isLast, jobstate)
-
 	local unwrap = g_instance.UnwrapObject(data)
-	if unwrap then data = unwrap end
+	if unwrap then
+		data = unwrap
+	end
 
 	local tp = type(data)
 
@@ -205,7 +203,7 @@ function s_anyVariable(data, lastType, isNumeric, isKey, isLast, jobstate)
 			--	The second argument, which is true now, means that the data type was just changed.
 			return _serialize[lastType](data, true, isNumeric, isKey, isLast, false, jobstate), lastType
 		else
-			SF.Throw("vON: No serializer defined for type \"" .. lastType .. "\"!", 3)
+			SF.Throw('vON: No serializer defined for type "' .. lastType .. '"!', 3)
 		end
 	end
 
@@ -213,16 +211,12 @@ function s_anyVariable(data, lastType, isNumeric, isKey, isLast, jobstate)
 	return _serialize[lastType](data, false, isNumeric, isKey, isLast, false, jobstate), lastType
 end
 
-
-
 --[[    This section contains the tables with the functions necessary
 		for decoding basic Lua data types.                               ]]
 
-
-
 _deserialize = {
---	Well, tables are very loose...
---	The first table doesn't have to begin and end with { and }.
+	--	Well, tables are very loose...
+	--	The first table doesn't have to begin and end with { and }.
 	["table"] = function(s, i, len, unnecessaryEnd, jobstate)
 		local ret, numeric, i, c, lastType, val, ind, expectValue, key = {}, true, i or 1, nil, nil, nil, 1
 		--	Locals, locals, locals, locals, locals, locals, locals, locals and locals.
@@ -235,14 +229,20 @@ _deserialize = {
 
 				if id then
 					if jobstate[1][id] and not jobstate[2] then
-						SF.Throw("vON: There already is a table of reference #" .. id .. "! Missing an option maybe?", 3)
+						SF.Throw(
+							"vON: There already is a table of reference #" .. id .. "! Missing an option maybe?",
+							3
+						)
 					end
 
 					jobstate[1][id] = ret
 
 					i = e + 1
 				else
-					SF.Throw("vON: Malformed table! Reference ID starting at char #" .. i .. " doesn't contain a number!", 3)
+					SF.Throw(
+						"vON: Malformed table! Reference ID starting at char #" .. i .. " doesn't contain a number!",
+						3
+					)
 				end
 			else
 				SF.Throw("vON: Malformed table! Cannot find end of reference ID start at char #" .. i .. "!", 3)
@@ -274,12 +274,11 @@ _deserialize = {
 			--	If it's the component separator, switch to key:value pairs.
 			elseif c == "~" then
 				numeric = false
-
 			elseif c == ";" then
 				--	Lol, nothing!
 				--	Remenant from numbers, for faster parsing.
 
-			--	OK, now, if it's on the numeric component, simply add everything encountered.
+				--	OK, now, if it's on the numeric component, simply add everything encountered.
 			elseif numeric then
 				--	Find a variable and it's value
 				val, i, lastType = d_findVariable(s, i, len, lastType, jobstate)
@@ -322,7 +321,7 @@ _deserialize = {
 		return nil, i
 	end,
 
---	Just a number which points to a table.
+	--	Just a number which points to a table.
 	["table_reference"] = function(s, i, len, unnecessaryEnd, jobstate)
 		local i, a = i or 1
 		--	Locals, locals, locals, locals
@@ -333,7 +332,8 @@ _deserialize = {
 			local n = tonumber(sub(s, i, a - 1))
 
 			if n then
-				return jobstate[1][n] or SF.Throw("vON: Table reference does not point to a (yet) known table!", 3), a - 1
+				return jobstate[1][n] or SF.Throw("vON: Table reference does not point to a (yet) known table!", 3),
+					a - 1
 			else
 				SF.Throw("vON: Table reference definition does not contain a valid number!", 3)
 			end
@@ -344,10 +344,9 @@ _deserialize = {
 		SF.Throw("vON: Number definition started... Found no end.", 3)
 	end,
 
-
---	Numbers are weakly defined.
---	The declaration is not very explicit. It'll do it's best to parse the number.
---	Has various endings: \n, }, ~, : and ;, some of which will force the table deserializer to go one char backwards.
+	--	Numbers are weakly defined.
+	--	The declaration is not very explicit. It'll do it's best to parse the number.
+	--	Has various endings: \n, }, ~, : and ;, some of which will force the table deserializer to go one char backwards.
 	["number"] = function(s, i, len, unnecessaryEnd, jobstate)
 		local i, a = i or 1
 		--	Locals, locals, locals, locals
@@ -355,15 +354,15 @@ _deserialize = {
 		a = find(s, "[;:}~]", i)
 
 		if a then
-			return tonumber(sub(s, i, a - 1)) or SF.Throw("vON: Number definition does not contain a valid number!", 3), a - 1
+			return tonumber(sub(s, i, a - 1)) or SF.Throw("vON: Number definition does not contain a valid number!", 3),
+				a - 1
 		end
 
 		SF.Throw("vON: Number definition started... Found no end.", 3)
 	end,
 
-
---	A boolean is A SINGLE CHARACTER, either 1 for true or 0 for false.
---	Any other attempt at boolean declaration will result in a failure.
+	--	A boolean is A SINGLE CHARACTER, either 1 for true or 0 for false.
+	--	Any other attempt at boolean declaration will result in a failure.
 	["boolean"] = function(s, i, len, unnecessaryEnd, jobstate)
 		local c = sub(s, i, i)
 		--	Only one character is needed.
@@ -381,18 +380,17 @@ _deserialize = {
 		SF.Throw("vON: Invalid value on boolean type... Char#" .. i .. ": " .. c, 3)
 	end,
 
-
---	Strings prior to 1.2.0
+	--	Strings prior to 1.2.0
 	["oldstring"] = function(s, i, len, unnecessaryEnd, jobstate)
 		local res, i, a = "", i or 1
 		--	Locals, locals, locals, locals
 
 		while true do
-			a = find(s, "\"", i, true)
+			a = find(s, '"', i, true)
 
 			if a then
 				if sub(s, a - 1, a - 1) == "\\" then
-					res = res .. sub(s, i, a - 2) .. "\""
+					res = res .. sub(s, i, a - 2) .. '"'
 					i = a + 1
 				else
 					return res .. sub(s, i, a - 2), a
@@ -403,17 +401,17 @@ _deserialize = {
 		end
 	end,
 
---	Strings after 1.2.0
+	--	Strings after 1.2.0
 	["string"] = function(s, i, len, unnecessaryEnd, jobstate)
 		local res, i, a = "", i or 1
 		--	Locals, locals, locals, locals
 
 		while true do
-			a = find(s, "\"", i, true)
+			a = find(s, '"', i, true)
 
 			if a then
 				if sub(s, a - 1, a - 1) == "\\" then
-					res = res .. sub(s, i, a - 2) .. "\""
+					res = res .. sub(s, i, a - 2) .. '"'
 					i = a + 1
 				else
 					return res .. sub(s, i, a - 1), a
@@ -425,27 +423,26 @@ _deserialize = {
 	end,
 }
 
-
-
 _serialize = {
---	Uh. Nothing to comment.
---	Ton of parameters.
---	Makes stuff faster than simply passing it around in locals.
---	table.concat works better than normal concatenations WITH LARGE-ISH STRINGS ONLY.
+	--	Uh. Nothing to comment.
+	--	Ton of parameters.
+	--	Makes stuff faster than simply passing it around in locals.
+	--	table.concat works better than normal concatenations WITH LARGE-ISH STRINGS ONLY.
 	["table"] = function(data, mustInitiate, isNumeric, isKey, isLast, first, jobstate)
 		--print(string.format("data: %s; mustInitiate: %s; isKey: %s; isLast: %s; nice: %s; indent: %s; first: %s", tostring(data), tostring(mustInitiate), tostring(isKey), tostring(isLast), tostring(nice), tostring(indent), tostring(first)))
 
-		local result, keyvals, len, keyvalsLen, keyvalsProgress, val, lastType, newIndent, indentString = {}, {}, #data, 0, 0
+		local result, keyvals, len, keyvalsLen, keyvalsProgress, val, lastType, newIndent, indentString =
+			{}, {}, #data, 0, 0
 		--	Locals, locals, locals, locals, locals, locals, locals, locals, locals and locals.
 
 		--	First thing to be done is separate the numeric and key:value components of the given table in two tables.
 		--	pairs(data) is slower than next, data as far as my tests tell me.
 		for k, v in next, data do
 			--	Skip the numeric keyz.
-			if type(k) ~= "number" or k < 1 or k > len or (k % 1 ~= 0) then	--	k % 1 == 0 is, as proven by personal benchmarks,
-				keyvals[#keyvals + 1] = k									--	the quickest way to check if a number is an integer.
-			end																--	k % 1 != 0 is the fastest way to check if a number
-		end																	--	is NOT an integer. > is proven slower.
+			if type(k) ~= "number" or k < 1 or k > len or (k % 1 ~= 0) then --	k % 1 == 0 is, as proven by personal benchmarks,
+				keyvals[#keyvals + 1] = k --	the quickest way to check if a number is an integer.
+			end --	k % 1 != 0 is the fastest way to check if a number
+		end --	is NOT an integer. > is proven slower.
 
 		keyvalsLen = #keyvals
 
@@ -485,9 +482,16 @@ _serialize = {
 
 				val, lastType = s_anyVariable(keyvals[_i], lastType, false, true, false, jobstate)
 
-				result[#result + 1] = val..":"
+				result[#result + 1] = val .. ":"
 
-				val, lastType = s_anyVariable(data[keyvals[_i]], lastType, false, false, keyvalsProgress == keyvalsLen and not first, jobstate)
+				val, lastType = s_anyVariable(
+					data[keyvals[_i]],
+					lastType,
+					false,
+					false,
+					keyvalsProgress == keyvalsLen and not first,
+					jobstate
+				)
 
 				result[#result + 1] = val
 			end
@@ -501,58 +505,55 @@ _serialize = {
 		return concat(result)
 	end,
 
---	Number which points to table.
+	--	Number which points to table.
 	["table_reference"] = function(data, mustInitiate, isNumeric, isKey, isLast, first, jobstate)
 		data = jobstate[1][data]
 
 		--	If a number hasn't been written before, add the type prefix.
 		if mustInitiate then
 			if isKey or isLast then
-				return "$"..data
+				return "$" .. data
 			else
-				return "$"..data..";"
+				return "$" .. data .. ";"
 			end
 		end
 
 		if isKey or isLast then
 			return data
 		else
-			return data..";"
+			return data .. ";"
 		end
 	end,
 
-
---	Normal concatenations is a lot faster with small strings than table.concat
---	Also, not so branched-ish.
+	--	Normal concatenations is a lot faster with small strings than table.concat
+	--	Also, not so branched-ish.
 	["number"] = function(data, mustInitiate, isNumeric, isKey, isLast, first, jobstate)
 		--	If a number hasn't been written before, add the type prefix.
 		if mustInitiate then
 			if isKey or isLast then
-				return "n"..data
+				return "n" .. data
 			else
-				return "n"..data..";"
+				return "n" .. data .. ";"
 			end
 		end
 
 		if isKey or isLast then
 			return data
 		else
-			return data..";"
+			return data .. ";"
 		end
 	end,
 
-
---	I hope gsub is fast enough.
+	--	I hope gsub is fast enough.
 	["string"] = function(data, mustInitiate, isNumeric, isKey, isLast, first, jobstate)
-		if sub(data, #data, #data) == "\\" then	--	Hah, old strings fix this best.
-			return "\"" .. gsub(data, "\"", "\\\"") .. "v\""
+		if sub(data, #data, #data) == "\\" then --	Hah, old strings fix this best.
+			return '"' .. gsub(data, '"', '\\"') .. 'v"'
 		end
 
-		return "'" .. gsub(data, "\"", "\\\"") .. "\""
+		return "'" .. gsub(data, '"', '\\"') .. '"'
 	end,
 
-
---	Fastest.
+	--	Fastest.
 	["boolean"] = function(data, mustInitiate, isNumeric, isKey, isLast, first, jobstate)
 		--	Prefix if we must.
 		if mustInitiate then
@@ -570,27 +571,20 @@ _serialize = {
 		end
 	end,
 
-
---	Fastest.
+	--	Fastest.
 	["nil"] = function(data, mustInitiate, isNumeric, isKey, isLast, first, jobstate)
 		return "@"
 	end,
 }
 
-
-
 --[[    This section handles additions necessary for Garry's Mod.    ]]
 
-
-
-if gmod then	--	Luckily, a specific table named after the game is present in Garry's Mod.
+if gmod then --	Luckily, a specific table named after the game is present in Garry's Mod.
 	local Entity = Entity
 
-
-
 	local extra_deserialize = {
---	Entities are stored simply by the ID. They're meant to be transfered, not stored anyway.
---	Exactly like a number definition, except it begins with "e".
+		--	Entities are stored simply by the ID. They're meant to be transfered, not stored anyway.
+		--	Exactly like a number definition, except it begins with "e".
 		["Entity"] = function(s, i, len, unnecessaryEnd, jobstate)
 			local i, a = i or 1
 			--	Locals, locals, locals, locals
@@ -604,8 +598,7 @@ if gmod then	--	Luckily, a specific table named after the game is present in Gar
 			SF.Throw("vON: Entity ID definition started... Found no end.", 3)
 		end,
 
-
---	A pair of 3 numbers separated by a comma (,).
+		--	A pair of 3 numbers separated by a comma (,).
 		["Vector"] = function(s, i, len, unnecessaryEnd, jobstate)
 			local i, a, x, y, z = i or 1
 			--	Locals, locals, locals, locals
@@ -637,8 +630,7 @@ if gmod then	--	Luckily, a specific table named after the game is present in Gar
 			SF.Throw("vON: Vector definition started... Found no end.", 3)
 		end,
 
-
---	A pair of 3 numbers separated by a comma (,).
+		--	A pair of 3 numbers separated by a comma (,).
 		["Angle"] = function(s, i, len, unnecessaryEnd, jobstate)
 			local i, a, p, y, r = i or 1
 			--	Locals, locals, locals, locals
@@ -672,58 +664,56 @@ if gmod then	--	Luckily, a specific table named after the game is present in Gar
 	}
 
 	local extra_serialize = {
---	Same as numbers, except they start with "e" instead of "n".
+		--	Same as numbers, except they start with "e" instead of "n".
 		["Entity"] = function(data, mustInitiate, isNumeric, isKey, isLast, first, jobstate)
 			data = data:EntIndex()
 
 			if mustInitiate then
 				if isKey or isLast then
-					return "e"..data
+					return "e" .. data
 				else
-					return "e"..data..";"
+					return "e" .. data .. ";"
 				end
 			end
 
 			if isKey or isLast then
 				return data
 			else
-				return data..";"
+				return data .. ";"
 			end
 		end,
 
-
---	3 numbers separated by a comma.
+		--	3 numbers separated by a comma.
 		["Vector"] = function(data, mustInitiate, isNumeric, isKey, isLast, first, jobstate)
 			if mustInitiate then
 				if isKey or isLast then
-					return "v"..data.x..","..data.y..","..data.z
+					return "v" .. data.x .. "," .. data.y .. "," .. data.z
 				else
-					return "v"..data.x..","..data.y..","..data.z..";"
+					return "v" .. data.x .. "," .. data.y .. "," .. data.z .. ";"
 				end
 			end
 
 			if isKey or isLast then
-				return data.x..","..data.y..","..data.z
+				return data.x .. "," .. data.y .. "," .. data.z
 			else
-				return data.x..","..data.y..","..data.z..";"
+				return data.x .. "," .. data.y .. "," .. data.z .. ";"
 			end
 		end,
 
-
---	3 numbers separated by a comma.
+		--	3 numbers separated by a comma.
 		["Angle"] = function(data, mustInitiate, isNumeric, isKey, isLast, first, jobstate)
 			if mustInitiate then
 				if isKey or isLast then
-					return "a"..data.p..","..data.y..","..data.r
+					return "a" .. data.p .. "," .. data.y .. "," .. data.r
 				else
-					return "a"..data.p..","..data.y..","..data.r..";"
+					return "a" .. data.p .. "," .. data.y .. "," .. data.r .. ";"
 				end
 			end
 
 			if isKey or isLast then
-				return data.p..","..data.y..","..data.r
+				return data.p .. "," .. data.y .. "," .. data.r
 			else
-				return data.p..","..data.y..","..data.r..";"
+				return data.p .. "," .. data.y .. "," .. data.r .. ";"
 			end
 		end,
 	}
@@ -743,11 +733,7 @@ if gmod then	--	Luckily, a specific table named after the game is present in Gar
 	end
 end
 
-
-
 --[[    This section exposes the functions of the library.    ]]
-
-
 
 local function checkTableForRecursion(tab, checked, assoc)
 	local id = checked.ID
@@ -770,8 +756,6 @@ local function checkTableForRecursion(tab, checked, assoc)
 	end
 end
 
-
-
 local _s_table = _serialize.table
 local _d_table = _deserialize.table
 
@@ -793,36 +777,34 @@ end
 
 local checkluatype = SF.CheckLuaType
 
-
 --- vON Library
 -- @name von
 -- @class library
 -- @libtbl von_library
 SF.RegisterLibrary("von")
 
-
 return function(instance)
+	local von_library = instance.Libraries.von
 
-local von_library = instance.Libraries.von
+	--- Deserialize a string
+	-- @param string str String to deserialize
+	-- @return table Table
+	function von_library.deserialize(str)
+		checkluatype(str, TYPE_STRING)
+		g_instance = instance
+		return deserialize(str)
+	end
 
---- Deserialize a string
--- @param string str String to deserialize
--- @return table Table
-function von_library.deserialize(str)
-	checkluatype(str, TYPE_STRING)
-	g_instance = instance
-	return deserialize(str)
-end
-
---- Serialize a table
--- @param table tbl Table to serialize
--- @param boolean? checkRecursive Enable checking for table recursion (default: false)
--- @return string String encoded from the table
-function von_library.serialize(tbl, checkRecursive)
-	checkluatype(tbl, TYPE_TABLE)
-	if checkRecursive~=nil then checkluatype(checkRecursive, TYPE_BOOL) end
-	g_instance = instance
-	return serialize(tbl, checkRecursive)
-end
-
+	--- Serialize a table
+	-- @param table tbl Table to serialize
+	-- @param boolean? checkRecursive Enable checking for table recursion (default: false)
+	-- @return string String encoded from the table
+	function von_library.serialize(tbl, checkRecursive)
+		checkluatype(tbl, TYPE_TABLE)
+		if checkRecursive ~= nil then
+			checkluatype(checkRecursive, TYPE_BOOL)
+		end
+		g_instance = instance
+		return serialize(tbl, checkRecursive)
+	end
 end

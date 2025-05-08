@@ -1,6 +1,6 @@
-AddCSLuaFile('cl_init.lua')
-AddCSLuaFile('shared.lua')
-include('shared.lua')
+AddCSLuaFile("cl_init.lua")
+AddCSLuaFile("shared.lua")
+include("shared.lua")
 
 util.AddNetworkString("starfall_hud_set_enabled")
 
@@ -17,7 +17,7 @@ function ENT:Initialize()
 	self:SetUseType(SIMPLE_USE)
 
 	self.enabled = {}
-	self:AddEFlags( EFL_FORCE_CHECK_TRANSMIT )
+	self:AddEFlags(EFL_FORCE_CHECK_TRANSMIT)
 end
 
 function ENT:UpdateTransmitState()
@@ -25,7 +25,10 @@ function ENT:UpdateTransmitState()
 end
 
 function ENT:Use(ply)
-	if not IsValid(self.link) then ply:ChatPrint("This hud isn't linked to a chip!") return end
+	if not IsValid(self.link) then
+		ply:ChatPrint("This hud isn't linked to a chip!")
+		return
+	end
 	local enabled = not self.enabled[ply]
 	self.enabled[ply] = enabled or nil
 	SF.EnableHud(ply, self.link, self, enabled)
@@ -33,7 +36,9 @@ end
 
 function ENT:LinkVehicle(ent)
 	if ent then
-		if not vehiclelinks[ent] then vehiclelinks[ent] = {} end
+		if not vehiclelinks[ent] then
+			vehiclelinks[ent] = {}
+		end
 		vehiclelinks[ent][self] = true
 	else
 		for k, huds in pairs(vehiclelinks) do
@@ -57,11 +62,17 @@ local function vehicleEnableHud(ply, vehicle, enabled)
 	end
 end
 
-hook.Add("PlayerEnteredVehicle", "Starfall_HUD", function(ply, vehicle) vehicleEnableHud(ply, vehicle, true) end)
-hook.Add("PlayerLeaveVehicle", "Starfall_HUD", function(ply, vehicle) vehicleEnableHud(ply, vehicle, false) end)
+hook.Add("PlayerEnteredVehicle", "Starfall_HUD", function(ply, vehicle)
+	vehicleEnableHud(ply, vehicle, true)
+end)
+hook.Add("PlayerLeaveVehicle", "Starfall_HUD", function(ply, vehicle)
+	vehicleEnableHud(ply, vehicle, false)
+end)
 
 function ENT:PreEntityCopy()
-	if self.EntityMods then self.EntityMods.SFLink = nil end
+	if self.EntityMods then
+		self.EntityMods.SFLink = nil
+	end
 	local info = {}
 	if IsValid(self.link) then
 		info.link = self.link:EntIndex()

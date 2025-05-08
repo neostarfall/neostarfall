@@ -4,22 +4,23 @@
 
 local holo
 if SERVER then
-
-	holo = holograms.create(chip():getPos()+Vector(0,0,50), chip():getAngles(), "models/Combine_Helicopter/helicopter_bomb01.mdl")
+	holo = holograms.create(
+		chip():getPos() + Vector(0, 0, 50),
+		chip():getAngles(),
+		"models/Combine_Helicopter/helicopter_bomb01.mdl"
+	)
 	holo:setScale(Vector(0.1, 0.1, 0.1))
 	holo:setParent(chip())
 
-	hook.add("net","",function(name, len, pl)
+	hook.add("net", "", function(name, len, pl)
 		net.start("")
 		net.writeEntity(holo)
 		net.send(pl)
 	end)
-
 else
-
 	local sphere
 	local mat = material.create("VertexLitGeneric")
-	mat:setInt("$flags",138414080)
+	mat:setInt("$flags", 138414080)
 	mat:setTexture("$basetexture", "hunter/myplastic")
 	mat:setTexture("$bumpmap", "hunter/myplastic_normal")
 	mat:setTexture("$envmap", "env_cubemap")
@@ -41,17 +42,20 @@ else
 		if holo and sphere then
 			holo:setMesh(sphere)
 			holo:setMeshMaterial(mat)
-			holo:setRenderBounds(Vector(-200),Vector(200))
+			holo:setRenderBounds(Vector(-200), Vector(200))
 		end
 	end
 
-	hook.add("net","",function(name, len, pl)
+	hook.add("net", "", function(name, len, pl)
 		holo = net.readEntity():toHologram()
 		init()
 	end)
 
-	http.get("https://raw.githubusercontent.com/neostarfall/neostarfall/master/lua/starfall/examples/resources/sphere.obj",function(data)
-		sphere = mesh.createFromObj(data).Sphere
-		init()
-	end)
+	http.get(
+		"https://raw.githubusercontent.com/neostarfall/neostarfall/master/lua/starfall/examples/resources/sphere.obj",
+		function(data)
+			sphere = mesh.createFromObj(data).Sphere
+			init()
+		end
+	)
 end

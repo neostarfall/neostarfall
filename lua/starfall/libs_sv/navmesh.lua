@@ -4,15 +4,50 @@ local registerprivilege = SF.Permissions.registerPrivilege
 
 -- Register privileges
 -- 3 = no one, 2 = anyone, 1 = admin
-registerprivilege("navmesh.generate", "Begin generation", "Allows the user to generate a navmesh for the map. This process is highly resource intensive and not wise to use during normal gameplay", { usergroups = { default = 3 } })
-registerprivilege("navmesh.reset", "Reset navmesh", "Allows the user to reset the map navmesh. You shouldn't enable this.", { usergroups = { default = 3 } })
-registerprivilege("navmesh.load", "Load navmesh", "Allows the user to load and discard changes on the current map navmesh. You shouldn't enable this.", { usergroups = { default = 3 } })
-registerprivilege("navmesh.save", "Reset navmesh", "Allows the user to save the map navmesh. You shouldn't enable this.", { usergroups = { default = 3 } })
+registerprivilege(
+	"navmesh.generate",
+	"Begin generation",
+	"Allows the user to generate a navmesh for the map. This process is highly resource intensive and not wise to use during normal gameplay",
+	{ usergroups = { default = 3 } }
+)
+registerprivilege(
+	"navmesh.reset",
+	"Reset navmesh",
+	"Allows the user to reset the map navmesh. You shouldn't enable this.",
+	{ usergroups = { default = 3 } }
+)
+registerprivilege(
+	"navmesh.load",
+	"Load navmesh",
+	"Allows the user to load and discard changes on the current map navmesh. You shouldn't enable this.",
+	{ usergroups = { default = 3 } }
+)
+registerprivilege(
+	"navmesh.save",
+	"Reset navmesh",
+	"Allows the user to save the map navmesh. You shouldn't enable this.",
+	{ usergroups = { default = 3 } }
+)
 
-registerprivilege("navmesh.modify", "Modify navmesh", "Allows the user to modify the map navmesh before generation", { usergroups = { default = 3 } })
+registerprivilege(
+	"navmesh.modify",
+	"Modify navmesh",
+	"Allows the user to modify the map navmesh before generation",
+	{ usergroups = { default = 3 } }
+)
 
-registerprivilege("navarea.create", "Create NavArea", "Allows the user to create a CNavArea", { usergroups = { default = 2 } })
-registerprivilege("navarea.openlist", "Modify NavArea Openlist", "Allows the user to modify the global navarea openlist", { usergroups = { default = 1 } })
+registerprivilege(
+	"navarea.create",
+	"Create NavArea",
+	"Allows the user to create a CNavArea",
+	{ usergroups = { default = 2 } }
+)
+registerprivilege(
+	"navarea.openlist",
+	"Modify NavArea Openlist",
+	"Allows the user to modify the global navarea openlist",
+	{ usergroups = { default = 1 } }
+)
 
 --- Library for navmesh navigation with the NavArea type
 -- @name navmesh
@@ -28,21 +63,30 @@ SF.RegisterLibrary("navmesh")
 SF.RegisterType("NavArea", true, false, nil, "LockedNavArea")
 SF.RegisterType("LockedNavArea", true, false) -- NavArea that can't be modified.
 
-local entList = SF.EntManager("navareas", "navareas", 40, "The number of CNavAreas allowed to spawn via neostarfall", 1, true)
+local entList =
+	SF.EntManager("navareas", "navareas", 40, "The number of CNavAreas allowed to spawn via neostarfall", 1, true)
 
 return function(instance)
 	local checkpermission = instance.player ~= SF.Superuser and SF.Permissions.check or function() end
 
 	local navmesh_library = instance.Libraries.navmesh
-	local navarea_methods, navarea_meta, navwrap, navunwrap = instance.Types.NavArea.Methods, instance.Types.NavArea, instance.Types.NavArea.Wrap, instance.Types.NavArea.Unwrap
-	local lnavarea_methods, lnavarea_meta, lnavwrap, lnavunwrap = instance.Types.LockedNavArea.Methods, instance.Types.LockedNavArea, instance.Types.LockedNavArea.Wrap, instance.Types.LockedNavArea.Unwrap
+	local navarea_methods, navarea_meta, navwrap, navunwrap =
+		instance.Types.NavArea.Methods,
+		instance.Types.NavArea,
+		instance.Types.NavArea.Wrap,
+		instance.Types.NavArea.Unwrap
+	local lnavarea_methods, lnavarea_meta, lnavwrap, lnavunwrap =
+		instance.Types.LockedNavArea.Methods,
+		instance.Types.LockedNavArea,
+		instance.Types.LockedNavArea.Wrap,
+		instance.Types.LockedNavArea.Unwrap
 
 	local owrap, ounwrap = instance.WrapObject, instance.UnwrapObject
-	local ents_methods, ent_meta, ewrap, eunwrap = instance.Types.Entity.Methods, instance.Types.Entity, instance.Types.Entity.Wrap, instance.Types.Entity.Unwrap
+	local ents_methods, ent_meta, ewrap, eunwrap =
+		instance.Types.Entity.Methods, instance.Types.Entity, instance.Types.Entity.Wrap, instance.Types.Entity.Unwrap
 	local ang_meta, awrap, aunwrap = instance.Types.Angle, instance.Types.Angle.Wrap, instance.Types.Angle.Unwrap
 	local vec_meta, vwrap, vunwrap = instance.Types.Vector, instance.Types.Vector.Wrap, instance.Types.Vector.Unwrap
 	local cunwrap = instance.Types.Color.Unwrap
-
 
 	local getent
 	local vunwrap1, vunwrap2
@@ -104,7 +148,7 @@ return function(instance)
 	-- @param Vector normal The terrain normal.
 	function navmesh_library.addWalkableSeed(pos, dir)
 		checkpermission(instance, nil, "navmesh.modify")
-		navmesh.AddWalkableSeed( vwrap(pos), vwrap(dir) )
+		navmesh.AddWalkableSeed(vwrap(pos), vwrap(dir))
 	end
 
 	--- Clears all the walkable positions, used before calling navmesh.beginGeneration.
@@ -117,7 +161,7 @@ return function(instance)
 	--- Returns the currently marked NavArea, for use with editing console commands.
 	-- @return NavArea The currently marked NavArea.
 	function navmesh_library.getMarkedArea()
-		return lnavwrap( navmesh.GetMarkedArea() )
+		return lnavwrap(navmesh.GetMarkedArea())
 	end
 
 	--- Returns the classname of the player spawn entity.
@@ -131,7 +175,7 @@ return function(instance)
 	-- @param NavArea area The CNavArea to set as the marked area.
 	function navmesh_library.setMarkedArea(area)
 		checkpermission(instance, nil, "navmesh.modify")
-		navmesh.SetMarkedArea( lnavunwrap(area) )
+		navmesh.SetMarkedArea(lnavunwrap(area))
 	end
 
 	--- Sets the classname of the default spawn point entity, used before generating a new navmesh with navmesh.beginGeneration.
@@ -150,7 +194,7 @@ return function(instance)
 		checkpermission(instance, nil, "navarea.create")
 		entList:checkuse(instance.player, 1)
 
-		local area = navmesh.CreateNavArea( vunwrap1(corner), vunwrap2(opposite_corner) )
+		local area = navmesh.CreateNavArea(vunwrap1(corner), vunwrap2(opposite_corner))
 		if area then
 			entList:register(instance, area)
 			return navwrap(area)
@@ -158,7 +202,7 @@ return function(instance)
 	end
 
 	function navmesh_library.getGroundHeight(pos)
-		local height, normal = navmesh.GetGroundHeight( vunwrap1(pos) )
+		local height, normal = navmesh.GetGroundHeight(vunwrap1(pos))
 		return height, vwrap(normal)
 	end
 
@@ -190,7 +234,7 @@ return function(instance)
 		stepup = math.Clamp(stepup, 0, 50000)
 
 		local out = {}
-		for idx, navarea in ipairs( navmesh.Find( vunwrap1(pos), radius, stepdown, stepup ) ) do
+		for idx, navarea in ipairs(navmesh.Find(vunwrap1(pos), radius, stepdown, stepup)) do
 			out[idx] = lnavwrap(navarea)
 		end
 		return out
@@ -208,7 +252,7 @@ return function(instance)
 	-- @return NavArea The NavArea with given ID.
 	function navmesh_library.getNavAreaByID(id)
 		checkluatype(id, TYPE_NUMBER)
-		return lnavwrap( navmesh.GetNavAreaByID(id) )
+		return lnavwrap(navmesh.GetNavAreaByID(id))
 	end
 
 	--- Returns the NavArea contained in this position that also satisfies the elevation limit.
@@ -217,7 +261,7 @@ return function(instance)
 	-- @return NavArea The NavArea.
 	function navmesh_library.getNavArea(pos, limit)
 		checkluatype(limit, TYPE_NUMBER)
-		return lnavwrap( navmesh.GetNavArea( vunwrap1(pos), limit ) )
+		return lnavwrap(navmesh.GetNavArea(vunwrap1(pos), limit))
 	end
 
 	--- Returns the closest NavArea to given position at the same height, or beneath it.
@@ -229,7 +273,7 @@ return function(instance)
 	-- @param boolean checkGround If checkGround is true then this function will internally call navmesh.getNavArea to check if there is a CNavArea directly below the position, and return it if so, before checking anywhere else. (Default true)
 	-- @return NavArea The closest NavArea found with the given parameters, or a NULL NavArea if one was not found.
 	function navmesh_library.getNearestNavArea(pos, maxDist, checkLOS, checkGround)
-		return lnavwrap( navmesh.GetNearestNavArea( vunwrap1(pos), nil, maxDist, checkLOS, checkGround ) )
+		return lnavwrap(navmesh.GetNearestNavArea(vunwrap1(pos), nil, maxDist, checkLOS, checkGround))
 	end
 
 	--- Returns the position of the edit cursor when nav_edit is set to 1.
@@ -275,7 +319,7 @@ return function(instance)
 	-- @param Vector v The position to check
 	-- @return boolean If the vector is inside the area
 	function lnavarea_methods:contains(v)
-		return lnavunwrap(self):Contains( vunwrap1(v) )
+		return lnavunwrap(self):Contains(vunwrap1(v))
 	end
 
 	--- Returns whether this Nav Area is flat within the tolerance of the nav_coplanar_slope_limit_displacement and nav_coplanar_slope_limit convars.
@@ -291,7 +335,7 @@ return function(instance)
 	-- @param NavArea other The other NavArea to check for connection to.
 	-- @return boolean Whether this NavArea has an outgoing ( one or two way ) connection to given NavArea.
 	function lnavarea_methods:isConnected(other)
-		return lnavunwrap(self):IsConnected( lnavunwrap(other) )
+		return lnavunwrap(self):IsConnected(lnavunwrap(other))
 	end
 
 	--- Returns whether this NavArea has an outgoing ( one or two way ) connection to given NavArea in given direction.
@@ -301,7 +345,7 @@ return function(instance)
 	-- @return boolean
 	function lnavarea_methods:isConnectedAtSide(other, navDirType)
 		checkluatype(navDirType, TYPE_NUMBER)
-		return lnavunwrap(self):IsConnectedAtSide( lnavunwrap(other), navDirType )
+		return lnavunwrap(self):IsConnectedAtSide(lnavunwrap(other), navDirType)
 	end
 
 	--- Returns whether this Nav Area is in the same plane as the given one.
@@ -309,7 +353,7 @@ return function(instance)
 	-- @param NavArea other The other NavArea to check against
 	-- @return boolean Whether we're coplanar or not.
 	function lnavarea_methods:isCoplanar(other)
-		return lnavunwrap(self):IsCoplanar( lnavunwrap(other) )
+		return lnavunwrap(self):IsCoplanar(lnavunwrap(other))
 	end
 
 	--- Returns the NAV_DIR direction that the given vector faces on this NavArea.
@@ -317,7 +361,7 @@ return function(instance)
 	-- @param Vector pos The position to compute direction towards.
 	-- @return number The direction the vector is in relation to this NavArea. See NAV_DIR enums
 	function lnavarea_methods:computeDirection(pos)
-		return lnavunwrap(self):ComputeDirection( vunwrap1(pos) )
+		return lnavunwrap(self):ComputeDirection(vunwrap1(pos))
 	end
 
 	--- Returns the height difference on the Z axis of the two CNavAreas. This is calculated from the center most point on both CNavAreas.
@@ -325,7 +369,7 @@ return function(instance)
 	-- @param NavArea other The nav area to test against.
 	-- @return number
 	function lnavarea_methods:computeGroundHeightChange(other)
-		return lnavunwrap(self):ComputeGroundHeightChange( lnavunwrap(other) )
+		return lnavunwrap(self):ComputeGroundHeightChange(lnavunwrap(other))
 	end
 
 	--- Returns the height difference between the edges of two connected navareas.
@@ -333,7 +377,7 @@ return function(instance)
 	-- @param NavArea other The nav area to test against.
 	-- @return number The height change
 	function lnavarea_methods:computeAdjacentConnectionHeightChange(other)
-		return lnavunwrap(self):ComputeAdjacentConnectionHeightChange( lnavunwrap(other) )
+		return lnavunwrap(self):ComputeAdjacentConnectionHeightChange(lnavunwrap(other))
 	end
 
 	--- Returns a table of all the CNavAreas that have a ( one and two way ) connection from this NavArea.
@@ -343,7 +387,7 @@ return function(instance)
 	-- @return table A table of all CNavArea that have a ( one and two way ) connection from this CNavArea.
 	function lnavarea_methods:getAdjacentAreas()
 		local out = {}
-		for k, area in ipairs( lnavunwrap(self):GetAdjacentAreas() ) do
+		for k, area in ipairs(lnavunwrap(self):GetAdjacentAreas()) do
 			out[k] = lnavwrap(area)
 		end
 		return out
@@ -358,7 +402,7 @@ return function(instance)
 	function lnavarea_methods:getAdjacentAreasAtSide(navDir)
 		checkluatype(navDir, TYPE_NUMBER)
 		local out = {}
-		for k, area in ipairs( lnavunwrap(self):GetAdjacentAreas() ) do
+		for k, area in ipairs(lnavunwrap(self):GetAdjacentAreas()) do
 			out[k] = lnavwrap(area)
 		end
 		return out
@@ -393,7 +437,7 @@ return function(instance)
 	-- @name navarea_methods.getCenter
 	-- @return Vector The center vector.
 	function lnavarea_methods:getCenter()
-		return vwrap( lnavunwrap(self):GetCenter() )
+		return vwrap(lnavunwrap(self):GetCenter())
 	end
 
 	--- Returns the closest point of this NavArea from the given position.
@@ -401,7 +445,7 @@ return function(instance)
 	-- @param Vector pos The given position, can be outside of the NavArea bounds.
 	-- @return Vector The closest point on the NavArea.
 	function lnavarea_methods:getClosestPointOnArea(pos)
-		return vwrap( lnavunwrap(self):GetClosestPointOnArea( vunwrap1(pos) ) )
+		return vwrap(lnavunwrap(self):GetClosestPointOnArea(vunwrap1(pos)))
 	end
 
 	--- Returns the vector position of the corner for the given CNavArea.
@@ -410,7 +454,7 @@ return function(instance)
 	-- @return Vector The vector position of the corner.
 	function lnavarea_methods:getCorner(cornerId)
 		checkluatype(cornerId, TYPE_NUMBER)
-		return vwrap( lnavunwrap(self):GetCorner(cornerId) )
+		return vwrap(lnavunwrap(self):GetCorner(cornerId))
 	end
 
 	--- Returns the cost from starting area this area when pathfinding. Set by NavArea:setCostSoFar
@@ -426,7 +470,7 @@ return function(instance)
 	-- @return table A table of Vectors
 	function lnavarea_methods:getExposedSpots()
 		local out = {}
-		for k, spot in ipairs( lnavunwrap(self):GetExposedSpots() ) do
+		for k, spot in ipairs(lnavunwrap(self):GetExposedSpots()) do
 			out[k] = vwrap(spot)
 		end
 		return out
@@ -458,7 +502,7 @@ return function(instance)
 	-- @return table Table of all CNavAreas with one-way connection to this CNavArea.
 	function lnavarea_methods:getIncomingConnections()
 		local out = {}
-		for k, area in ipairs( lnavunwrap(self):GetIncomingConnections() ) do
+		for k, area in ipairs(lnavunwrap(self):GetIncomingConnections()) do
 			out[k] = lnavwrap(area)
 		end
 		return out
@@ -474,7 +518,7 @@ return function(instance)
 		checkluatype(navDir, TYPE_NUMBER)
 
 		local out = {}
-		for k, area in ipairs( lnavunwrap(self):GetIncomingConnectionsAtSide(navDir) ) do
+		for k, area in ipairs(lnavunwrap(self):GetIncomingConnectionsAtSide(navDir)) do
 			out[k] = lnavwrap(area)
 		end
 		return out
@@ -484,7 +528,7 @@ return function(instance)
 	-- @name navarea_methods.getParent
 	-- @return NavArea The parent NavArea
 	function lnavarea_methods:getParent()
-		return lnavwrap( lnavunwrap(self):GetParent() )
+		return lnavwrap(lnavunwrap(self):GetParent())
 	end
 
 	--- Returns how this CNavArea is connected to its parent.
@@ -507,14 +551,14 @@ return function(instance)
 	-- @return NavArea The random CNavArea that has an outgoing ( one or two way ) connection from this CNavArea in given direction, if any.
 	function lnavarea_methods:getRandomAdjacentAreaAtSide(navDir)
 		checkluatype(navDir, TYPE_NUMBER)
-		return lnavwrap( lnavunwrap(self):GetRandomAdjacentAreaAtSide(navDir) )
+		return lnavwrap(lnavunwrap(self):GetRandomAdjacentAreaAtSide(navDir))
 	end
 
 	--- Returns a random point on the nav area.
 	-- @name navarea_methods.getRandomPoint
 	-- @return Vector The random point on the nav area.
 	function lnavarea_methods:getRandomPoint()
-		return vwrap( lnavunwrap(self):GetRandomPoint() )
+		return vwrap(lnavunwrap(self):GetRandomPoint())
 	end
 
 	--- Returns the width this Nav Area.
@@ -543,7 +587,7 @@ return function(instance)
 	-- @param Vector The position to get the elevation from, the z value from this position is ignored and only the X and Y values are used to this task.
 	-- @return number Elevation
 	function lnavarea_methods:getZ(pos)
-		return lnavunwrap(self):GetZ( vunwrap1(pos) )
+		return lnavunwrap(self):GetZ(vunwrap1(pos))
 	end
 
 	--- Returns true if the given CNavArea has this attribute flag set.
@@ -579,7 +623,7 @@ return function(instance)
 	-- @param NavArea area The area to test visibility with.
 	-- @return boolean Whether this CNavArea can see the given CNavArea.
 	function lnavarea_methods:isCompletelyVisible(area)
-		return lnavunwrap(self):IsCompletelyVisible( lnavunwrap(area) )
+		return lnavunwrap(self):IsCompletelyVisible(lnavunwrap(area))
 	end
 
 	--- Returns if this position overlaps the NavArea within the given tolerance.
@@ -590,7 +634,7 @@ return function(instance)
 	function lnavarea_methods:isOverlapping(pos, tolerance)
 		checkluatype(tolerance, TYPE_NUMBER)
 
-		return lnavunwrap(self):IsOverlapping( vunwrap1(pos), tolerance )
+		return lnavunwrap(self):IsOverlapping(vunwrap1(pos), tolerance)
 	end
 
 	--- Returns true if this CNavArea is overlapping the given CNavArea.
@@ -598,7 +642,7 @@ return function(instance)
 	-- @param NavArea area The area to test.
 	-- @return boolean True if the given CNavArea overlaps this CNavArea at any point.
 	function lnavarea_methods:isOverlappingArea(area)
-		return lnavunwrap(self):IsOverlappingArea( lnavunwrap(area) )
+		return lnavunwrap(self):IsOverlappingArea(lnavunwrap(area))
 	end
 
 	--- Returns whether this CNavArea can see given position.
@@ -607,7 +651,7 @@ return function(instance)
 	-- @param Entity? ignoreEnt If set, the given entity will be ignored when doing LOS tests (Default NULL)
 	-- @return boolean Whether the given position is visible from this area
 	function lnavarea_methods:isPartiallyVisible(pos, ignoreEnt)
-		return lnavunwrap(self):IsPartiallyVisible( vunwrap1(pos), eunwrap(ignoreEnt) )
+		return lnavunwrap(self):IsPartiallyVisible(vunwrap1(pos), eunwrap(ignoreEnt))
 	end
 
 	--- Returns whether this CNavArea can potentially see the given CNavArea.
@@ -615,7 +659,7 @@ return function(instance)
 	-- @param NavArea area The area to test.
 	-- @return boolean Whether the given area is visible from this area
 	function lnavarea_methods:isPotentiallyVisible(area)
-		return lnavunwrap(self):IsPotentiallyVisible( lnavunwrap(area) )
+		return lnavunwrap(self):IsPotentiallyVisible(lnavunwrap(area))
 	end
 
 	--- Returns if we're shaped like a square.
@@ -631,7 +675,7 @@ return function(instance)
 	-- @return boolean Whether we can be seen or not.
 	-- @return Vector If we can be seen, this is returned with either the center or one of the corners of the Nav Area.
 	function lnavarea_methods:isVisible(pos)
-		local a, b = lnavunwrap(self):IsVisible( vunwrap1(pos) )
+		local a, b = lnavunwrap(self):IsVisible(vunwrap1(pos))
 		return a, vwrap(b)
 	end
 
@@ -648,7 +692,7 @@ return function(instance)
 	function navarea_methods:popOpenList()
 		checkpermission(instance, nil, "navarea.openlist")
 
-		return lnavwrap( lnavunwrap(self):PopOpenList() )
+		return lnavwrap(lnavunwrap(self):PopOpenList())
 	end
 
 	--- Removes the given NavArea.
@@ -691,7 +735,7 @@ return function(instance)
 	-- @param number how How we get from parent to us using NAV_TRAVERSE_TYPE
 	function navarea_methods:setParent(parent, how)
 		checkluatype(how, TYPE_NUMBER)
-		navunwrap(self):SetParent( navunwrap(parent), how )
+		navunwrap(self):SetParent(navunwrap(parent), how)
 	end
 
 	--- Sets the Place of the nav area.
@@ -699,14 +743,14 @@ return function(instance)
 	-- @param string? place Place to set. Leave as nil to remove place from NavArea
 	-- @return boolean True if operation succeeded, false otherwise.
 	function navarea_methods:setPlace(place)
-		return navunwrap(self):SetPlace(place or '')
+		return navunwrap(self):SetPlace(place or "")
 	end
 
 	--- Sets the total cost when passing from starting area to the goal area through this node.
 	-- @param number cost The total cost of the path to set. (>= 0)
 	function navarea_methods:setTotalCost(cost)
 		checkluatype(cost, TYPE_NUMBER)
-		navunwrap(self):SetTotalCost( math.max(0, cost) )
+		navunwrap(self):SetTotalCost(math.max(0, cost))
 	end
 
 	--- Moves this open list to appropriate position based on its CNavArea:getTotalCost compared to the total cost of other areas in the open list.
@@ -718,7 +762,7 @@ return function(instance)
 	-- @name navarea_methods.disconnect
 	-- @param NavArea other The other NavArea to disconnect from.
 	function navarea_methods:disconnect(other)
-		navunwrap(self):Disconnect( navunwrap(other) )
+		navunwrap(self):Disconnect(navunwrap(other))
 	end
 
 	--- Adds a hiding spot onto this nav area.
@@ -733,7 +777,7 @@ return function(instance)
 	-- @param number flags Flags describing what kind of hiding spot this is.
 	function navarea_methods:addHidingSpot(pos, flags)
 		checkluatype(flags, TYPE_NUMBER)
-		navunwrap(self):AddHidingSpot( vunwrap1(pos), flags )
+		navunwrap(self):AddHidingSpot(vunwrap1(pos), flags)
 	end
 
 	--- Adds this CNavArea to the closed list, a list of areas that have been checked by A* pathfinding algorithm.
@@ -756,6 +800,6 @@ return function(instance)
 	--- Connects this CNavArea to another CNavArea with a one way connection. ( From this area to the target )
 	-- @param NavArea other The CNavArea this area leads to.
 	function navarea_methods:connectTo(other)
-		navunwrap(self):ConnectTo( navunwrap(other) )
+		navunwrap(self):ConnectTo(navunwrap(other))
 	end
 end

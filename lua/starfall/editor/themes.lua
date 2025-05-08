@@ -2,11 +2,11 @@
 	All code related to editor themes.
 ]]
 
-SF.Editor.Themes = { }
+SF.Editor.Themes = {}
 
 include("xml.lua")
 
-SF.Editor.Themes.Themes = { }
+SF.Editor.Themes.Themes = {}
 SF.Editor.Themes.CurrentTheme = nil -- Theme table
 
 local DEFAULT_THEME = "vsdark"
@@ -18,9 +18,11 @@ local themeformat_version = 1 --Change that if previous themes arent compatibile
 SF.Editor.Themes.Version = themeformat_version
 
 local function debugPrint(...)
-	if not SF.Editor.Themes.DebugOutput then return end
-	local args = {...}
-	args[1] = "[TextMate Debug]"..args[1]
+	if not SF.Editor.Themes.DebugOutput then
+		return
+	end
+	local args = { ... }
+	args[1] = "[TextMate Debug]" .. args[1]
 	return print(string.format(...))
 end
 
@@ -83,16 +85,15 @@ function SF.Editor.Themes.RemoveTheme(name)
 end
 
 function SF.Editor.Themes.SwitchTheme(name)
-
 	local theme = SF.Editor.Themes.Themes[name]
 
 	if not theme then
-	   print("No such theme " .. name)
-	   return
+		print("No such theme " .. name)
+		return
 	end
 	if theme.Version ~= themeformat_version then
 		SF.Editor.Themes.SwitchTheme(DEFAULT_THEME)
-		print("Theme "..name.." isnt compatibile with this Neostarfall version, you have to reimport it!")
+		print("Theme " .. name .. " isnt compatibile with this Neostarfall version, you have to reimport it!")
 		return
 	end
 
@@ -116,9 +117,11 @@ local function parseTextMate(text)
 	-- Parse dict
 
 	local function parseDict(dict)
-		if not dict.children then return { } end
+		if not dict.children then
+			return {}
+		end
 
-		local tbl = { }
+		local tbl = {}
 
 		for i = 1, #dict.children, 2 do
 			local value = dict.children[i + 1]
@@ -128,7 +131,7 @@ local function parseTextMate(text)
 			elseif value.name == "dict" then
 				tbl[dict.children[i].value] = parseDict(value)
 			elseif value.name == "array" then
-				tbl[dict.children[i].value] = { }
+				tbl[dict.children[i].value] = {}
 
 				for k, v in pairs(value.children) do
 					tbl[dict.children[i].value][#tbl[dict.children[i].value] + 1] = parseDict(v)
@@ -139,21 +142,24 @@ local function parseTextMate(text)
 		return tbl
 	end
 
-
 	local parsed = parseDict(plist.children[1])
 
-	local tbl = { }
+	local tbl = {}
 
 	-- Editor values
 
 	tbl.Name = parsed.name or "No name"
 
 	local function parseColor(hex)
-		if not hex then return end -- In case there is no color just return nil
-		return Color(tonumber("0x" .. hex:sub(2, 3)),
+		if not hex then
+			return
+		end -- In case there is no color just return nil
+		return Color(
+			tonumber("0x" .. hex:sub(2, 3)),
 			tonumber("0x" .. hex:sub(4, 5)),
 			tonumber("0x" .. hex:sub(6, 7)),
-			#hex >= 9 and tonumber("0x" .. hex:sub(8, 9)))
+			#hex >= 9 and tonumber("0x" .. hex:sub(8, 9))
+		)
 	end
 
 	tbl.background = parseColor(parsed.settings[1].settings.background)
@@ -186,27 +192,34 @@ local function parseTextMate(text)
 		["Class name"] = { "library" },
 		["Operators"] = { "operator" },
 		["Storage type"] = { "storageType" },
-		["Variable"] = { "identifier" }
+		["Variable"] = { "identifier" },
 	}
 
 	local newmap = {}
-	for k,v in pairs(map) do -- It's not "normalized" in source for readability
-		k = k:gsub("%s",""):lower()
+	for k, v in pairs(map) do -- It's not "normalized" in source for readability
+		k = k:gsub("%s", ""):lower()
 		newmap[k] = v
 	end
 	map = newmap
 
 	PrintTable(parsed.settings)
 	for k, v in pairs(parsed.settings) do
-		local foreground, background, fontStyle = parseColor(v.settings.foreground), parseColor(v.settings.background), v.settings.fontStyle
+		local foreground, background, fontStyle =
+			parseColor(v.settings.foreground), parseColor(v.settings.background), v.settings.fontStyle
 		fontStyle = fontStyle or "normal"
 
-		if fontStyle:lower() == "italic" then fontStyle = 1
-		elseif fontStyle:lower() == "bold" then fontStyle = 1
-		else fontStyle = 0 end
-		if not v.name then continue end
-		local names = string.Explode(",",v.name:gsub("%s",""):lower())
-		for _,name in pairs(names) do
+		if fontStyle:lower() == "italic" then
+			fontStyle = 1
+		elseif fontStyle:lower() == "bold" then
+			fontStyle = 1
+		else
+			fontStyle = 0
+		end
+		if not v.name then
+			goto cont
+		end
+		local names = string.Explode(",", v.name:gsub("%s", ""):lower())
+		for _, name in pairs(names) do
 			local token = map[name] -- Potential token
 			if token then
 				debugPrint("Parsing %q as %s", name, table.concat(token, ","))
@@ -217,6 +230,8 @@ local function parseTextMate(text)
 				debugPrint("[TextMate Import] Ignored setting:%q", name)
 			end
 		end
+
+		::cont::
 	end
 
 	tbl.operator = tbl.operator or tbl.keyword
@@ -257,7 +272,7 @@ SF.Editor.Themes.AddTheme("vsdark", {
 
 	["gutter_foreground"] = Color(146, 144, 140),
 	["gutter_background"] = Color(36, 36, 31),
-	["gutter_divider"] = Color(47,49,41),
+	["gutter_divider"] = Color(47, 49, 41),
 
 	["caret"] = Color(248, 248, 242),
 	["selection"] = Color(129, 164, 219, 20),
@@ -267,7 +282,7 @@ SF.Editor.Themes.AddTheme("vsdark", {
 	--{foreground color, background color, fontStyle}
 	["keyword"] = { VS_Keyword, nil, 0 },
 	["storageType"] = { VS_Keyword, nil, 0 },
-	["directive"] =	{ VS_Control, nil, 0 },
+	["directive"] = { VS_Control, nil, 0 },
 	["comment"] = { Color(106, 153, 85), nil, 1 },
 	["string"] = { Color(206, 145, 120), nil, 0 },
 	["number"] = { Color(181, 206, 168), nil, 0 },
@@ -279,7 +294,7 @@ SF.Editor.Themes.AddTheme("vsdark", {
 	["bracket"] = { Color(212, 212, 212), nil, 0 },
 	["userfunction"] = { VS_FunctionName, nil, 0 },
 	["constant"] = { VS_Control, nil, 0 },
-	["identifier"] = { VS_Control_Light, nil, 0 }
+	["identifier"] = { VS_Control_Light, nil, 0 },
 })
 
 SF.Editor.Themes.AddTheme("monokai", {
@@ -288,9 +303,9 @@ SF.Editor.Themes.AddTheme("monokai", {
 	["background"] = Color(30, 30, 30),
 	["line_highlight"] = Color(39, 40, 34),
 
-	["gutter_foreground"] = Color(143,144,138),
-	["gutter_background"] = Color(47,49,41),
-	["gutter_divider"] = Color(47,49,41),
+	["gutter_foreground"] = Color(143, 144, 138),
+	["gutter_background"] = Color(47, 49, 41),
+	["gutter_divider"] = Color(47, 49, 41),
 
 	["caret"] = Color(240, 240, 240),
 	["selection"] = Color(73, 72, 62),
@@ -300,7 +315,7 @@ SF.Editor.Themes.AddTheme("monokai", {
 	--{foreground color, background color, fontStyle}
 	["keyword"] = { Color(249, 38, 114), nil, 0 },
 	["storageType"] = { Color(249, 38, 114), nil, 0 },
-	["directive"] =	{ Color(230, 219, 116), nil, 0 },
+	["directive"] = { Color(230, 219, 116), nil, 0 },
 	["comment"] = { Color(117, 113, 94), nil, 1 },
 	["string"] = { Color(230, 219, 116), nil, 0 },
 	["number"] = { Color(174, 129, 255), nil, 0 },
@@ -312,7 +327,7 @@ SF.Editor.Themes.AddTheme("monokai", {
 	["bracket"] = { Color(230, 230, 230), nil, 0 },
 	["userfunction"] = { Color(166, 226, 42), nil, 0 },
 	["constant"] = { Color(174, 129, 255), nil, 0 },
-	["identifier"] = { Color(230, 230, 230), nil, 0 }
+	["identifier"] = { Color(230, 230, 230), nil, 0 },
 })
 
 SF.Editor.Themes.Load()

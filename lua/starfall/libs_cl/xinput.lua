@@ -1,4 +1,6 @@
-if not SF.Require("xinput") then return function() end end
+if not SF.Require("xinput") then
+	return function() end
+end
 
 local checkluatype = SF.CheckLuaType
 
@@ -63,84 +65,81 @@ SF.hookAdd("xinputStick", "xinputstick")
 -- @libtbl xinput_library
 SF.RegisterLibrary("xinput")
 
-
 return function(instance)
-local checkpermission = instance.player ~= SF.Superuser and SF.Permissions.check or function() end
+	local checkpermission = instance.player ~= SF.Superuser and SF.Permissions.check or function() end
 
-local xinputRumble = {}
-for i = 0, 3 do
-	xinputRumble[i] = {0, 0}
-end
-
-instance:AddHook("deinitialize", function()
+	local xinputRumble = {}
 	for i = 0, 3 do
-		local rumble = xinputRumble[i]
-		if rumble[1] > 0 or rumble[2] > 0 then
-			xinput.setRumble(i, 0, 0)
-		end
+		xinputRumble[i] = { 0, 0 }
 	end
-end)
 
+	instance:AddHook("deinitialize", function()
+		for i = 0, 3 do
+			local rumble = xinputRumble[i]
+			if rumble[1] > 0 or rumble[2] > 0 then
+				xinput.setRumble(i, 0, 0)
+			end
+		end
+	end)
 
-local xinput_library = instance.Libraries.xinput
+	local xinput_library = instance.Libraries.xinput
 
---- Gets the state of the controller.
--- @name xinput_library.getState
--- @class function
--- @param number id Controller number. Starts at 0
--- @return table Table containing all input data of the controller, or false if the controller is not connected. The table uses this struct: https://github.com/mitterdoo/garrysmod-xinput#xinput_gamepad
-xinput_library.getState = xinput.getState
+	--- Gets the state of the controller.
+	-- @name xinput_library.getState
+	-- @class function
+	-- @param number id Controller number. Starts at 0
+	-- @return table Table containing all input data of the controller, or false if the controller is not connected. The table uses this struct: https://github.com/mitterdoo/garrysmod-xinput#xinput_gamepad
+	xinput_library.getState = xinput.getState
 
---- Gets whether the button on the controller is currently pushed down.
--- @name xinput_library.getButton
--- @class function
--- @param number id Controller number. Starts at 0
--- @param number button The button to check for. See https://github.com/mitterdoo/garrysmod-xinput#xinput_gamepad_
--- @return boolean
-xinput_library.getButton = xinput.getButton
+	--- Gets whether the button on the controller is currently pushed down.
+	-- @name xinput_library.getButton
+	-- @class function
+	-- @param number id Controller number. Starts at 0
+	-- @param number button The button to check for. See https://github.com/mitterdoo/garrysmod-xinput#xinput_gamepad_
+	-- @return boolean
+	xinput_library.getButton = xinput.getButton
 
---- Gets the current position of the trigger on the controller.
--- @name xinput_library.getTrigger
--- @class function
--- @param number id Controller number. Starts at 0
--- @param number trigger Which trigger to use. 0 is left
--- @return number 0-255 inclusive
-xinput_library.getTrigger = xinput.getTrigger
+	--- Gets the current position of the trigger on the controller.
+	-- @name xinput_library.getTrigger
+	-- @class function
+	-- @param number id Controller number. Starts at 0
+	-- @param number trigger Which trigger to use. 0 is left
+	-- @return number 0-255 inclusive
+	xinput_library.getTrigger = xinput.getTrigger
 
---- Gets the current coordinates of the stick on the controller.
--- @name xinput_library.getStick
--- @class function
--- @param number id Controller number. Starts at 0
--- @param number stick Which stick to use. 0 is left
--- @return number X Coordinate, Between -32768 - 32767 inclusive
--- @return number Y Coordinate, Between -32768 - 32767 inclusive
-xinput_library.getStick = xinput.getStick
+	--- Gets the current coordinates of the stick on the controller.
+	-- @name xinput_library.getStick
+	-- @class function
+	-- @param number id Controller number. Starts at 0
+	-- @param number stick Which stick to use. 0 is left
+	-- @return number X Coordinate, Between -32768 - 32767 inclusive
+	-- @return number Y Coordinate, Between -32768 - 32767 inclusive
+	xinput_library.getStick = xinput.getStick
 
---- Attempts to check the battery level of the controller.
--- @name xinput_library.getBatteryLevel
--- @class function
--- @param number id Controller number. Starts at 0
--- @return number|boolean If successful: a number between 0.0-1.0 inclusive.
--- @return string? If last return was a false boolean (errored), this will be the error message.
-xinput_library.getBatteryLevel = xinput.getBatteryLevel
+	--- Attempts to check the battery level of the controller.
+	-- @name xinput_library.getBatteryLevel
+	-- @class function
+	-- @param number id Controller number. Starts at 0
+	-- @return number|boolean If successful: a number between 0.0-1.0 inclusive.
+	-- @return string? If last return was a false boolean (errored), this will be the error message.
+	xinput_library.getBatteryLevel = xinput.getBatteryLevel
 
---- Gets all of the connected controllers.
--- @name xinput_library.getControllers
--- @class function
--- @return table A table where each key is the ID of the controller that is connected. Disconnected controllers are not placed in the table.
-xinput_library.getControllers = xinput.getControllers
+	--- Gets all of the connected controllers.
+	-- @name xinput_library.getControllers
+	-- @class function
+	-- @return table A table where each key is the ID of the controller that is connected. Disconnected controllers are not placed in the table.
+	xinput_library.getControllers = xinput.getControllers
 
---- Sets the rumble on the controller.
--- @param number id Controller number. Starts at 0
--- @param number softPercent A number between 0.0-1.0 for how much the soft rumble motor should vibrate.
--- @param number hardPercent A number between 0.0-1.0 for how much the hard rumble motor should vibrate.
-function xinput_library.setRumble(id, softPercent, hardPercent)
-	-- This longer function makes sure that the rumble doesn't continue when the instance is gone.
-	checkluatype(id, TYPE_NUMBER)
-	id = math.floor(id)
-	xinput.setRumble(id, softPercent, hardPercent) -- Does the rest of the type checking
-	xinputRumble[id][1] = softPercent
-	xinputRumble[id][2] = hardPercent
-end
-
+	--- Sets the rumble on the controller.
+	-- @param number id Controller number. Starts at 0
+	-- @param number softPercent A number between 0.0-1.0 for how much the soft rumble motor should vibrate.
+	-- @param number hardPercent A number between 0.0-1.0 for how much the hard rumble motor should vibrate.
+	function xinput_library.setRumble(id, softPercent, hardPercent)
+		-- This longer function makes sure that the rumble doesn't continue when the instance is gone.
+		checkluatype(id, TYPE_NUMBER)
+		id = math.floor(id)
+		xinput.setRumble(id, softPercent, hardPercent) -- Does the rest of the type checking
+		xinputRumble[id][1] = softPercent
+		xinputRumble[id][2] = hardPercent
+	end
 end
