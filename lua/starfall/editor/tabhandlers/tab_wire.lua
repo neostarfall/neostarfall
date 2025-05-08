@@ -3362,12 +3362,17 @@ function PANEL:AC_populateVariableResults(typing)
 	return true
 end
 
-function PANEL:AC_populateDirectiveResults(
-	typing --[[@param typing string?]]
-)
+---@param typing? string
+function PANEL:AC_populateDirectiveResults(typing)
 	if not typing then
 		return false
 	end
+
+	if not typing:StartsWith("--@") then
+		return false
+	end
+
+	typing = typing:sub(4) -- remove "--@"
 
 	for dirName, dirData in pairs(SF.Docs.Directives) do
 		---@cast dirName string
@@ -3556,7 +3561,7 @@ function PANEL:AC_populateHookResults(typing)
 		if quotedHookName:StartsWith(typing) then
 			self.AC_suggestionsList[#self.AC_suggestionsList + 1] = {
 				name = quotedHookName,
-				desc = hookData.description,
+				desc = hookData.description or ("The hook " .. hookName),
 
 				replacement = function(self, editor)
 					return fullReplacement, #fullReplacement
@@ -3892,7 +3897,8 @@ function PANEL:AC_fillList()
 			if panel.selected == i then
 				surface_SetDrawColor(50, 50, 50, 150)
 				-- todo: make the color brighter
-				backgroundColor = suggestion.color:AddBrightness(1.0)
+				backgroundColor = Color(suggestion.color:Unpack())
+				backgroundColor:AddBrightness(1.0)
 			else
 				surface_SetDrawColor(30, 30, 30, 150)
 				backgroundColor = suggestion.color
