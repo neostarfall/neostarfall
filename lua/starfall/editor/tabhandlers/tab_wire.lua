@@ -3219,11 +3219,11 @@ function PANEL:AC_getPreviousWord()
 	return word, self:GetArea({ { ln, startpos - 1 }, { ln, startpos } })
 end
 
---- Returns the 'word' at the caret position.
+--- Returns the 'blob' at the caret position.
 --- @return string? word # Anything non-whitespace that is being typed at the caret.
 --- @return Caret? wordStart
 --- @return Caret? wordEnd
-function PANEL:AC_getCurrentWord()
+function PANEL:AC_getCurrentBlob()
 	local row, col = self.Caret[1], self.Caret[2]
 
 	local lineContent = self:GetRowText(row)
@@ -3298,15 +3298,10 @@ function PANEL:AC_isInString()
 	return isInString
 end
 
----@param typing? string
----@return boolean # Whether the results were populated
-function PANEL:AC_populateVariableResults(typing)
-	if not typing then
-		return false
-	end
-
+function PANEL:AC_saveVariables()
 	local now = CurTime()
-	if not self.AC_savedVariables or (now - self.AC_savedVariablesTime) > 5 then
+
+	if not self.AC_savedVariables or ((now - self.AC_savedVariablesTime) > 5) then
 		-- Regenerate list of variables
 		---@type table<string, "var" | "fn">
 		self.AC_savedVariables = {}
@@ -3343,6 +3338,17 @@ function PANEL:AC_populateVariableResults(typing)
 			self.AC_savedVariables[localFn] = "fn"
 		end
 	end
+end
+
+---@param typingBlob string
+---@return boolean # Whether the results were populated
+function PANEL:AC_populateVariableResults(typingBlob)
+	local typing = typingBlob:match("([%w_]+)$")
+	if not typing then
+		return false
+	end
+
+	self:AC_saveVariables()
 
 	for varName, varType in pairs(self.AC_savedVariables) do
 		if varName:StartsWith(typing) then
@@ -3362,12 +3368,8 @@ function PANEL:AC_populateVariableResults(typing)
 	return true
 end
 
----@param typing? string
+---@param typing string
 function PANEL:AC_populateDirectiveResults(typing)
-	if not typing then
-		return false
-	end
-
 	if not typing:StartsWith("--@") then
 		return false
 	end
@@ -3396,9 +3398,10 @@ function PANEL:AC_populateDirectiveResults(typing)
 	return true
 end
 
----@param typing? string
+---@param typingBlob string
 ---@return boolean # Whether the results were populated
-function PANEL:AC_populateDocResults(typing)
+function PANEL:AC_populateDocResults(typingBlob)
+	local typing = typingBlob:match("([%w_%.:]+)$")
 	if not typing then
 		return false
 	end
@@ -3546,6 +3549,7 @@ function PANEL:AC_populateHookResults(typing)
 		return false
 	end
 
+	-- Todo: support case of being embedded inside of another function
 	if not typing:StartsWith("hook.add(") then
 		return false
 	end
@@ -3585,7 +3589,7 @@ function PANEL:AC_populateResults()
 
 	self.AC_suggestionsList = {}
 
-	local typing = self:AC_getCurrentWord()
+	local typing = self:AC_getCurrentBlob()
 	if not typing then
 		return false
 	end
@@ -3597,11 +3601,16 @@ function PANEL:AC_populateResults()
 		local prevWord = self:AC_getPreviousWord()
 
 		if prevWord ~= "function" and prevWord ~= "local" then -- don't autocomplete while writing a function
-			if typing:StartsWith("hook.add(") then
-				hasResults = self:AC_populateHookResults(typing)
-			elseif not self:AC_isInString() then
-				hasResults = self:AC_populateDocResults(typing) or self:AC_populateVariableResults(typing)
+			hasResults = self:AC_populateHookResults(typing)
+
+			if not self:AC_isInString() then
+				local hasDocResults = self:AC_populateDocResults(typing)
+				local hasVarResults = self:AC_populateVariableResults(typing)
+
+				hasResults = hasResults or hasDocResults or hasVarResults
 			end
+		elseif prevWord == "local" then
+			self:AC_saveVariables()
 		end
 	end
 
@@ -3635,7 +3644,7 @@ function PANEL:AC_applySuggestion(suggestion)
 
 	local ret = false
 
-	local _, wordStart, wordEnd = self:AC_getCurrentWord()
+	local _, wordStart, wordEnd = self:AC_getCurrentBlob()
 	if not wordStart or not wordEnd then
 		-- This shouldn't ever happen, but just in case
 		return false
