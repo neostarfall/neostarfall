@@ -3458,6 +3458,7 @@ function PANEL:AC_populateDocResults(typingBlob)
 
 				---@cast funcName string
 				local fullName = libName == "builtins" and funcName or (libName .. "." .. funcName)
+				local fullReplacement = fullName .. "("
 
 				if fullName:StartsWith(typing) then
 					suggestions[#suggestions + 1] = {
@@ -3465,7 +3466,7 @@ function PANEL:AC_populateDocResults(typingBlob)
 						desc = funcMethod.description,
 
 						replacement = function(self, editor)
-							return fullName, #fullName
+							return fullReplacement, #fullReplacement
 						end,
 
 						color = AC_COLOR_FUNCTION,
@@ -3521,13 +3522,15 @@ function PANEL:AC_populateDocResults(typingBlob)
 				local replacement = beginsWithSeparator and (callSeparator .. funcName)
 					or (beforeSeparator .. callSeparator .. funcName)
 
+				local fullReplacement = replacement .. "("
+
 				if funcName:StartsWith(methodNameTyping) then
 					suggestions[#suggestions + 1] = {
 						name = fullName .. paramStr,
 						desc = funcMethod.description,
 
 						replacement = function(self, editor)
-							return replacement, #replacement
+							return fullReplacement, #fullReplacement
 						end,
 
 						color = AC_COLOR_FUNCTION,
