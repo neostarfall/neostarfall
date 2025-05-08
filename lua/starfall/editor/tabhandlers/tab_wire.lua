@@ -360,6 +360,9 @@ local AC_STYLE_SCROLLER_ENTER = 3 -- Scroller Style w/ Enter - Mouse scroller to
 local AC_STYLE_ECLIPSE = 4 -- Eclipse Style - Enter to use top match;\nTab to enter auto completion menu;\nArrow keys to choose item;\nEnter to use;\nSpace to abort.
 local AC_STYLE_ATOM = 5 -- Atom style - Tab/Enter to use, arrow keys to choose
 
+--- Row, Column
+---@alias Caret { [1]: number, [2]: number }
+
 function PANEL:Init()
 	self:SetCursor("beam")
 
@@ -3177,30 +3180,6 @@ function PANEL:getWordStart(caret, getword)
 	return { caret[1], 1 }
 end
 
-function PANEL:getWordlikeStart(caret, getword)
-	local line = self:GetRowText(caret[1])
-
-	for startpos, endpos in line:gmatch("()[%w%.:_]+()") do
-		if startpos <= caret[2] and endpos >= caret[2] then
-			return { caret[1], startpos }, getword and line:sub(startpos, endpos - 1) or nil
-		end
-	end
-
-	return { caret[1], 1 }
-end
-
-function PANEL:getWordlikeStart(caret, getword)
-	local line = self:GetRowText(caret[1])
-
-	for startpos, endpos in line:gmatch("()[%w%.:_]+()") do
-		if startpos <= caret[2] and endpos >= caret[2] then
-			return { caret[1], startpos }, getword and line:sub(startpos, endpos - 1) or nil
-		end
-	end
-
-	return { caret[1], 1 }
-end
-
 function PANEL:getWordEnd(caret, getword)
 	local line = self:GetRowText(caret[1])
 
@@ -3240,6 +3219,26 @@ function PANEL:AC_getPreviousWord()
 	return word, self:GetArea({ { ln, startpos - 1 }, { ln, startpos } })
 end
 
+--- Returns the 'word' at the caret position.
+--- @return string? word # Anything non-whitespace that is being typed at the caret.
+--- @return Caret? wordStart
+--- @return Caret? wordEnd
+function PANEL:AC_getCurrentWord()
+	local row, col = self.Caret[1], self.Caret[2]
+
+	local lineContent = self:GetRowText(row)
+	local lineBeforeCaret = lineContent:sub(1, col - 1)
+
+	-- Can consider these as cols directly since they're 1-indexed as well
+	local startCol, endCol, matchedWord = string.find(lineBeforeCaret, "(%S+)")
+
+	if not startCol then
+		return
+	end
+
+	return matchedWord, { row, startCol }, { row, endCol + 1 }
+end
+
 function PANEL:AC_setVisible(bool)
 	if self.AC_panelVisible == bool or not self.AC_panel then
 		return
@@ -3260,6 +3259,7 @@ local AC_COLOR_FUNCTION = Color(220, 220, 170)
 local AC_COLOR_VARIABLE = Color(156, 220, 254)
 local AC_COLOR_KEYWORD = Color(197, 134, 192)
 local AC_COLOR_DIRECTIVE = AC_COLOR_CONSTANT
+local AC_COLOR_STRING = Color(206, 145, 120)
 
 ---@param method { params?: { name: string, type: string }[], returns: { name?: string, type: string }[] }
 local function getMethodParamsStr(method)
@@ -3281,16 +3281,26 @@ local function getMethodParamsStr(method)
 	return "(" .. table.concat(params, ", ") .. ")"
 end
 
-function PANEL:AC_isInCommentOrString()
-	local line = self:GetRowText(self.Caret[1])
+function PANEL:AC_isInComment()
+	local lineContent = self:GetRowText(self.Caret[1])
+	local startPos = lineContent:find("%-%-") or lineContent:find("%-%-%[") or lineContent:find("//")
 
-	local startPos = line:find("%-%-") or line:find("%-%-%[") or line:find("//") or line:find('"') or line:find("'")
 	return startPos and startPos < self.Caret[2]
 end
 
-function PANEL:AC_populateVariableResults(
-	typing --[[@param typing string?]]
-)
+function PANEL:AC_isInString()
+	local lineContent = self:GetRowText(self.Caret[1])
+	local startPos = lineContent:find("%f[%w]\"") or lineContent:find("%f[%w]'")
+	local endPos = lineContent:find("%f[%w]\"%s*%-%-") or lineContent:find("%f[%w]'%s*%-%-")
+	local isInString = startPos and startPos < self.Caret[2]
+		and (not endPos or endPos > self.Caret[2])
+
+	return isInString
+end
+
+---@param typing? string
+---@return boolean # Whether the results were populated
+function PANEL:AC_populateVariableResults(typing)
 	if not typing then
 		return false
 	end
@@ -3348,6 +3358,8 @@ function PANEL:AC_populateVariableResults(
 			}
 		end
 	end
+
+	return true
 end
 
 function PANEL:AC_populateDirectiveResults(
@@ -3377,9 +3389,9 @@ function PANEL:AC_populateDirectiveResults(
 	return true
 end
 
-function PANEL:AC_populateDocResults(
-	typing --[[@param typing string?]]
-)
+---@param typing? string
+---@return boolean # Whether the results were populated
+function PANEL:AC_populateDocResults(typing)
 	if not typing then
 		return false
 	end
@@ -3521,36 +3533,74 @@ function PANEL:AC_populateDocResults(
 	return true
 end
 
---- Runs before populating results.
---- This provides context for the autocompletion, and can return false to abort the operation.
+---@param typing? string
+function PANEL:AC_populateHookResults(typing)
+	if not typing then
+		return false
+	end
+
+	if not typing:StartsWith("hook.add(") then
+		return false
+	end
+
+	typing = typing:sub(10) -- remove "hook.add("
+
+	print("populating hook results", typing)
+
+	for hookName, hookData in pairs(SF.Docs.Hooks) do
+		---@cast hookName string
+
+		local quotedHookName = "\"" .. hookName .. "\""
+		local fullReplacement = "hook.add(" .. quotedHookName .. ", "
+
+		if quotedHookName:StartsWith(typing) then
+			self.AC_suggestionsList[#self.AC_suggestionsList + 1] = {
+				name = quotedHookName,
+				desc = hookData.description,
+
+				replacement = function(self, editor)
+					return fullReplacement, #fullReplacement
+				end,
+
+				color = AC_COLOR_STRING,
+			}
+		end
+	end
+
+	return true
+end
+
+--- This clears the current suggestions list and populates it with new results.
+--- Returns false if failed to populate any results (shouldn't show a ui)
+--- @return boolean # Whether results were populated to self.AC_suggestionsList
 function PANEL:AC_populateResults()
 	if not SF.Docs then
 		return false
 	end
 
-	local _, typing = self:getWordlikeStart(self.Caret, true)
 	self.AC_suggestionsList = {}
 
-	local ret = true
+	local typing = self:AC_getCurrentWord()
+	if not typing then
+		return false
+	end
+
+	local hasResults = true
 	if self:AC_isDirectiveLine() then
-		ret = self:AC_populateDirectiveResults(typing)
-	elseif not self:AC_isInCommentOrString() then
+		hasResults = self:AC_populateDirectiveResults(typing)
+	elseif not self:AC_isInComment() then
 		local prevWord = self:AC_getPreviousWord()
 
 		if prevWord ~= "function" and prevWord ~= "local" then -- don't autocomplete while writing a function
-			ret = self:AC_populateDocResults(typing)
-			if ret ~= false then
-				local out = self:AC_populateVariableResults(typing)
-				if out ~= false then
-					ret = table.Add(ret, out)
-				else
-					return false
-				end
+			if typing:StartsWith("hook.add(") then
+				hasResults = self:AC_populateHookResults(typing)
+			elseif not self:AC_isInString() then
+				hasResults = self:AC_populateDocResults(typing) or self:AC_populateVariableResults(typing)
 			end
 		end
 	end
 
-	if ret == true then
+	if hasResults then
 		-- Sort suggestions, clamp to max
 		table.sort(self.AC_suggestionsList, function(a, b)
 			return a.name < b.name
@@ -3571,17 +3621,20 @@ function PANEL:AC_populateResults()
 	return false
 end
 
-function PANEL:AC_applySuggestion(
-	suggestion --[[ @param suggestion? Suggestion ]]
-)
+---@param suggestion? Suggestion
+---@return boolean # Whether the suggestion was applied
+function PANEL:AC_applySuggestion(suggestion)
 	if not suggestion then
 		return false
 	end
+
 	local ret = false
 
-	-- Get word position
-	local wordStart = self:getWordlikeStart(self.Caret)
-	local wordEnd = self:getWordEnd(self.Caret)
+	local _, wordStart, wordEnd = self:AC_getCurrentWord()
+	if not wordStart or not wordEnd then
+		-- This shouldn't ever happen, but just in case
+		return false
+	end
 
 	local replacement, caretOffset = suggestion:replacement(self)
 
