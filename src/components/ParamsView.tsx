@@ -21,7 +21,7 @@ export default function ParamsView(props: {
 	));
 
 	return (
-		<div className={`flex flex-row ${props.className ?? ""}`}>
+		<div className={`flex flex-row items-center ${props.className ?? ""}`}>
 			<span>(</span>
 			{(() => {
 				if (showParams) {

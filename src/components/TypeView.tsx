@@ -15,7 +15,9 @@ export default function TypeView(props: { name: string; className?: string }) {
 	if (!classData) {
 		// It's a native type, or a struct (todo)
 		return (
-			<span className={`${NATIVE_TYPE_COLOR} ${props.className ?? ""}`}>
+			<span
+				className={`${NATIVE_TYPE_COLOR} text-nowrap ${props.className ?? ""}`}
+			>
 				{props.name}
 			</span>
 		);
@@ -24,7 +26,7 @@ export default function TypeView(props: { name: string; className?: string }) {
 	return (
 		<button
 			type="button"
-			className={`${SF_TYPE_COLOR} ${props.className ?? ""} hover:cursor-pointer`}
+			className={`${SF_TYPE_COLOR} ${props.className ?? ""} text-nowrap hover:cursor-pointer`}
 			onClick={() => {
 				window.location.hash = `#classes.${classData.name}`;
 			}}
