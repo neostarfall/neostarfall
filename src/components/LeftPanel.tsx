@@ -80,9 +80,9 @@ export default function LeftPanel(props: { className?: string }) {
 		<div
 			className={`bg-zinc-800 text-white flex flex-col h-full ${props.className ?? ""}`}
 		>
-			<div className="h-full p-1 lg:px-4 lg:py-2 flex flex-col gap-2 overflow-clip">
+			<div className="flex-1 p-1 lg:px-4 lg:py-2 flex flex-col gap-2 min-h-0">
 				<a
-					className="flex flex-row items-center gap-2 hover:cursor-pointer"
+					className="flex flex-row items-center gap-2 hover:cursor-pointer flex-shrink-0"
 					href="."
 				>
 					<img
@@ -96,9 +96,9 @@ export default function LeftPanel(props: { className?: string }) {
 					</span>
 				</a>
 
-				<div className="flex flex-col gap-2 h-full">
+				<div className="flex flex-col gap-2 flex-1 min-h-0">
 					<div
-						className="flex flex-row gap-2 py-2 lg:py-1 text-sm lg:text-base items-center border-b border-white"
+						className="flex flex-row gap-2 py-2 lg:py-1 text-sm lg:text-base items-center border-b border-white flex-shrink-0"
 						onClick={() => searchInputRef.current?.focus()}
 						onKeyDown={(e) => {
 							if (e.key === "Enter" || e.key === " ") {
@@ -116,11 +116,13 @@ export default function LeftPanel(props: { className?: string }) {
 						/>
 					</div>
 
-					<Tree items={items} expand={search !== ""} />
+					<div className="flex-1 min-h-0">
+						<Tree items={items} expand={search !== ""} />
+					</div>
 				</div>
 			</div>
 
-			<div className="border-t border-white flex flex-row text-2xl h-[9%] md:text-3xl justify-center max-h-16">
+			<div className="border-t border-white flex flex-row text-2xl mt-auto h-[9%] md:text-3xl justify-center max-h-16">
 				<div className="w-1/2 flex flex-row gap-2 justify-evenly items-center">
 					<a
 						href="https://github.com/neostarfall/neostarfall"

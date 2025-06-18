@@ -73,7 +73,7 @@ export default function Tree(props: {
 }) {
 	return (
 		<ol
-			className={`font-mono text-sm lg:text-base w-full overflow-y-auto overflow-x-clip ${props.className ?? ""}`}
+			className={`font-mono text-sm lg:text-base w-full h-full overflow-y-auto overflow-x-hidden ${props.className ?? ""}`}
 		>
 			{props.items.map((item) => (
 				<Item item={item} key={item.key} expand={props.expand} />
