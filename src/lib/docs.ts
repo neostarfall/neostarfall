@@ -20,9 +20,14 @@ export interface SFDocMethodEntry extends SFDocEntry {
 	returns: SFDocParam[];
 }
 
+export interface SFDocTableEntry extends SFDocEntry {
+	fields: { name: string, description: string }[]
+}
+
 export interface SFDocLibraryEntry extends SFDocEntry {
 	libtbl: string;
 	methods: Record<string, SFDocMethodEntry>;
+	tables: Record<string, SFDocTableEntry>;
 }
 
 export interface SFDocTypeEntry extends SFDocEntry {

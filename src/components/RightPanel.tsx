@@ -7,9 +7,12 @@ import Type from "../views/Class";
 import Contributors from "../views/Contributors";
 import Library from "../views/Library";
 import Example from "@/views/Example";
+import { useDocs } from "@/lib/docs";
+import Table from "@/views/Table";
 
 export default function RightPanel(props: { className?: string }) {
 	const hash = useHash();
+	const docs = useDocs();
 	const [parts, setParts] = useState<string[]>([]);
 	const afterFirstDot = hash.indexOf(".") && hash.slice(hash.indexOf(".") + 1);
 
@@ -38,6 +41,10 @@ export default function RightPanel(props: { className?: string }) {
 		const methodName = parts[2];
 
 		if (libName && methodName) {
+			if (docs?.Libraries[libName]?.tables[methodName]) {
+				return <Table lib={libName} name={methodName} />;
+			}
+
 			return <Method lib={libName} name={methodName} />;
 		}
 
