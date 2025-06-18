@@ -8,7 +8,7 @@ import Contributors from "../views/Contributors";
 import Library from "../views/Library";
 import Example from "@/views/Example";
 import { useDocs } from "@/lib/docs";
-import Table from "@/views/Table";
+import Enum from "@/views/Enum";
 
 export default function RightPanel(props: { className?: string }) {
 	const hash = useHash();
@@ -36,15 +36,19 @@ export default function RightPanel(props: { className?: string }) {
 		}
 	}
 
+	if (parts[0] === "enums") {
+		const enumName = parts[1];
+
+		if (enumName) {
+			return <Enum name={enumName} />;
+		}
+	}
+
 	if (parts[0] === "libraries") {
 		const libName = parts[1];
 		const methodName = parts[2];
 
 		if (libName && methodName) {
-			if (docs?.Libraries[libName]?.tables[methodName]) {
-				return <Table lib={libName} name={methodName} />;
-			}
-
 			return <Method lib={libName} name={methodName} />;
 		}
 

@@ -11,6 +11,7 @@ import { getDirectiveItem } from "@/views/Directive";
 import { getContributorsItem } from "@/views/Contributors";
 import { type Example, useExamples } from "@/lib/examples";
 import { getExampleItem } from "@/views/Example";
+import { getEnumItem } from "@/views/Enum";
 
 export type ItemBuilder = (
 	docs: SFDocs,
@@ -66,6 +67,7 @@ export default function LeftPanel(props: { className?: string }) {
 		items.push(getClassItem(docs, examples, filter));
 		items.push(getHookItem(docs, examples, filter));
 		items.push(getDirectiveItem(docs, examples, filter));
+		items.push(getEnumItem(docs, examples, filter));
 		items.push(getExampleItem(docs, examples, filter));
 		items.push(getContributorsItem(docs, examples, filter));
 

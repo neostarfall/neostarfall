@@ -31,22 +31,6 @@ export const getGlobalsItem: ItemBuilder = (docs, examples, filter) => {
 		});
 	}
 
-	for (const [fieldName, field] of Object.entries(docs.Libraries.builtins.tables ?? {})) {
-		if (!filter(`${fieldName}`)) continue;
-
-		globalsSection.children.push({
-			title: (
-				<span className="flex flex-row gap-1 items-center">
-					<RealmView realm={field.realm} /> {fieldName}
-				</span>
-			),
-			key: `libraries.builtins.${fieldName}`,
-			callback() {
-				window.location.hash = `libraries.builtins.${fieldName}`;
-			},
-		});
-	}
-
 	return globalsSection;
 };
 
@@ -76,23 +60,6 @@ export const getLibraryItem: ItemBuilder = (docs, examples, filter) => {
 				key: `libraries.${libName}.${methodName}`,
 				callback() {
 					window.location.hash = `libraries.${libName}.${methodName}`;
-				},
-			});
-		}
-
-		for (const [fieldName, field] of Object.entries(lib.tables)) {
-			if (!filter(`${libName}.${fieldName}`)) continue;
-			foundValidChild = true;
-
-			children.push({
-				title: (
-					<span className="flex flex-row gap-1 items-center">
-						<RealmView realm={field.realm} /> {fieldName}
-					</span>
-				),
-				key: `libraries.${libName}.${fieldName}`,
-				callback() {
-					window.location.hash = `libraries.${libName}.${fieldName}`;
 				},
 			});
 		}
