@@ -215,5 +215,48 @@ return function(instance)
 			Npc_SetLastPosition(npc, vunwrap1(vec))
 			Npc_SetSchedule(npc, SCHED_FORCED_GO_RUN)
 		end
+
+		--- Returns the eye direction of the NPC.
+		-- @server
+		-- @return Vector The eye direction
+		function npc_methods:getEyeDirection()
+			return vwrap(getnpc(self):GetEyeDirection())
+		end
+
+		--- Returns the 2D head direction of the NPC.
+		-- @server
+		-- @return Vector The head direction
+		function npc_methods:getHeadDirection()
+			local headDirection = getnpc(self):GetHeadDirection()
+			headDirection[3] = 0 -- This is garbage data
+
+			return vwrap(headDirection)
+		end
+
+		--- Returns whether the NPC is moving or not.
+		-- @server
+		-- @return boolean Whether the NPC is moving
+		function npc_methods:isMoving()
+			return getnpc(self):IsMoving()
+		end
+
+		--- Sets the Field Of View of the NPC, for use with such functions as NPC:IsInViewCone. it is also used internally by the NPC for enemy detection, etc.
+		-- @server
+		-- @param number fov The field of view, in degrees [0, 360]
+		function npc_methods:setFOV(fov)
+			local npc = getnpc(self)
+			checkpermission(instance, npc, "npcs.modify")
+			checkluatype(fov, TYPE_NUMBER)
+
+			-- Follows observed behavior of SetFOV's internal limitations
+			npc:SetFOV(math.Clamp(math.abs(fov), 0, 360))
+		end
+
+		--- Returns the Field Of View of the NPC. See NPC:setFOV.
+		-- @server
+		-- @return number The field of view, in degrees
+		function npc_methods:getFOV()
+			return getnpc(self):GetFOV()
+		end
 	end
 end
