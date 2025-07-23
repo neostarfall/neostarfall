@@ -116,7 +116,7 @@ SF.RegisterType("Entity", false, true, ENT_META)
 
 return function(instance)
 	local checkpermission = instance.player ~= SF.Superuser and SF.Permissions.check or function() end
-	local Ent_BoundingRadius, Ent_DrawModel, Ent_EmitSound, Ent_EntIndex, Ent_EyeAngles, Ent_EyePos, Ent_FindBodygroupByName, Ent_GetAngles, Ent_GetAttachment, Ent_GetAttachments, Ent_GetBodygroup, Ent_GetBodygroupCount, Ent_GetBodygroupName, Ent_GetBodyGroups, Ent_GetBoneCount, Ent_GetBoneMatrix, Ent_GetBoneName, Ent_GetBoneParent, Ent_GetBonePosition, Ent_GetBrushPlane, Ent_GetBrushPlaneCount, Ent_GetBrushSurfaces, Ent_GetChildren, Ent_GetClass, Ent_GetCollisionBounds, Ent_GetCollisionGroup, Ent_GetColor, Ent_GetColor4Part, Ent_GetCreationTime, Ent_GetDTAngle, Ent_GetDTBool, Ent_GetDTEntity, Ent_GetDTFloat, Ent_GetDTInt, Ent_GetDTString, Ent_GetDTVector, Ent_GetElasticity, Ent_GetFlexIDByName, Ent_GetFlexName, Ent_GetFlexNum, Ent_GetFlexScale, Ent_GetFlexWeight, Ent_GetForward, Ent_GetHitBoxBone, Ent_GetHitBoxBounds, Ent_GetHitBoxCount, Ent_GetHitBoxHitGroup, Ent_GetHitboxSet, Ent_GetHitboxSetCount, Ent_GetInternalVariable, Ent_GetLocalAngles, Ent_GetLocalPos, Ent_GetManipulateBoneAngles, Ent_GetManipulateBoneJiggle, Ent_GetManipulateBonePosition, Ent_GetManipulateBoneScale, Ent_GetMaterial, Ent_GetMaterials, Ent_GetMaxHealth, Ent_GetModel, Ent_GetModelBounds, Ent_GetModelContents, Ent_GetModelRadius, Ent_GetModelRenderBounds, Ent_GetModelScale, Ent_GetMoveType, Ent_GetNoDraw, Ent_GetNumPoseParameters, Ent_GetNWEntity, Ent_GetNWVarTable, Ent_GetOwner, Ent_GetParent, Ent_GetParentAttachment, Ent_GetPersistent, Ent_GetPhysicsObject, Ent_GetPhysicsObjectCount, Ent_GetPhysicsObjectNum, Ent_GetPos, Ent_GetPoseParameter, Ent_GetPoseParameterName, Ent_GetPoseParameterRange, Ent_GetRenderFX, Ent_GetRenderGroup, Ent_GetRenderMode, Ent_GetRight, Ent_GetRotatedAABB, Ent_GetSaveTable, Ent_GetSequence, Ent_GetSequenceCount, Ent_GetSequenceInfo, Ent_GetSequenceList, Ent_GetSequenceName, Ent_GetSkin, Ent_GetSolid, Ent_GetSolidFlags, Ent_GetSubMaterial, Ent_GetTable, Ent_GetUp, Ent_GetVelocity, Ent_GetWorldTransformMatrix, Ent_HasFlexManipulatior, Ent_Health, Ent_IsDormant, Ent_IsEffectActive, Ent_IsOnFire, Ent_IsOnGround, Ent_IsSequenceFinished, Ent_IsSolid, Ent_IsValid, Ent_IsWorld, Ent_LocalToWorld, Ent_LocalToWorldAngles, Ent_LookupAttachment, Ent_LookupBone, Ent_LookupPoseParameter, Ent_LookupSequence, Ent_MapCreationID, Ent_NearestPoint, Ent_OBBCenter, Ent_OBBMaxs, Ent_OBBMins, Ent_SequenceDuration, Ent_SetBodygroup, Ent_SetBoneMatrix, Ent_SetColor, Ent_SetColor4Part, Ent_SetFlexScale, Ent_SetFlexWeight, Ent_SetHealth, Ent_SetLOD, Ent_SetMaterial, Ent_SetMaxHealth, Ent_SetNoDraw, Ent_SetPersistent, Ent_SetPoseParameter, Ent_SetRenderBounds, Ent_SetRenderFX, Ent_SetRenderMode, Ent_SetSkin, Ent_SetSubMaterial, Ent_SetupBones, Ent_SkinCount, Ent_StopSound, Ent_TranslateBoneToPhysBone, Ent_TranslatePhysBoneToBone, Ent_WaterLevel, Ent_WorldSpaceAABB, Ent_WorldToLocal, Ent_WorldToLocalAngles =
+	local Ent_BoundingRadius, Ent_DrawModel, Ent_EmitSound, Ent_EntIndex, Ent_EyeAngles, Ent_EyePos, Ent_FindBodygroupByName, Ent_GetAngles, Ent_GetAttachment, Ent_GetAttachments, Ent_GetBodygroup, Ent_GetBodygroupCount, Ent_GetBodygroupName, Ent_GetBodyGroups, Ent_GetBoneCount, Ent_GetBoneMatrix, Ent_GetBoneName, Ent_GetBoneParent, Ent_GetBonePosition, Ent_GetBrushPlane, Ent_GetBrushPlaneCount, Ent_GetBrushSurfaces, Ent_GetChildren, Ent_GetClass, Ent_GetCollisionBounds, Ent_GetCollisionGroup, Ent_GetColor, Ent_GetColor4Part, Ent_GetCreationTime, Ent_GetDTAngle, Ent_GetDTBool, Ent_GetDTEntity, Ent_GetDTFloat, Ent_GetDTInt, Ent_GetDTString, Ent_GetDTVector, Ent_GetElasticity, Ent_GetFlexBounds, Ent_GetFlexIDByName, Ent_GetFlexName, Ent_GetFlexNum, Ent_GetFlexScale, Ent_GetFlexWeight, Ent_GetForward, Ent_GetHitBoxBone, Ent_GetHitBoxBounds, Ent_GetHitBoxCount, Ent_GetHitBoxHitGroup, Ent_GetHitboxSet, Ent_GetHitboxSetCount, Ent_GetInternalVariable, Ent_GetLocalAngles, Ent_GetLocalPos, Ent_GetManipulateBoneAngles, Ent_GetManipulateBoneJiggle, Ent_GetManipulateBonePosition, Ent_GetManipulateBoneScale, Ent_GetMaterial, Ent_GetMaterials, Ent_GetMaxHealth, Ent_GetModel, Ent_GetModelBounds, Ent_GetModelContents, Ent_GetModelRadius, Ent_GetModelRenderBounds, Ent_GetModelScale, Ent_GetMoveType, Ent_GetNoDraw, Ent_GetNumPoseParameters, Ent_GetNWEntity, Ent_GetNWVarTable, Ent_GetOwner, Ent_GetParent, Ent_GetParentAttachment, Ent_GetPersistent, Ent_GetPhysicsObject, Ent_GetPhysicsObjectCount, Ent_GetPhysicsObjectNum, Ent_GetPos, Ent_GetPoseParameter, Ent_GetPoseParameterName, Ent_GetPoseParameterRange, Ent_GetRenderFX, Ent_GetRenderGroup, Ent_GetRenderMode, Ent_GetRight, Ent_GetRotatedAABB, Ent_GetSaveTable, Ent_GetSequence, Ent_GetSequenceCount, Ent_GetSequenceInfo, Ent_GetSequenceList, Ent_GetSequenceName, Ent_GetSkin, Ent_GetSolid, Ent_GetSolidFlags, Ent_GetSubMaterial, Ent_GetTable, Ent_GetUp, Ent_GetVelocity, Ent_GetWorldTransformMatrix, Ent_HasFlexManipulatior, Ent_Health, Ent_IsDormant, Ent_IsEffectActive, Ent_IsOnFire, Ent_IsOnGround, Ent_IsSequenceFinished, Ent_IsSolid, Ent_IsValid, Ent_IsWorld, Ent_LocalToWorld, Ent_LocalToWorldAngles, Ent_LookupAttachment, Ent_LookupBone, Ent_LookupPoseParameter, Ent_LookupSequence, Ent_MapCreationID, Ent_NearestPoint, Ent_OBBCenter, Ent_OBBMaxs, Ent_OBBMins, Ent_SequenceDuration, Ent_SetBodygroup, Ent_SetBoneMatrix, Ent_SetColor, Ent_SetColor4Part, Ent_SetFlexScale, Ent_SetFlexWeight, Ent_SetHealth, Ent_SetLOD, Ent_SetMaterial, Ent_SetMaxHealth, Ent_SetNoDraw, Ent_SetPersistent, Ent_SetPoseParameter, Ent_SetRenderBounds, Ent_SetRenderFX, Ent_SetRenderMode, Ent_SetSkin, Ent_SetSubMaterial, Ent_SetupBones, Ent_SkinCount, Ent_StopSound, Ent_TranslateBoneToPhysBone, Ent_TranslatePhysBoneToBone, Ent_WaterLevel, Ent_WorldSpaceAABB, Ent_WorldToLocal, Ent_WorldToLocalAngles =
 		ENT_META.BoundingRadius,
 		ENT_META.DrawModel,
 		ENT_META.EmitSound,
@@ -154,6 +154,7 @@ return function(instance)
 		ENT_META.GetDTString,
 		ENT_META.GetDTVector,
 		ENT_META.GetElasticity,
+		ENT_META.GetFlexBounds,
 		ENT_META.GetFlexIDByName,
 		ENT_META.GetFlexName,
 		ENT_META.GetFlexNum,
@@ -2027,6 +2028,24 @@ return function(instance)
 		end
 
 		Ent_SetFlexScale(ent, scale)
+	end
+
+	--- Gets the acceptable value range for the flex controller, as defined by the model
+	-- @shared
+	-- @param number flexid The id of the flex
+	-- @return The minimum value for this flex
+	-- @return The maximum value for this flex
+	function ents_methods:getFlexBounds(flexid)
+		local ent = getent(self)
+	    	
+		checkluatype(flexid, TYPE_NUMBER)
+	    	flexid = math.floor(flexid)
+	    	
+	    	if flexid < 0 or flexid >= Ent_GetFlexNum(ent) then
+			SF.Throw("Invalid flex: "..flexid, 2)
+	    	end
+	    	
+		return Ent_GetFlexBounds(flexid)
 	end
 
 	--- Gets the model of an entity
