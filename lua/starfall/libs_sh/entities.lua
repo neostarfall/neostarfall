@@ -2033,18 +2033,18 @@ return function(instance)
 	--- Gets the acceptable value range for the flex controller, as defined by the model
 	-- @shared
 	-- @param number flexid The id of the flex
-	-- @return The minimum value for this flex
-	-- @return The maximum value for this flex
+	-- @return number The minimum value for this flex
+	-- @return number The maximum value for this flex
 	function ents_methods:getFlexBounds(flexid)
 		local ent = getent(self)
-	    	
+
 		checkluatype(flexid, TYPE_NUMBER)
 	    	flexid = math.floor(flexid)
-	    	
+
 	    	if flexid < 0 or flexid >= Ent_GetFlexNum(ent) then
 			SF.Throw("Invalid flex: "..flexid, 2)
 	    	end
-	    	
+
 		return Ent_GetFlexBounds(flexid)
 	end
 
