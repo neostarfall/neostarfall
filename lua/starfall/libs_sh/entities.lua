@@ -2498,4 +2498,13 @@ return function(instance)
 		local ent_tbl = Ent_GetTable(ent)
 		return istable(ent_tbl.dt) and instance.Sanitize(ent_tbl.GetNetworkVars(ent)) or nil
 	end
+
+	--- Checks if the entity is considered alive.
+	-- Checks entity's internal life state variable. Does not check health, but it is generally expected the health to be 0 or below at the point of an entity being considered dead.
+	-- Note this is different from Player:isAlive()
+	-- @shared
+	-- @return boolean Whether the entity is considered alive or not.
+	function ents_methods:isAlive()
+		return getent(self):Alive()
+	end
 end
