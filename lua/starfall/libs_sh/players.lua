@@ -10,7 +10,18 @@ local Ent_SetCycle = ENT_META.SetCycle
 local playerMaxScale
 if SERVER then
 	-- Register privileges
-	registerprivilege("player.dropweapon", "DropWeapon", "Drops a weapon from the player", { entities = {} })
+	registerprivilege(
+		"player.dropweapon", 
+		"DropWeapon", 
+		"Drops a weapon from the player", 
+		{ entities = {} }
+	)
+	registerprivilege(
+		"player.giveWeapon",
+		"GiveWeapon",
+		"Whether a player can have weapons spawned in inventory.",
+		{ entities = {} }
+	)
 	registerprivilege(
 		"player.setammo",
 		"SetAmmo",
@@ -22,6 +33,12 @@ if SERVER then
 		"EnterVehicle",
 		"Whether a player can be forced into a vehicle",
 		{ usergroups = { default = 1 }, entities = {} }
+	)
+	registerprivilege(
+		"player.respawn",
+		"Respawn",
+		"Whether a player can be forcefully respawned",
+		{ entities = {} }
 	)
 
 	playerMaxScale = SF.CreateConVar(
@@ -701,6 +718,34 @@ return function(instance)
 		-- @return boolean True if the player has godmode
 		function player_methods:hasGodMode()
 			return Ply_HasGodMode(getply(self))
+		end
+
+		--- Respawns the player.
+		-- @param Vector? position Custom position if player should spawn at specific coordinates
+		-- @param boolean? keepangle Should eyeAngles be preserved
+		function player_methods:respawn(pos, keepangle)
+			local ply = getply(self)
+			checkpermission(instance, ply, "player.respawn")
+			local savedangle = ply:EyeAngles()
+
+			ENT_META.Spawn(ply)
+
+			if pos then
+				PLY_META.SetPos(ply, vunwrap1(pos))
+			end
+			if keepangle then
+				PLY_META.SetEyeAngles(ply, savedangle)
+			end
+		end
+
+		--- Gives a weapon to the player
+		-- @param string weapon The weapon class name of the weapon to add
+		-- @param boolean? unloaded Should weapon be unloaded on start
+		function player_methods:giveWeapon(name, unloaded)
+			local ply = getply(self)
+			checkpermission(instance, ply, "player.giveWeapon")
+
+			PLY_META.Give(ply, name, unloaded)
 		end
 
 		--- Drops the player's weapon
