@@ -739,14 +739,17 @@ return function(instance)
 			local ply = getply(self)
 			checkpermission(instance, ply, "player.respawn")
 			local savedangle = ply:EyeAngles()
+			if keepangle ~= nil then
+			    checkluatype(keepangle, TYPE_BOOL)
+			end
 
-			ENT_META.Spawn(ply)
+ply:Spawn()
 
 			if pos then
-				ENT_META.SetPos(ply, vunwrap1(pos))
+ply:SetPos(vunwrap1(pos))
 			end
 			if keepangle then
-				PLY_META.SetEyeAngles(ply, savedangle)
+				ply:SetEyeAngles(savedangle)
 			end
 		end
 
@@ -757,8 +760,11 @@ return function(instance)
 		function player_methods:giveWeapon(name, unloaded)
 			local ply = getply(self)
 			checkpermission(instance, ply, "player.giveWeapon")
-
-			PLY_META.Give(ply, name, unloaded)
+checkluatype(name, TYPE_STRING)
+if unloaded ~= nil then
+    checkluatype(unloaded, TYPE_BOOL)
+end
+			ply:Give(name, unloaded)
 		end
 
 		--- Drops the player's weapon
