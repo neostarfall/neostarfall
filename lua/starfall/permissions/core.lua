@@ -288,7 +288,7 @@ local function changePermission(ply, arg)
 			end
 		end
 	else
-		ply:PrintMessage(HUD_PRINTCONSOLE, "Usage: sf_permission <privilege> <permission> <value>.\n")
+		ply:PrintMessage(HUD_PRINTCONSOLE, "Usage: nsf_permission <privilege> <permission> <value>.\n")
 	end
 end
 

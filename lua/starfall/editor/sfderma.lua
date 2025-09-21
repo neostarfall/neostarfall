@@ -1128,7 +1128,7 @@ function PANEL:AddProviders(providers, server)
 				button.active = setting[3] == i
 
 				button.DoClick = function(self)
-					RunConsoleCommand(server and "sf_permission" or "sf_permission_cl", id, p.id, i)
+					RunConsoleCommand(server and "nsf_permission" or "nsf_permission_cl", id, p.id, i)
 					for _, b in ipairs(buttons) do
 						b.active = false
 					end
