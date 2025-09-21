@@ -54,7 +54,7 @@ else
 		"timebuffersoftlock_cl_owner",
 		1,
 		FCVAR_ARCHIVE,
-		"If sf_timebuffersoftlock_cl is 0, this enabled will make it only your own chips will be affected."
+		"If nsf_timebuffersoftlock_cl is 0, this enabled will make it only your own chips will be affected."
 	)
 	SF.RamCap = SF.CreateConVar(
 		"ram_max_cl",
@@ -153,7 +153,7 @@ function SF.Instance.Compile(code, mainfile, player, entity)
 		player = SF.Superuser
 	elseif ppdata.files[mainfile].superuser then
 		if not SF.AllowSuperUser:GetBool() then
-			return false, { message = "Can't use --@superuser unless sf_superuserallowed is enabled!", traceback = "" }
+			return false, { message = "Can't use --@superuser unless nsf_superuserallowed is enabled!", traceback = "" }
 		end
 		local ok, message = hook.Run("StarfallCanSuperUser", player)
 		if ok == false or (ok == nil and not player:IsSuperAdmin()) then

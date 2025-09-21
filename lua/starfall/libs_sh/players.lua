@@ -664,7 +664,7 @@ return function(instance)
 	end
 
 	if SERVER then
-		--- Lets you change the size of yourself if the server has sf_permissions_entity_owneraccess 1
+		--- Lets you change the size of yourself if the server has nsf_permissions_entity_owneraccess 1
 		-- @param number scale The scale to apply, will be truncated to the first two decimal places (min 0.01, max 100)
 		-- @server
 		function player_methods:setModelScale(scale)
