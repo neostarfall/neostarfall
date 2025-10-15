@@ -214,12 +214,20 @@ SF.Preprocessor = {
 
 				local originalCode = files[path]
 				if fdata.obfuscate or isMainFileObfuscated then
-					files[path] = SF.ObfuscateCode(files[path])
+					local success, obfuscated = pcall(SF.ObfuscateCode, files[path])
+					if not success then
+						-- we cant revert in this case since it'd be a security issue
+						error("Failed to obfuscate " .. path .. ": " .. obfuscated)
+					end
+
+					files[path] = obfuscated
 				elseif minifyAllScripts:GetBool() then
-					files[path] = SF.MinifyCode(files[path])
-					if #originalCode - #files[path] < 0 then
+					local success, minified = pcall(SF.MinifyCode, files[path])
+					if #originalCode - #files[path] < 0 or not success then
 						-- revert to original code if minification is larger, which can happen in certain cases
 						files[path] = originalCode
+					else
+						files[path] = minified
 					end
 				end
 			end
