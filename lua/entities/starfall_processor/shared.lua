@@ -50,7 +50,15 @@ function ENT:Compile(sfdata)
 				end)
 			end
 
-			self.sfsenddata, self.sfownerdata, self.sforiginalsenddata = instance.ppdata:GetSendData(sfdata)
+			local sendDataReceived, message = pcall(function()
+				self.sfsenddata, self.sfownerdata, self.sforiginalsenddata = instance.ppdata:GetSendData(sfdata)
+			end)
+
+			if not sendDataReceived then
+				self:Error({ message = message, traceback = "" })
+				return
+			end
+			
 			self:SendCode()
 		end
 	end
