@@ -973,33 +973,23 @@ return function(instance)
 	instance.whitelistedEnvs = whitelistedEnvs
 
 	--- Like Lua 5.2 or LuaJIT's load/loadstring, except it has no mode parameter and, of course, the resulting function is in your instance's environment by default.
-	-- For compatibility with older versions of Starfall, loadstring is NOT an alias of this function like it is in vanilla Lua 5.2/LuaJIT.
 	-- @param string code String to compile
 	-- @param string? identifier Name of compiled function
-	-- @param table? env Environment of compiled function
 	-- @return function? Compiled function, or nil if failed to compile
 	-- @return string? Error string, or nil if successfully compiled
-	function builtins_library.loadstring(ld, source, mode, env)
+	function builtins_library.loadstring(ld, source)
 		checkluatype(ld, TYPE_STRING)
 		if source == nil then
 			source = "=(load)"
 		else
 			checkluatype(source, TYPE_STRING)
 		end
-		if not isstring(mode) then
-			mode, env = nil, mode
-		end
-		if env == nil then
-			env = instance.env
-		else
-			checkluatype(env, TYPE_TABLE)
-		end
-		source = "NSF:" .. source
-		local retval = SF.CompileString(ld, source, false)
+
+		local retval = SF.CompileString(ld, string.format("NSF:%s", source), false)
 		if isfunction(retval) then
-			whitelistedEnvs[env] = true
-			return setfenv(retval, env)
+			return setfenv(retval, instance.env)
 		end
+
 		return nil, tostring(retval)
 	end
 	builtins_library.load = builtins_library.loadstring
@@ -1011,18 +1001,7 @@ return function(instance)
 	-- @param table tbl New environment
 	-- @return function Function with environment set to tbl
 	function builtins_library.setfenv(location, environment)
-		if location == nil then
-			location = 2
-		elseif isnumber(location) then
-			location = location + 1 -- This makes setfenv appear as though it's not detoured.
-		elseif not isfunction(location) then
-			SF.ThrowTypeError("function or number", SF.GetType(location), 2)
-		end
-		if whitelistedEnvs[getfenv(location)] then
-			whitelistedEnvs[environment] = true
-			return setfenv(location, environment)
-		end
-		SF.Throw("cannot change environment of given object", 2)
+		SF.Throw("`setfenv` is temporarily disabled", 2)
 	end
 
 	--- Lua's getfenv
@@ -1031,17 +1010,7 @@ return function(instance)
 	-- @param function|number funcOrStackLevel Function or stack level to get the environment of
 	-- @return table? Environment table (or nil, if restricted)
 	function builtins_library.getfenv(location)
-		if location == nil then
-			location = 2
-		elseif isnumber(location) then
-			location = location + 1 -- This makes getfenv appear as though it's not detoured.
-		elseif not isfunction(location) then
-			SF.ThrowTypeError("function or number", SF.GetType(location), 2)
-		end
-		local fenv = getfenv(location)
-		if whitelistedEnvs[fenv] then
-			return fenv
-		end
+		SF.Throw("`getfenv` is temporarily disabled", 2)
 	end
 
 	--- Gets an SF type's methods table
