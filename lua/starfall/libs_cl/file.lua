@@ -698,4 +698,11 @@ return function(instance)
 		checkluatype(x, TYPE_STRING)
 		unwrap(self):WriteUInt64(x)
 	end
+
+	--- Returns whether the File object has reached the end of file or not.
+	-- @return boolean Whether the file has reached end or not.
+	function file_methods:endOfFile()
+		return unwrap(self):EndOfFile()
+	end
+
 end
