@@ -437,7 +437,7 @@ return function(instance)
 	-- @return boolean Is the audio stream block streamed or not.
 	function bass_methods:isBlockStreamed()
 		local uw = getsnd(self)
-		if !uw:IsOnline() then SF.Throw("The Bass Object isn't playing an online audio stream!", 2) end
+		if not uw:IsOnline() then SF.Throw("The Bass Object isn't playing an online audio stream!", 2) end
 		return uw:IsBlockStreamed()
 	end
 
@@ -510,7 +510,7 @@ return function(instance)
 	--- Retrieves HTTP headers from a bass stream channel created by Bass:loadURL(), if available.
 	--- Of special interest here are headers such as icy-name, icy-br, ice-audio-info, icy-genre.
 	--- CRITICAL NOTE: Tags aren't available immediately! Must use a timer to wait 100-500ms for BASS to parse metadata during stream init!!
-	-- @return table<string> A list of HTTP headers or nil if no information is available.
+	-- @return table A list of HTTP headers or nil if no information is available.
 	function bass_methods:getTagsHTTP()
 		return getsnd(self):GetTagsHTTP()
 	end
@@ -532,14 +532,14 @@ return function(instance)
 
 	--- Retrieves .m4a media info, from a bass channel created by Bass:loadFile or Bass:loadURL, if available.
 	--- CRITICAL NOTE: Tags aren't available immediately! Must use a timer to wait 100-500ms for BASS to parse metadata during stream init!!
-	-- @return table<string> A list of available information in no particular order, or nil if no information is available.
+	-- @return table A list of available information in no particular order, or nil if no information is available.
 	function bass_methods:getTagsMP4()
 		return getsnd(self):GetTagsMP4()
 	end
 
 	--- Retrieves OGG media info tag, from a bass channel created by Bass:loadFile or Bass:loadURL, if available.
 	--- CRITICAL NOTE: Tags aren't available immediately! Must use a timer to wait 100-500ms for BASS to parse metadata during stream init!!
-	-- @return table<string> A list of available information in no particular order, or nil if no information is available. 
+	-- @return table A list of available information in no particular order, or nil if no information is available. 
 	function bass_methods:getTagsOGG()
 		return getsnd(self):GetTagsOGG()
 	end
@@ -553,7 +553,7 @@ return function(instance)
 
 	--- Retrieves .WMA media info, from a bass channel created by Bass:loadFile or Bass:loadURL, if available.
 	--- CRITICAL NOTE: Tags aren't available immediately! Must use a timer to wait 100-500ms for BASS to parse metadata during stream init!!
-	-- @return table<string> A list of available information in no particular order, or nil if no information is available.
+	-- @return table A list of available information in no particular order, or nil if no information is available.
 	function bass_methods:getTagsWMA()
 		return getsnd(self):GetTagsWMA()
 	end
@@ -583,7 +583,9 @@ return function(instance)
 		checkluatype(enable, TYPE_BOOLEAN)
 
 		local uw = getsnd(self)
-		if !uw:Is3D() then SF.Throw("You cannot set the mode of a Bass Object that isn't 3D! Please call is3D first!!", 2) end
+		if !uw:Is3D() then
+			SF.Throw("You cannot set the mode of a Bass Object that isn't 3D! Please call is3D first!!", 2)
+		end
 		uw:Set3DEnabled(enable)
 	end
 
@@ -635,7 +637,9 @@ return function(instance)
 
 		local uw = getsnd(self)
 		-- If we ever use / add Set3DEnabled to SF, remember to change this Is3D to Get3DEnabled.
-		if !uw:Is3D() then SF.Throw("You cannot set the cone of a Bass Object that isn't 3D!", 2) end
+		if not uw:Is3D() then
+			SF.Throw("You cannot set the cone of a Bass Object that isn't 3D!", 2)
+		end
 		uw:Set3DCone( innerAngle, outerAngle, outerVolume )
 	end
 
