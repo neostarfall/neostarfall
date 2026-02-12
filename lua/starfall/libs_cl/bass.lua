@@ -335,7 +335,7 @@ return function(instance)
 	end
 
 	--- Gets the pitch of the sound.
-	-- @param number The current pitch of the sound.
+	-- @return number The current pitch of the sound.
 	function bass_methods:getPitch()
 		return getsnd(self):GetPlaybackRate()
 	end
