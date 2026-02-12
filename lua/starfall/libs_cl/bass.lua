@@ -583,7 +583,7 @@ return function(instance)
 		checkluatype(enable, TYPE_BOOLEAN)
 
 		local uw = getsnd(self)
-		if !uw:Is3D() then
+		if not uw:Is3D() then
 			SF.Throw("You cannot set the mode of a Bass Object that isn't 3D! Please call is3D first!!", 2)
 		end
 		uw:Set3DEnabled(enable)
