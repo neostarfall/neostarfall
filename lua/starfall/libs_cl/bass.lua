@@ -578,7 +578,7 @@ return function(instance)
 
 	--- Sets the 3D mode of the channel. This will affect Bass:set3DEnabled() but not Bass:is3D().
 	--- This feature requires the channel to be initially created in 3D mode, i.e. Bass:is3D() should return true or this function will do nothing. 
-	-- @return boolean enable True or False to toggle 3D.
+	-- @param boolean enable True or False to toggle 3D.
 	function bass_methods:set3DEnabled(enable)
 		checkluatype(enable, TYPE_BOOLEAN)
 
