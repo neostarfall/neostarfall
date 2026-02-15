@@ -10,7 +10,18 @@ local Ent_SetCycle = ENT_META.SetCycle
 local playerMaxScale
 if SERVER then
 	-- Register privileges
-	registerprivilege("player.dropweapon", "DropWeapon", "Drops a weapon from the player", { entities = {} })
+	registerprivilege(
+		"player.dropweapon", 
+		"DropWeapon", 
+		"Drops a weapon from the player", 
+		{ entities = {} }
+	)
+	registerprivilege(
+		"player.giveWeapon",
+		"GiveWeapon",
+		"Whether a player can have weapons spawned in inventory.",
+		{ entities = {} }
+	)
 	registerprivilege(
 		"player.setammo",
 		"SetAmmo",
@@ -22,6 +33,12 @@ if SERVER then
 		"EnterVehicle",
 		"Whether a player can be forced into a vehicle",
 		{ usergroups = { default = 1 }, entities = {} }
+	)
+	registerprivilege(
+		"player.respawn",
+		"Respawn",
+		"Whether a player can be forcefully respawned",
+		{ entities = {} }
 	)
 
 	playerMaxScale = SF.CreateConVar(
@@ -140,7 +157,7 @@ return function(instance)
 		ENT_META.SetCycle,
 		ENT_META.SetFriction,
 		ENT_META.SetModelScale
-	local Ply_Alive, Ply_AnimResetGestureSlot, Ply_AnimRestartGesture, Ply_AnimSetGestureWeight, Ply_Armor, Ply_Crouching, Ply_Deaths, Ply_DropNamedWeapon, Ply_DropWeapon, Ply_EnterVehicle, Ply_FlashlightIsOn, Ply_Frags, Ply_GetActiveWeapon, Ply_GetAimVector, Ply_GetAmmoCount, Ply_GetCrouchedWalkSpeed, Ply_GetDuckSpeed, Ply_GetEntityInUse, Ply_GetEyeTrace, Ply_GetFOV, Ply_GetFriendStatus, Ply_GetJumpPower, Ply_GetLadderClimbSpeed, Ply_GetMaxArmor, Ply_GetMaxSpeed, Ply_GetName, Ply_GetPlayerColor, Ply_GetRagdollEntity, Ply_GetRunSpeed, Ply_GetShootPos, Ply_GetSlowWalkSpeed, Ply_GetStepSize, Ply_GetTimeoutSeconds, Ply_GetUnDuckSpeed, Ply_GetUserGroup, Ply_GetVehicle, Ply_GetViewEntity, Ply_GetViewModel, Ply_GetViewPunchAngles, Ply_GetWalkSpeed, Ply_GetWeapon, Ply_GetWeaponColor, Ply_GetWeapons, Ply_HasGodMode, Ply_InVehicle, Ply_IsAdmin, Ply_IsBot, Ply_IsConnected, Ply_IsFrozen, Ply_IsMuted, Ply_IsSpeaking, Ply_IsSprinting, Ply_IsSuperAdmin, Ply_IsTimingOut, Ply_IsTyping, Ply_IsUserGroup, Ply_IsWalking, Ply_KeyDown, Ply_Kill, Ply_LastHitGroup, Ply_OwnerSteamID64, Ply_PacketLoss, Ply_Ping, Ply_Say, Ply_SetAmmo, Ply_SetArmor, Ply_SetCrouchedWalkSpeed, Ply_SetDuckSpeed, Ply_SetEyeAngles, Ply_SetJumpPower, Ply_SetLadderClimbSpeed, Ply_SetMaxArmor, Ply_SetMaxSpeed, Ply_SetRunSpeed, Ply_SetSlowWalkSpeed, Ply_SetStepSize, Ply_SetUnDuckSpeed, Ply_SetViewEntity, Ply_SetWalkSpeed, Ply_ShouldDrawLocalPlayer, Ply_SteamID, Ply_SteamID64, Ply_StripAmmo, Ply_StripWeapon, Ply_StripWeapons, Ply_Team, Ply_TimeConnected, Ply_UserID, Ply_VoiceVolume =
+	local Ply_Alive, Ply_AnimResetGestureSlot, Ply_AnimRestartGesture, Ply_AnimSetGestureWeight, Ply_Armor, Ply_Crouching, Ply_Deaths, Ply_DropNamedWeapon, Ply_DropWeapon, Ply_EnterVehicle, Ply_FlashlightIsOn, Ply_Frags, Ply_GetActiveWeapon, Ply_GetAimVector, Ply_GetAmmoCount, Ply_GetCrouchedWalkSpeed, Ply_GetDuckSpeed, Ply_GetEntityInUse, Ply_GetEyeTrace, Ply_GetFOV, Ply_GetFriendStatus, Ply_GetJumpPower, Ply_GetLadderClimbSpeed, Ply_GetMaxArmor, Ply_GetMaxSpeed, Ply_GetName, Ply_GetPlayerColor, Ply_GetRagdollEntity, Ply_GetRunSpeed, Ply_GetShootPos, Ply_GetSlowWalkSpeed, Ply_GetStepSize, Ply_GetTimeoutSeconds, Ply_GetUnDuckSpeed, Ply_GetUserGroup, Ply_GetVehicle, Ply_GetViewEntity, Ply_GetViewModel, Ply_GetViewPunchAngles, Ply_GetWalkSpeed, Ply_GetWeapon, Ply_GetWeaponColor, Ply_GetWeapons, Ply_HasGodMode, Ply_InVehicle, Ply_IsAdmin, Ply_IsBot, Ply_IsConnected, Ply_IsFrozen, Ply_IsMuted, Ply_IsSpeaking, Ply_IsSprinting, Ply_IsSuperAdmin, Ply_IsTimingOut, Ply_IsTyping, Ply_IsUserGroup, Ply_IsWalking, Ply_KeyDown, Ply_Kill, Ply_LastHitGroup, Ply_OwnerSteamID64, Ply_PacketLoss, Ply_Ping, Ply_Say, Ply_SetAmmo, Ply_SetArmor, Ply_SetCrouchedWalkSpeed, Ply_SetDuckSpeed, Ply_SetEyeAngles, Ply_SetJumpPower, Ply_SetLadderClimbSpeed, Ply_SetMaxArmor, Ply_SetMaxSpeed, Ply_SetRunSpeed, Ply_SetSlowWalkSpeed, Ply_SetStepSize, Ply_SetUnDuckSpeed, Ply_SetViewEntity, Ply_SetWalkSpeed, Ply_ShouldDrawLocalPlayer, Ply_SteamID, Ply_SteamID64, Ply_StripAmmo, Ply_StripWeapon, Ply_StripWeapons, Ply_Team, Ply_TimeConnected, Ply_UserID, Ply_VoiceVolume, Ply_SetWeaponColor =
 		PLY_META.Alive,
 		PLY_META.AnimResetGestureSlot,
 		PLY_META.AnimRestartGesture,
@@ -229,7 +246,8 @@ return function(instance)
 		PLY_META.Team,
 		PLY_META.TimeConnected,
 		PLY_META.UserID,
-		PLY_META.VoiceVolume
+		PLY_META.VoiceVolume,
+		PLY_META.SetWeaponColor
 
 	local player_methods, player_meta, wrap, unwrap =
 		instance.Types.Player.Methods, instance.Types.Player, instance.Types.Player.Wrap, instance.Types.Player.Unwrap
@@ -663,6 +681,16 @@ return function(instance)
 		return owrap(Ply_GetRagdollEntity(getply(self)))
 	end
 
+	--- Changes viewmodel's weapon color.
+	-- @shared
+	-- @param Vector Color in 0-1 RGB vector
+	function player_methods:setWeaponColor(v)
+		local ply = getply(self)
+		checkpermission(instance, ply, "entities.setRenderProperty")
+
+		Ply_SetWeaponColor(ply, vunwrap1(v))
+	end
+
 	if SERVER then
 		--- Lets you change the size of yourself if the server has nsf_permissions_entity_owneraccess 1
 		-- @param number scale The scale to apply, will be truncated to the first two decimal places (min 0.01, max 100)
@@ -701,6 +729,42 @@ return function(instance)
 		-- @return boolean True if the player has godmode
 		function player_methods:hasGodMode()
 			return Ply_HasGodMode(getply(self))
+		end
+
+		--- Respawns the player.
+		-- @server
+		-- @param Vector? position Custom position if player should spawn at specific coordinates
+		-- @param boolean? keepangle Should eyeAngles be preserved
+		function player_methods:respawn(pos, keepangle)
+			local ply = getply(self)
+			checkpermission(instance, ply, "player.respawn")
+			local savedangle = ply:EyeAngles()
+			if keepangle ~= nil then
+			    checkluatype(keepangle, TYPE_BOOL)
+			end
+
+ply:Spawn()
+
+			if pos then
+ply:SetPos(vunwrap1(pos))
+			end
+			if keepangle then
+				ply:SetEyeAngles(savedangle)
+			end
+		end
+
+		--- Gives a weapon to the player
+		-- @server
+		-- @param string weapon The weapon class name of the weapon to add
+		-- @param boolean? unloaded Should weapon be unloaded on start
+		function player_methods:giveWeapon(name, unloaded)
+			local ply = getply(self)
+			checkpermission(instance, ply, "player.giveWeapon")
+checkluatype(name, TYPE_STRING)
+if unloaded ~= nil then
+    checkluatype(unloaded, TYPE_BOOL)
+end
+			ply:Give(name, unloaded)
 		end
 
 		--- Drops the player's weapon
