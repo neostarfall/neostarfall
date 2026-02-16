@@ -473,6 +473,21 @@ return function(instance)
 	-- @return number Seconds passed since Unix epoch
 	os_library.time = os.time
 
+	--- Returns whether the OS is Windows
+	-- @class function
+	-- @return boolean Whether the OS is Windows
+	os_library.isWindows = system.IsWindows
+	
+	--- Returns whether the OS is OSX
+	-- @class function
+	-- @return boolean Whether the OS is OSX
+	os_library.isOSX = system.IsOSX
+
+	--- Returns whether the OS is Linux based
+	-- @class function
+	-- @return boolean Whether the OS is Linux based
+	os_library.isLinux = system.IsLinux
+
 	-- ------------------------- Functions ------------------------- --
 
 	--- Gets all libraries
