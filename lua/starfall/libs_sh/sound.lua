@@ -4,6 +4,7 @@ local registerprivilege = SF.Permissions.registerPrivilege
 
 -- Register Privileges
 registerprivilege("sound.create", "Sound", "Allows the user to create sounds", { client = {} })
+registerprivilege("sound.emit", "Sound", "Allows the user to emit temporary sounds", { client = {} })
 
 local plyCount =
 	SF.LimitObject("sounds", "sounds", 20, "The number of sounds allowed to be playing via Neostarfall client at once")
@@ -14,6 +15,15 @@ local plySoundBurst = SF.BurstObject(
 	5,
 	"The rate at which the burst regenerates per second.",
 	"The number of sounds allowed to be made in a short interval of time via Neostarfall scripts for a single instance ( burst )"
+)
+
+local emitSoundBurst = SF.BurstObject(
+	"emitSound",
+	"emitsound",
+	180,
+	200,
+	" sounds can be emitted per second",
+	"Number of sounds that can be emitted in a short time"
 )
 
 SF.ResourceCounters.Sounds = {
@@ -48,6 +58,7 @@ return function(instance)
 	local sound_methods, sound_meta, wrap, unwrap =
 		instance.Types.Sound.Methods, instance.Types.Sound, instance.Types.Sound.Wrap, instance.Types.Sound.Unwrap
 	local ent_meta, ewrap, eunwrap = instance.Types.Entity, instance.Types.Entity.Wrap, instance.Types.Entity.Unwrap
+	local vec_meta, vwrap, vunwrap = instance.Types.Vector, instance.Types.Vector.Wrap, instance.Types.Vector.Unwrap
 
 	local sounds = {}
 	local function registerSound(ent, sound)
@@ -117,6 +128,43 @@ return function(instance)
 	-- @return boolean If it is possible to make a sound
 	function sound_library.canCreate()
 		return plyCount:check(instance.player) > 0 and plySoundBurst:check(instance.player) >= 1
+	end
+
+	--- Emits the specified sound at the specified position.
+	-- If you want to play on a specific entity, try Entity:emitSound instead.
+	-- https://wiki.facepunch.com/gmod/Global.EmitSound
+	-- @param string name The name of the sound to emit
+	-- @param pos Vector The position to emit the sound at
+	-- @param number? channel The channel to play the sound on. Default is CHAN_AUTO (0)
+	-- @param number? volume The volume of the sound. Default is 1
+	-- @param number? level The sound level in dB. Default is 75
+	-- @param number? flags The sound flags. Default is 0
+	-- @param number? pitch The pitch of the sound. Default is 100
+	-- @param number? dsp The DSP value. Default is 0
+	function sound_library.emit(name, pos, channel, volume, level, flags, pitch, dsp)
+		checkluatype(name, TYPE_STRING)
+		SF.CheckSound(instance.player, name)
+
+		pos = vunwrap(pos)
+		if channel ~= nil then checkluatype(channel, TYPE_NUMBER) end
+		if volume ~= nil then checkluatype(volume, TYPE_NUMBER) end
+		if level ~= nil then checkluatype(level, TYPE_NUMBER) end
+		if flags ~= nil then checkluatype(flags, TYPE_NUMBER) end
+		if pitch ~= nil then checkluatype(pitch, TYPE_NUMBER) end
+		if dsp ~= nil then checkluatype(dsp, TYPE_NUMBER) end
+
+		channel = channel or CHAN_AUTO
+		volume = volume or 1
+		level = level or 75
+		flags = flags or 0
+		pitch = pitch or 100
+		dsp = dsp or 0
+
+		checkpermission(instance, { instance.entity, pos }, "sound.emit")
+
+		emitSoundBurst:use(instance.player, 1)
+
+		EmitSound(name, pos, channel, volume, level, flags, pitch, dsp)
 	end
 
 	--- Returns the number of sounds left that can be created
