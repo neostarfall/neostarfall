@@ -10,6 +10,7 @@ if SERVER then
 		{ usergroups = { default = 1 } }
 	)
 	registerprivilege("game.bulletDamage", "Fire bullets", "Allows the user to fire bullets", {})
+	registerprivilege("game.fireBullets", "Fire bullets", "Allows the user to fire bullets", {})
 end
 
 local fireBulletsBurst = SERVER
@@ -203,18 +204,6 @@ return function(instance)
 			)
 		end
 
-		--- Fires a bullet. Bullet made with this function will not have any tracer, you will have to make them yourself.
-		-- @server
-		-- @param Vector src The position to fire the bullets from.
-		-- @param Vector Dir The fire direction.
-		-- @param number? damage The damage dealt by the bullet. Default: (1-100)
-		-- @param number? num The amount of bullets to fire. Default: (1-40)
-		-- @param number? force The force of the bullets. Default: (0-100)
-		-- @param number? distance Maximum distance the bullet can travel.
-		-- @param Vector? Spread The spread, only x and y are needed.
-		-- @param number? hullSize The hull size of the bullet. Default: (0-10)
-		-- @param Entity? ignoreEntity The entity that the bullet will ignore when it will be shot.
-		-- @param function? callback Function to be called with attacker, traceResult after the bullet was fired but before the damage is applied (the callback is called even if no damage is applied).
 		function game_library.bulletDamage(src, dir, damage, num, force, distance, spread, hullSize, ignoreEntity, cb)
 			checkpermission(instance, nil, "game.bulletDamage")
 			src = vunwrap1(src)
@@ -310,6 +299,55 @@ return function(instance)
 		function game_library.bulletsDPSLeft()
 			return fireBulletsDPSBurst:check(instance.player)
 		end
+
+		
+		local bulletCheckTypes = {
+			Damage = TYPE_NUMBER,
+			Force = TYPE_NUMBER,
+			Distance = TYPE_NUMBER,
+			HullSize = TYPE_NUMBER,
+			Num = TYPE_NUMBER,
+			AmmoType = TYPE_STRING,
+			TracerName = TYPE_STRING
+		}
+
+		local bulletCheckTypesIgnore = {Dir = true,Src = true,Callback = true,IgnoreEntity=true,Spread=true}
+
+		--- Fires a bullet
+		-- @server
+		-- @param table BulletInfo(https://wiki.facepunch.com/gmod/Structures/Bullet)
+		function game_library.fireBullets(bulletInfo)
+			checkpermission(instance, nil, "game.fireBullets")
+			checkluatype(bulletInfo,TYPE_TABLE)
+
+			local newtbl = {}
+
+			if bulletInfo.Dir ~= nil then newtbl.Dir = vunwrap(bulletInfo.Dir) end
+			if bulletInfo.Src ~= nil then newtbl.Src = vunwrap(bulletInfo.Src) end
+			if bulletInfo.Spread ~= nil then newtbl.Spread = vunwrap(spread) end
+
+			if bulletInfo.IgnoreEntity ~= nil then newtbl.IgnoreEntity = eunwrap(bulletInfo.IgnoreEntity) end
+
+			for k,v in pairs(bulletInfo) do
+				local check = bulletCheckTypes[k]
+				if check then
+					checkluatype(v,check)
+					newtbl[k] = v
+				elseif not bulletCheckTypesIgnore[k] then
+					SF.Throw("Invalid key found in bulletInfo: " .. k, 2)
+				end
+			end
+
+			newtbl.Attacker = instance.player -- Always make the attacker the owner of the chip
+			if newtbl.Num then
+				newtbl.Num = math.Clamp(newtbl.Damage,1,20) -- maybe this isn't even needed?
+			end
+			fireBulletsBurst:use(instance.player, newtbl.Num)
+			fireBulletsDPSBurst:use(instance.player, newtbl.Damage * newtbl.Num)
+			instance.entity:FireBullets(newtbl)
+		end
+
+
 	else
 		--- Returns if the game has focus or not, i.e. will return false if the game is minimized
 		-- @name game_library.hasFocus
