@@ -43,7 +43,7 @@ local bassSound = {
 	__index = {
 		calcFade = function(self)
 			local fadeMult
-			local distSqr = self.sound:GetPos():DistToSqr(EyePos())
+			local distSqr = self.sound:GetPos():DistToSqr(MainEyePos())
 			if distSqr <= self.fadeMin * self.fadeMin then
 				fadeMult = 1
 			elseif distSqr >= self.fadeMax * self.fadeMax then
