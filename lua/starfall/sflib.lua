@@ -2349,7 +2349,7 @@ function SF.GetExecutingPath()
 			break
 		end
 
-		curdir = string.match(info.short_src, "^SF:(.*)")
+		curdir = string.match(info.short_src, "^NSF:(.*)")
 		stackLevel = stackLevel + 1
 	until curdir
 	return curdir
